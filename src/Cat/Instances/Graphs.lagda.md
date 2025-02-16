@@ -202,3 +202,59 @@ Strict-cats↪Graphs-faithful p =
     (λ x i → p i .vertex x)
     (λ e i → p i .edge e)
 ```
+
+```
+-- We need one-hop graph neighborhoods
+
+```
+Let a graph be a tuple of nodes and edges,
+G = (V, E),
+with one-hop neighbourhoods defined as
+Nu = {v ∈ V | (v, u) ∈ E}.
+```
+
+-- one-hop-graph-neighborhoods : _
+-- one-hop-graph-neighborhoods = ?
+
+module Neighborhoods {G : Graph o ℓ} where
+  open import Cat.Prelude
+  open import 1Lab.Prelude
+  open import Data.Sum
+  open Graph G
+
+  -- record Neighborhood (G : Graph o ℓ) (v : Graph.Vertex G) : Type (o ⊔ ℓ) where
+  --   field
+  --     neighbors : Type o
+  --     neighbor-edges : neighbors → G .Edge neighbors v
+  --     neighbor-is-set : is-set neighbors
+
+  one-hop-out : Vertex G  → Type (o ⊔ ℓ)
+  one-hop-out v = Σ[ u ∈ G .Vertex ] G .Edge v u
+
+  one-hop-in : Vertex G → Type (o ⊔ ℓ)
+  one-hop-in v = Σ[ u ∈ Graph.Vertex G ] Graph.Edge G u v
+
+  -- one-hop-neighborhood : (G : Graph o ℓ) → (v : Graph.Vertex G) → Neighborhood G v
+  -- one-hop-neighborhood G v .Neighborhood.neighbors = one-hop-out G v
+  -- one-hop-neighborhood G v .Neighborhood.neighbor-edges (u , e) = e
+  -- one-hop-neighborhood G v .Neighborhood.neighbor-is-set =
+  --   Σ-inj-set (Graph.Vertex-is-set G) λ _ → Graph.Edge-is-set G
+
+  -- For convenience, we also provide functions to get just the vertex sets
+  out-vertices : Vertex G → Type o
+  out-vertices v = snd (one-hop-out v)
+
+  in-vertices : Vertex G → Type o
+  in-vertices v = fst ∘ one-hop-in G v
+
+  -- Helper function to check if a vertex is a neighbor
+  is-neighbor : (G : Graph o ℓ) → (v u : Graph.Vertex G) → Type ℓ
+  is-neighbor G v u = Graph.Edge G v u
+
+  -- Function to get all neighbors (both in and out)
+  all-neighbors : (G : Graph o ℓ) → Graph.Vertex G → Type (o ⊔ ℓ)
+  all-neighbors G v = one-hop-out G v ⊎ one-hop-in G v
+
+-- ```
+
+```
