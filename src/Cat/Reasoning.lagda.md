@@ -1,5 +1,7 @@
 <!--
 ```agda
+open import 1Lab.Function.Embedding
+open import 1Lab.Equiv
 open import 1Lab.Path
 open import 1Lab.Type hiding (id; _∘_)
 
@@ -33,17 +35,39 @@ private variable
 ```
 -->
 
+## Lenses
+
+```agda
+module _ {w x y z} {a : Hom y z} {b : Hom x y} {c : Hom w x} {f : Hom w z} where abstract
+  reassocl : ((a ∘ b) ∘ c ≡ f) ≃ (a ∘ b ∘ c ≡ f)
+  reassocl = ∙-pre-equiv (assoc _ _ _)
+
+  reassocr : (f ≡ (a ∘ b) ∘ c) ≃ (f ≡ a ∘ b ∘ c)
+  reassocr = ∙-post-equiv (sym (assoc _ _ _))
+
+  module reassocl = Equiv reassocl
+  module reassocr = Equiv reassocr
+```
+
+
 ## Identity morphisms
 
 ```agda
-id-comm : ∀ {a b} {f : Hom a b} → f ∘ id ≡ id ∘ f
-id-comm {f = f} = idr f ∙ sym (idl f)
+abstract
+  id-comm : ∀ {a b} {f : Hom a b} → f ∘ id ≡ id ∘ f
+  id-comm {f = f} = idr f ∙ sym (idl f)
 
-id-comm-sym : ∀ {a b} {f : Hom a b} → id ∘ f ≡ f ∘ id
-id-comm-sym {f = f} = idl f ∙ sym (idr f)
+  id-comm-sym : ∀ {a b} {f : Hom a b} → id ∘ f ≡ f ∘ id
+  id-comm-sym {f = f} = idl f ∙ sym (idr f)
 
-idr2 : ∀ {a b c} (f : Hom b c) (g : Hom a b) → f ∘ g ∘ id ≡ f ∘ g
-idr2 f g = ap (f ∘_) (idr g)
+  id2 : ∀ {x} → id {x} ∘ id {x} ≡ id
+  id2 = idl _
+
+  idr2 : ∀ {a b c} (f : Hom b c) (g : Hom a b) → f ∘ g ∘ id ≡ f ∘ g
+  idr2 f g = ap (f ∘_) (idr g)
+
+  idl2 : ∀ {a b c} (f : Hom b c) (g : Hom a b) → (id ∘ f) ∘ g ≡ f ∘ g
+  idl2 f g = ap (_∘ g) (idl f)
 
 module _ (a≡id : a ≡ id) where abstract
   eliml : a ∘ f ≡ f
@@ -332,6 +356,47 @@ module _ {y z} (f : y ≅ z) where abstract
     f .from ∘ f .to ∘ h   ≡⟨ cancell (f .invr) ⟩
     h                     ∎
 ```
+
+### Lenses for isomorphisms
+
+```agda
+module _
+  {x y z} {a : Hom x z} {f : Hom x y} {b : Hom y z}
+  (f-inv : is-invertible f)
+  where abstract
+
+  private module f = is-invertible f-inv
+
+  pre-invr : (a ∘ f.inv ≡ b) ≃ (a ≡ b ∘ f)
+  pre-invr =
+    (ap (_∘ f) , equiv→cancellable (invertible-precomp-equiv f-inv))
+    ∙e ∙-pre-equiv (insertr f.invr)
+
+  post-invr : (b ≡ a ∘ f.inv) ≃ (b ∘ f ≡ a)
+  post-invr = sym-equiv ∙e pre-invr ∙e sym-equiv
+
+  module pre-invr = Equiv pre-invr
+  module post-invr = Equiv post-invr
+
+module _
+  {w x y} {a : Hom w y} {f : Hom x y} {b : Hom w x}
+  (f-inv : is-invertible f)
+  where abstract
+
+  private module f = is-invertible f-inv
+
+  pre-invl : (f.inv ∘ a ≡ b) ≃ (a ≡ f ∘ b)
+  pre-invl =
+    (ap (f ∘_) , equiv→cancellable (invertible-postcomp-equiv f-inv))
+    ∙e ∙-pre-equiv (insertl f.invl)
+
+  post-invl : (b ≡ f.inv ∘ a) ≃ (f ∘ b ≡ a)
+  post-invl = sym-equiv ∙e pre-invl ∙e sym-equiv
+
+  module pre-invl = Equiv pre-invl
+  module post-invl = Equiv post-invl
+```
+
 
 If we have a commuting triangle of isomorphisms, then we
 can flip one of the sides to obtain a new commuting triangle

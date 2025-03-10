@@ -38,7 +38,7 @@ $f : A \to B$, and I have an $x : A$, then application gives me an $f(x)
 
 <!--
 ```agda
-open Binary-products C fp hiding (unique₂)
+open Binary-products C fp
 open Cat.Reasoning C
 open Terminal term
 open Functor
@@ -83,7 +83,7 @@ structure.
 ```
 
 <!--
-```
+```agda
   unique₂ : ∀ {C} {m : Hom (C ⊗₀ _) _} m₁ m₂
           → ev ∘ m₁ ⊗₁ id ≡ m
           → ev ∘ m₂ ⊗₁ id ≡ m
@@ -417,7 +417,7 @@ f$, over $B$.
 ```
 
 <!--
-```
+```agda
       where
         done : ƛ π₂ ∘ ! ≡ ƛ π₂
         done = Exponential.unique (exp _) _ $
