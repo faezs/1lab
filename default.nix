@@ -3,9 +3,9 @@
   # Do we want the full Agda package for interactive use? Set to false in CI
 , interactive ? true
 , system ? builtins.currentSystem
+, pkgs ? import ./support/nix/nixpkgs.nix { inherit system; }
 }:
 let
-  pkgs = import ./support/nix/nixpkgs.nix { inherit system; };
   inherit (pkgs) lib;
 
   our-ghc = pkgs.labHaskellPackages.ghcWithPackages (ps: with ps; ([
