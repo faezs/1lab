@@ -50,7 +50,7 @@ module _ {ℓ} (G : Group ℓ) where
 ```
 
 <!--
-```
+```agda
   private instance
     H-Level-Deloop : ∀ {n} → H-Level Deloop (3 + n)
     H-Level-Deloop = basic-instance 3 squash
@@ -227,7 +227,7 @@ to `Code`{.Agda}. For decoding, we do induction on `Deloop`{.Agda} with
   decode = go where
     coh : ∀ x → PathP (λ i → Code ʻ path x i → base ≡ path x i) path path
     coh x i c j = hcomp (∂ i ∨ ∂ j) λ where
-      k (k = i0) → path (ua-unglue (Code.path-case.eqv x) i c) j
+      k (k = i0) → path (unglue c) j
       k (i = i0) → path-sq c x (~ k) j
       k (i = i1) → path c j
       k (j = i0) → base
@@ -432,7 +432,7 @@ again. That finishes the construction:
           (λ i j → go (α i j)) (λ i j → go (β i j))
           (squash x y p q α β) i j k
 
-  {-# DISPLAY windingⁱ.go x p = winding p #-}
+  {-# DISPLAY windingⁱ.go _ p = winding p #-}
 ```
 -->
 

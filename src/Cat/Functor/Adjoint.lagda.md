@@ -15,6 +15,7 @@ open import Cat.Functor.Base
 open import Cat.Prelude
 
 import Cat.Functor.Reasoning as Func
+import Cat.Natural.Reasoning
 import Cat.Reasoning
 ```
 -->
@@ -48,7 +49,7 @@ set of maps $x \to y$). Going further, we have structures at the level
 of 2-groupoids, which could be given an interesting _category_ of
 relations, etc.
 
-:::{.definition #adjunction alias="left-adjoint right-adjoint adjoint-functor"}
+:::{.definition #adjunction alias="left-adjoint right-adjoint adjoint-functor adjoint"}
 A particularly important relationship is, of course, "sameness". Going
 up the ladder of category number, we have equality at the (-1)-level,
 isomorphism at the 0-level, and what's generally referred to as
@@ -78,8 +79,8 @@ record _⊣_ (L : Functor C D) (R : Functor D C) : Type (adj-level C D) where
     unit   : Id => (R F∘ L)
     counit : (L F∘ R) => Id
 
-  module unit = _=>_ unit
-  module counit = _=>_ counit renaming (η to ε)
+  module unit = Cat.Natural.Reasoning unit
+  module counit = Cat.Natural.Reasoning counit renaming (η to ε)
 
   open unit using (η) public
   open counit using (ε) public
@@ -165,7 +166,7 @@ module _
 ```
 -->
 
-## Adjuncts {defines=adjuncts}
+## Adjuncts {defines="adjunct left-adjunct right-adjunct"}
 
 Another view on adjunctions, one which is productive when thinking about
 adjoint *endo*functors $L \dashv R$, is the concept of _adjuncts_. Any
@@ -199,19 +200,20 @@ these functions are inverse _equivalences_ between the hom-sets
 $\hom(La,b) \cong \hom(a,Rb)$.
 
 ```agda
-  L-R-adjunct : ∀ {a b} → is-right-inverse (R-adjunct {a} {b}) L-adjunct
-  L-R-adjunct f =
-    R.₁ (adj.ε _ D.∘ L.₁ f) C.∘ adj.η _        ≡⟨ R.pushl refl ⟩
-    R.₁ (adj.ε _) C.∘ R.₁ (L.₁ f) C.∘ adj.η _  ≡˘⟨ C.refl⟩∘⟨ adj.unit.is-natural _ _ _ ⟩
-    R.₁ (adj.ε _) C.∘ adj.η _ C.∘ f            ≡⟨ C.cancell adj.zag ⟩
-    f                                          ∎
+  abstract
+    L-R-adjunct : ∀ {a b} → is-right-inverse (R-adjunct {a} {b}) L-adjunct
+    L-R-adjunct f =
+      R.₁ (adj.ε _ D.∘ L.₁ f) C.∘ adj.η _        ≡⟨ R.pushl refl ⟩
+      R.₁ (adj.ε _) C.∘ R.₁ (L.₁ f) C.∘ adj.η _  ≡˘⟨ C.refl⟩∘⟨ adj.unit.is-natural _ _ _ ⟩
+      R.₁ (adj.ε _) C.∘ adj.η _ C.∘ f            ≡⟨ C.cancell adj.zag ⟩
+      f                                          ∎
 
-  R-L-adjunct : ∀ {a b} → is-left-inverse (R-adjunct {a} {b}) L-adjunct
-  R-L-adjunct f =
-    adj.ε _ D.∘ L.₁ (R.₁ f C.∘ adj.η _)       ≡⟨ D.refl⟩∘⟨ L.F-∘ _ _ ⟩
-    adj.ε _ D.∘ L.₁ (R.₁ f) D.∘ L.₁ (adj.η _) ≡⟨ D.extendl (adj.counit.is-natural _ _ _) ⟩
-    f D.∘ adj.ε _ D.∘ L.₁ (adj.η _)           ≡⟨ D.elimr adj.zig ⟩
-    f                                         ∎
+    R-L-adjunct : ∀ {a b} → is-left-inverse (R-adjunct {a} {b}) L-adjunct
+    R-L-adjunct f =
+      adj.ε _ D.∘ L.₁ (R.₁ f C.∘ adj.η _)       ≡⟨ D.refl⟩∘⟨ L.F-∘ _ _ ⟩
+      adj.ε _ D.∘ L.₁ (R.₁ f) D.∘ L.₁ (adj.η _) ≡⟨ D.extendl (adj.counit.is-natural _ _ _) ⟩
+      f D.∘ adj.ε _ D.∘ L.₁ (adj.η _)           ≡⟨ D.elimr adj.zig ⟩
+      f                                         ∎
 
   L-adjunct-is-equiv : ∀ {a b} → is-equiv (L-adjunct {a} {b})
   L-adjunct-is-equiv = is-iso→is-equiv

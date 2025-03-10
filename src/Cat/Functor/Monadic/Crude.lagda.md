@@ -38,9 +38,9 @@ private
   module C = C-r C
   module D = C-r D
   module UF = F-r (U F∘ F)
-  module T = Monad (Adjunction→Monad F⊣U)
+  module T = Monad-on (Adjunction→Monad F⊣U)
 
-  T : Monad C
+  T : Monad-on _
   T = Adjunction→Monad F⊣U
   C^T : Precategory _ _
   C^T = Eilenberg-Moore T
@@ -54,7 +54,7 @@ open Total-hom
 ```
 -->
 
-# Crude monadicity
+# Crude monadicity {defines="crude-monadicity-theorem"}
 
 We present a refinement of the conditions laid out in [Beck's
 coequaliser] for when an adjunction $F \dashv G$ is [monadic]: The

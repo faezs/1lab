@@ -7,7 +7,6 @@ open import 1Lab.HIT.Truncation
 open import 1Lab.HLevel.Closure
 open import 1Lab.Reflection
 open import 1Lab.Type.Sigma
-open import 1Lab.Resizing
 open import 1Lab.Type.Pi
 open import 1Lab.HLevel
 open import 1Lab.Equiv
@@ -150,20 +149,6 @@ instance
   Extensional-Π'' ⦃ sb ⦄ .reflᵉ f = reflᵉ sb f
   Extensional-Π'' ⦃ sb ⦄ .idsᵉ .to-path h i = sb .idsᵉ .to-path h i
   Extensional-Π'' ⦃ sb ⦄ .idsᵉ .to-path-over h i = sb .idsᵉ .to-path-over h i
-
-  Extensional-×
-    : ∀ {ℓ ℓ' ℓr ℓs} {A : Type ℓ} {B : Type ℓ'}
-    → ⦃ sa : Extensional A ℓr ⦄
-    → ⦃ sb : Extensional B ℓs ⦄
-    → Extensional (A × B) (ℓr ⊔ ℓs)
-  Extensional-× ⦃ sa ⦄ ⦃ sb ⦄ .Pathᵉ (x , y) (x' , y') = Pathᵉ sa x x' × Pathᵉ sb y y'
-  Extensional-× ⦃ sa ⦄ ⦃ sb ⦄ .reflᵉ (x , y) = reflᵉ sa x , reflᵉ sb y
-  Extensional-× ⦃ sa ⦄ ⦃ sb ⦄ .idsᵉ .to-path (p , q) = ap₂ _,_
-    (sa .idsᵉ .to-path p)
-    (sb .idsᵉ .to-path q)
-  Extensional-× ⦃ sa ⦄ ⦃ sb ⦄ .idsᵉ .to-path-over (p , q) = Σ-pathp
-    (sa .idsᵉ .to-path-over p)
-    (sb .idsᵉ .to-path-over q)
 
   -- Some non-confluent "reduction rules" for extensionality are those
   -- for functions from a type with a mapping-out property; here, we can
@@ -355,15 +340,15 @@ instance
     → ⦃ ea : Extensional A ℓr ⦄ → Extensional (Σ A λ x → ∥ B x ∥) ℓr
   Extensional-Σ-trunc ⦃ ea ⦄ = Σ-prop-extensional (λ x → hlevel 1) ea
 
-  Extensional-Σ-□
-    : ∀ {ℓ ℓ' ℓr} {A : Type ℓ} {B : A → Type ℓ'}
-    → ⦃ ea : Extensional A ℓr ⦄ → Extensional (Σ A λ x → □ (B x)) ℓr
-  Extensional-Σ-□ ⦃ ea ⦄ = Σ-prop-extensional (λ x → hlevel 1) ea
-
   Extensional-equiv
     : ∀ {ℓ ℓ' ℓr} {A : Type ℓ} {B : Type ℓ'}
     → ⦃ ea : Extensional (A → B) ℓr ⦄ → Extensional (A ≃ B) ℓr
-  Extensional-equiv ⦃ ea ⦄ = Σ-prop-extensional (λ x → is-equiv-is-prop _) ea
+  Extensional-equiv ⦃ ea ⦄ = Σ-prop-extensional (λ x → hlevel 1) ea
+
+  Extensional-emb
+    : ∀ {ℓ ℓ' ℓr} {A : Type ℓ} {B : Type ℓ'}
+    → ⦃ ea : Extensional (A → B) ℓr ⦄ → Extensional (A ↪ B) ℓr
+  Extensional-emb ⦃ ea ⦄ = Σ-prop-extensional (λ x → hlevel 1) ea
 
   Extensional-tr-map
     : ∀ {ℓ ℓ' ℓr} {A : Type ℓ} {B : Type ℓ'}

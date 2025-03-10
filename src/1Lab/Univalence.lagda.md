@@ -70,22 +70,22 @@ along an equivalence, to a total type.
 
 <!--
 ```agda
-private
-  variable
-    ℓ ℓ' : Level
+private variable
+  ℓ ℓ' ℓ'' ℓ''' : Level
+  A A₀ A₁ B B₀ B₁ C C₀ C₁ : Type ℓ
 
-  primitive
-    primGlue : (A : Type ℓ) {φ : I}
-             → (T : Partial φ (Type ℓ')) → (e : PartialP φ (λ o → T o ≃ A))
-             → Type ℓ'
+private primitive
+  primGlue : (A : Type ℓ) {φ : I}
+            → (T : Partial φ (Type ℓ')) → (e : PartialP φ (λ o → T o ≃ A))
+            → Type ℓ'
 
-    prim^glue : {A : Type ℓ} {φ : I}
+  prim^glue : {A : Type ℓ} {φ : I}
+            → {T : Partial φ (Type ℓ')} → {e : PartialP φ (λ o → T o ≃ A)}
+            → PartialP φ T → A → primGlue A T e
+
+  prim^unglue : {A : Type ℓ} {φ : I}
               → {T : Partial φ (Type ℓ')} → {e : PartialP φ (λ o → T o ≃ A)}
-              → PartialP φ T → A → primGlue A T e
-
-    prim^unglue : {A : Type ℓ} {φ : I}
-                → {T : Partial φ (Type ℓ')} → {e : PartialP φ (λ o → T o ≃ A)}
-                → primGlue A T e → A
+              → primGlue A T e → A
 
 open import Prim.HCompU
 open import 1Lab.Equiv.FromPath
@@ -125,22 +125,44 @@ defined type, we get a type which [[extends|extension type]] $T$.
 
 <!--
 ```agda
-Glue A Te = primGlue A (λ x → Te x .fst) (λ x → Te x .snd)
+Glue A {φ} Te = primGlue A tys eqvs module glue-sys where
+  tys : Partial φ (Type _)
+  tys (φ = i1) = Te 1=1 .fst
 
-unglue
+  eqvs : PartialP φ (λ .o → tys _ ≃ A)
+  eqvs (φ = i1) = Te 1=1 .snd
+
+unattach
   : {A : Type ℓ} (φ : I) {T : Partial φ (Type ℓ')}
     {e : PartialP φ (λ o → T o ≃ A)}
   → primGlue A T e → A
-unglue φ = prim^unglue {φ = φ}
+unattach φ = prim^unglue {φ = φ}
 
-glue-inc
-  : {A : Type ℓ} (φ : I)
-  → {Tf : Partial φ (Σ[ B ∈ Type ℓ' ] B ≃ A)}
-  → (p : PartialP φ (λ { (φ = i1) → Tf 1=1 .fst }))
-  → A [ φ ↦ (λ { (φ = i1) → Tf 1=1 .snd .fst (p 1=1) }) ]
-  → Glue A Tf
-glue-inc φ p x = prim^glue {φ = φ} p (outS x)
+attach
+  : {A : Type ℓ} (φ : I) {T : Partial φ (Type ℓ')} {e : PartialP φ (λ o → T o ≃ A)}
+  → (p : PartialP φ T)
+  → A [ φ ↦ (λ o → e o .fst (p o)) ]
+  → primGlue A T e
+attach φ p x = prim^glue {φ = φ} p (outS x)
 
+-- Display of primGlue
+-- -------------------
+--
+-- We can't in general recover a pretty Glue application from an
+-- internal 'primGlue', since display forms can't do higher order
+-- matching.
+--
+-- But we can instead use a *named* system in the definition
+-- of important 'Glue's, and then match on this definition when trying
+-- to unapply 'primGlue'.
+--
+-- Since 'primGlue' is private, the only way to glue things is using the
+-- nice interface, so 'Glue's display nicely.
+
+{-# DISPLAY primGlue A (glue-sys.tys _ Te) (glue-sys.eqvs _ Te) = Glue A Te #-}
+
+{-# DISPLAY prim^unglue {l} {l'} {A} {φ} {t} {e} x = unattach {l} {l'} {A} φ {t} {e} x #-}
+{-# DISPLAY prim^glue {_} {_} {_} {φ} {_} {_} x y = attach φ x y #-}
 ```
 -->
 
@@ -221,12 +243,38 @@ the _line_ with endpoints $A$ and $B$ as an open cube to be filled. A
 filler for this line is exactly a path $A \equiv B$. Since `Glue`{.Agda}
 fills open boxes of types using equivalences, this path exists!
 
+<!--
 ```agda
-ua : {A B : Type ℓ} → A ≃ B → A ≡ B
-ua {A = A} {B} eqv i = Glue B λ { (i = i0) → A , eqv
-                                ; (i = i1) → B , _ , id-equiv
-                                }
+private module _ where private
 ```
+-->
+
+```agda
+  ua : {A B : Type ℓ} → A ≃ B → A ≡ B
+  ua {A = A} {B} eqv i = Glue B λ where
+    (i = i0) → A , eqv
+    (i = i1) → B , _ , id-equiv
+```
+
+<!--
+```agda
+-- We use two named systems for the definition of 'ua' so that we can
+-- make the Glue display away
+
+ua : {A B : Type ℓ} → A ≃ B → A ≡ B
+ua {A = A} {B} eqv i = primGlue B tys eqvs module ua-sys where
+  tys : Partial (∂ i) (Type _)
+  tys (i = i0) = A
+  tys (i = i1) = B
+
+  eqvs : PartialP (∂ i) (λ .o → tys o ≃ B)
+  eqvs (i = i0) = eqv
+  eqvs (i = i1) = id≃
+
+-- see "Display of primGlue" above
+{-# DISPLAY primGlue _ (ua-sys.tys e i) (ua-sys.eqvs _ _) = ua e i #-}
+```
+-->
 
 Semantically, the explanation of `ua`{.Agda} as completing a partial
 line is sufficient. But we can also ask ourselves: Why does this
@@ -307,7 +355,7 @@ i` (varying over an interval variable `i`), then we have an element of
 
 ```agda
 ua-unglue : ∀ {A B : Type ℓ} (e : A ≃ B) (i : I) (x : ua e i) → B
-ua-unglue e i x = unglue (i ∨ ~ i) x
+ua-unglue e i x = unattach (∂ i) x
 ```
 
 We can factor the interval variable out, to get a type in terms of
@@ -334,13 +382,11 @@ $y$ where these are defined.
 ua-glue : ∀ {A B : Type ℓ} (e : A ≃ B) (i : I)
             (x : Partial (~ i) A)
             (y : B [ _ ↦ (λ { (i = i0) → e .fst (x 1=1) }) ])
-          → ua e i [ _ ↦ (λ { (i = i0) → x 1=1
-                            ; (i = i1) → outS y
-                            }) ]
-ua-glue e i x y = inS (prim^glue {φ = i ∨ ~ i}
-                                 (λ { (i = i0) → x 1=1
-                                    ; (i = i1) → outS y })
-                                 (outS y))
+          → ua e i
+ua-glue e i x y = prim^glue {φ = i ∨ ~ i}
+  (λ { (i = i0) → x 1=1
+     ; (i = i1) → outS y })
+  (outS y)
 ```
 
 Observe that, since $y$ is partially in the image of $x$, this
@@ -352,7 +398,7 @@ promised map between dependent paths over `ua`{.Agda} and paths in B.
 path→ua-pathp : ∀ {A B : Type ℓ} (e : A ≃ B) {x : A} {y : B}
               → e .fst x ≡ y
               → PathP (λ i → ua e i) x y
-path→ua-pathp e {x = x} p i = outS (ua-glue e i (λ { (i = i0) → x }) (inS (p i)))
+path→ua-pathp e {x = x} p i = ua-glue e i (λ { (i = i0) → x }) (inS (p i))
 ```
 
 The "pathp to path" versions of the above lemmas are definitionally
@@ -487,7 +533,7 @@ Equiv-is-contr : ∀ {ℓ} (A : Type ℓ) → is-contr (Σ[ B ∈ Type ℓ ] A �
 Equiv-is-contr A .centre            = A , _ , id-equiv
 Equiv-is-contr A .paths (B , A≃B) i = ua A≃B i , p i , q i where
   p : PathP (λ i → A → ua A≃B i) id (A≃B .fst)
-  p i x = outS (ua-glue A≃B i (λ { (i = i0) → x }) (inS (A≃B .fst x)))
+  p i x = ua-glue A≃B i (λ { (i = i0) → x }) (inS (A≃B .fst x))
 
   q : PathP (λ i → is-equiv (p i)) id-equiv (A≃B .snd)
   q = is-prop→pathp (λ i → is-equiv-is-prop (p i)) _ _
@@ -567,7 +613,7 @@ classifiers_].
 <!--
 ```agda
 private variable
-  A B E : Type ℓ
+  E : Type ℓ
 open is-iso
 ```
 -->
@@ -645,7 +691,7 @@ the notion of subobject classifier in a $(1,1)$-topos, since the maps
 with propositional fibres are precisely the injective maps.
 
 <!--
-```
+```agda
 _ = is-prop
 ```
 -->
@@ -695,9 +741,9 @@ module ua {ℓ} {A B : Type ℓ} = Equiv (ua {A = A} {B} , univalence⁻¹)
 unglue-is-equiv
   : ∀ {ℓ ℓ'} {A : Type ℓ} (φ : I)
   → {B : Partial φ (Σ (Type ℓ') (_≃ A))}
-  → is-equiv {A = Glue A B} (unglue φ)
+  → is-equiv {A = Glue A B} (unattach φ)
 unglue-is-equiv {A = A} φ {B = B} .is-eqv y = extend→is-contr ctr
-  where module _ (ψ : I) (par : Partial ψ (fibre (unglue φ) y)) where
+  where module _ (ψ : I) (par : Partial ψ (fibre (unattach φ) y)) where
     fib : .(p : IsOne φ)
         → fibre (B p .snd .fst) y
           [ (ψ ∧ φ) ↦ (λ { (ψ = i1) (φ = i1) → par 1=1 }) ]
@@ -708,7 +754,7 @@ unglue-is-equiv {A = A} φ {B = B} .is-eqv y = extend→is-contr ctr
     sys j (φ = i1) = outS (fib 1=1) .snd (~ j)
     sys j (ψ = i1) = par 1=1 .snd (~ j)
 
-    ctr = inS $ₛ glue-inc φ {Tf = B} (λ { (φ = i1) → outS (fib 1=1) .fst })
+    ctr = inS $ₛ attach φ (λ { (φ = i1) → outS (fib 1=1) .fst })
                   (inS (hcomp (φ ∨ ψ) sys))
                , (λ i → hfill (φ ∨ ψ) (~ i) sys)
 
@@ -738,23 +784,30 @@ sym-ua {A = A} {B = B} e i j = Glue B λ where
       id-equiv (((e e⁻¹) ∙e e) .snd) i
   (j = i1) → A , e
 
-ua→ : ∀ {ℓ ℓ'} {A₀ A₁ : Type ℓ} {e : A₀ ≃ A₁} {B : (i : I) → Type ℓ'}
-  {f₀ : A₀ → B i0} {f₁ : A₁ → B i1}
-  → ((a : A₀) → PathP B (f₀ a) (f₁ (e .fst a)))
-  → PathP (λ i → ua e i → B i) f₀ f₁
-ua→ {B = B} {f₀ = f₀} {f₁} h i a =
-  comp (λ j → B (i ∨ ~ j)) (∂ i) λ where
-    j (j = i0) → f₁ (unglue (∂ i) a)
-    j (i = i0) → h a (~ j)
-    j (i = i1) → f₁ a
+ua-inc : ∀ {ℓ} {A₀ A₁ : Type ℓ} (e : A₀ ≃ A₁) (x : A₀) (i : I) → ua e i
+ua-inc e x i = ua-glue e i (λ ._ → x) (inS (e .fst x))
 
-ua→2 : ∀ {ℓ ℓ' ℓ''} {A₀ A₁ : Type ℓ} {e₁ : A₀ ≃ A₁}
-  {B₀ B₁ : Type ℓ'} {e₂ : B₀ ≃ B₁}
-  {C : (i : I) → Type ℓ''}
-  {f₀ : A₀ → B₀ → C i0} {f₁ : A₁ → B₁ → C i1}
-  → (∀ a b → PathP C (f₀ a b) (f₁ (e₁ .fst a) (e₂ .fst b)))
-  → PathP (λ i → ua e₁ i → ua e₂ i → C i) f₀ f₁
-ua→2 h = ua→ (ua→ ∘ h)
+ua→
+  : ∀ {e : A₀ ≃ A₁} {B : (i : I) → ua e i → Type ℓ'} {f₀ f₁}
+  → (∀ a → PathP (λ i → B i (ua-inc e a i)) (f₀ a) (f₁ (e .fst a)))
+  → PathP (λ i → (x : ua e i) → B i x) f₀ f₁
+ua→ {e = e} {B} {f₀ = f₀} {f₁} h = (λ i a → comp (λ j → B (i ∨ ~ j) (x' i (~ j) a)) (∂ i) (sys i a)) module ua→ where
+  x' : ∀ i j (x : ua e i) → ua e (i ∨ j)
+  x' i j x = ua-glue e (i ∨ j) (λ { (i = i0) (j = i0) → x }) (inS (unattach (∂ i) x))
+
+  sys : ∀ i (a : ua e i) j → Partial (∂ i ∨ ~ j) (B (i ∨ ~ j) (x' i (~ j) a))
+  sys i a j (j = i0) = f₁ (unattach (∂ i) a)
+  sys i a j (i = i0) = h a (~ j)
+  sys i a j (i = i1) = f₁ a
+
+  filler : ∀ i j (a : ua e i) → B (i ∨ ~ j) (x' i (~ j) a)
+  filler i j a = fill (λ j → B (i ∨ ~ j) (x' i (~ j) a)) (∂ i) j (sys i a)
+
+ua→'
+  : ∀ {e : A₀ ≃ A₁} {B : (i : I) → ua e i → Type ℓ'} {f₀ : {a : A₀} → B i0 a} {f₁ : {a : A₁} → B i1 a}
+  → (∀ a → PathP (λ i → B i (ua-inc e a i)) (f₀ {a}) (f₁ {e .fst a}))
+  → PathP (λ i → {x : ua e i} → B i x) f₀ f₁
+ua→' {B = B} {f₀} {f₁} h i {x} = ua→ {B = B} {f₀ = λ x → f₀ {x}} {f₁ = λ x → f₁ {x}} h i x
 
 transport-∙ : ∀ {ℓ} {A B C : Type ℓ}
             → (p : A ≡ B) (q : B ≡ C) (u : A)
@@ -767,6 +820,5 @@ subst-∙ : ∀ {ℓ ℓ'} {A : Type ℓ} → (B : A → Type ℓ')
         → subst B (p ∙ q) u ≡ subst B q (subst B p u)
 subst-∙ B p q Bx i =
   transport (ap B (∙-filler' p q (~ i))) (transport-filler-ext (ap B p) i Bx)
-
 ```
 -->

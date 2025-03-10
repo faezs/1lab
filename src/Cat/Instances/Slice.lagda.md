@@ -410,6 +410,35 @@ product in $\cC/c.$
 ```
 -->
 
+<!--
+```agda
+  module _
+    {f g : /-Obj c} {p : /-Obj c} {π₁ : C/c.Hom p f} {π₂ : C/c.Hom p g}
+    (prod : is-product (Slice C c) π₁ π₂)
+    where
+    private module prod = is-product prod
+```
+-->
+
+We can go in the other direction as well, hence products in a slice
+category correspond precisely to pullbacks in the base category.
+
+```agda
+    open is-pullback
+
+    is-fibre-product→is-pullback : is-pullback C (π₁ .map) (f .map) (π₂ .map) (g .map)
+    is-fibre-product→is-pullback .square = π₁ .commutes ∙ sym (π₂ .commutes)
+    is-fibre-product→is-pullback .universal {P} {p₁} {p₂} square =
+      prod.⟨ record { map = p₁ ; commutes = refl }
+           , record { map = p₂ ; commutes = sym square } ⟩ .map
+    is-fibre-product→is-pullback .p₁∘universal = ap map prod.π₁∘⟨⟩
+    is-fibre-product→is-pullback .p₂∘universal = ap map prod.π₂∘⟨⟩
+    is-fibre-product→is-pullback .unique {lim' = lim'} fac₁ fac₂ = ap map $
+      prod.unique
+        {other = record { map = lim' ; commutes = ap (C._∘ lim') (sym (π₁ .commutes)) ∙ C.pullr fac₁}}
+        (ext fac₁) (ext fac₂)
+```
+
 While products and terminal objects in $\cC/X$ do not correspond to
 those in $\cC$, _pullbacks_ (and equalisers) are precisely equivalent. A
 square is a pullback in $\cC/X$ _precisely if_ its image in $\cC$,
@@ -751,7 +780,7 @@ adjunction between dependent sum and base change.
   Forget⊣constant-family : Forget/ ⊣ constant-family
   Forget⊣constant-family .unit .η X .map = ⟨ id , X .map ⟩
   Forget⊣constant-family .unit .η X .commutes = π₂∘⟨⟩
-  Forget⊣constant-family .unit .is-natural _ _ f = ext (unique₂
+  Forget⊣constant-family .unit .is-natural _ _ f = ext (⟨⟩-unique₂
     (pulll π₁∘⟨⟩ ∙ id-comm-sym)
     (pulll π₂∘⟨⟩ ∙ f .commutes)
     (pulll π₁∘⟨⟩ ∙ pullr π₁∘⟨⟩)
@@ -759,7 +788,7 @@ adjunction between dependent sum and base change.
   Forget⊣constant-family .counit .η x = π₁
   Forget⊣constant-family .counit .is-natural _ _ f = π₁∘⟨⟩
   Forget⊣constant-family .zig = π₁∘⟨⟩
-  Forget⊣constant-family .zag = ext (unique₂
+  Forget⊣constant-family .zag = ext (⟨⟩-unique₂
     (pulll π₁∘⟨⟩ ∙ pullr π₁∘⟨⟩)
     (pulll π₂∘⟨⟩ ∙ π₂∘⟨⟩)
     refl
@@ -767,5 +796,5 @@ adjunction between dependent sum and base change.
 ```
 
 <!--
-TODO(@ncfavier): this adjunction is comonadic!
+[TODO: Naïm, 24/06/2024] this adjunction is comonadic!
 -->
