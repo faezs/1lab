@@ -1,7 +1,10 @@
 <!--
 ```agda
+open import Cat.Instances.Localisation.Invertible
 open import Cat.Instances.Localisation
 open import Cat.Functor.WideSubcategory
+open import Cat.Functor.Equivalence
+open import Cat.Functor.Naturality
 open import Cat.Functor.Base
 open import Cat.Prelude
 
@@ -136,7 +139,101 @@ module _ {I : Type ℓ} {probe : I → ⌞ C ⌟}
   L-liso = Localisation (PSh ℓ C) local-isos
 ```
 
-The identification of `L-liso`{.Agda} with the topos of sheaves — the
-statement that arbitrarily small probes suffice to see the smooth
-structure — depends on the specific coverage and neighbourhood
-structures of the site, and remains future work.
+## Sites with trivial coverage
+
+For the paper's (7) — sheaves are the localisation of presheaves at
+the local isomorphisms — we can settle the case that actually applies
+to the simplicial and infinitesimal sites of this development, where
+the coverage is [[trivial|trivial-coverage]] and every presheaf is a
+sheaf. There, the right neighbourhood structure is the *discrete*
+one: a probe is its own only neighbourhood.
+
+```agda
+discrete-nbhd : ∀ (U : ⌞ C ⌟) → Neighbourhoods U
+discrete-nbhd U .Neighbourhoods.Nb = Lift ℓ ⊤
+discrete-nbhd U .Neighbourhoods.dom _ = U
+discrete-nbhd U .Neighbourhoods.incl _ = C.id
+discrete-nbhd U .Neighbourhoods.inhabited = inc (lift tt)
+discrete-nbhd U .Neighbourhoods.directed n₁ n₂ =
+  inc (lift tt , (C.id , C.idl _) , (C.id , C.idl _))
+```
+
+With discrete neighbourhoods, germs are just plots, so germ-wise
+equivalences are plot-wise equivalences, and those are invertible
+maps of presheaves.
+
+```agda
+module _ {U : ⌞ C ⌟} (X : ⌞ PSh ℓ C ⌟) where
+  germs-discrete : Germs (discrete-nbhd U) X → ∣ X .F₀ U ∣
+  germs-discrete = Quot-elim (λ _ → X .F₀ U .is-tr) (λ φ → φ)
+    λ φ φ' r → case r of λ where
+      n p → sym (happly (X .F-id) φ) ∙ p ∙ happly (X .F-id) φ'
+
+  germs-discrete-is-equiv : is-equiv germs-discrete
+  germs-discrete-is-equiv = is-iso→is-equiv (iso inc
+    (λ φ → refl)
+    (Quot-elim
+      (λ g → is-prop→is-set (squash (inc (germs-discrete g)) g))
+      (λ φ → refl)
+      λ φ φ' r → is-prop→pathp
+        (λ i → squash (inc (germs-discrete (quot r i))) (quot r i))
+        refl refl))
+```
+
+<!--
+```agda
+private
+  equiv→Sets-invertible
+    : ∀ {A B : Set ℓ} {f : ∣ A ∣ → ∣ B ∣}
+    → is-equiv f → Cat.Reasoning.is-invertible (Sets ℓ) {A} {B} f
+  equiv→Sets-invertible {f = f} eq = Cat.Reasoning.make-invertible (Sets ℓ)
+    (equiv→inverse eq)
+    (funext (equiv→counit eq))
+    (funext (equiv→unit eq))
+```
+-->
+
+```agda
+discrete-local-iso→invertible
+  : ∀ {X Y : ⌞ PSh ℓ C ⌟} (F : X => Y)
+  → is-local-iso {probe = λ U → U} discrete-nbhd F
+  → Cat.Reasoning.is-invertible (PSh ℓ C) F
+discrete-local-iso→invertible {X} {Y} F li =
+  invertible→invertibleⁿ F λ U → equiv→Sets-invertible (η-equiv U)
+  where
+  η-equiv : ∀ U → is-equiv (F .η U)
+  η-equiv U = subst is-equiv (funext λ φ → refl)
+    ((( _ , is-iso→is-equiv (iso (germs-discrete X)
+          (Quot-elim
+            (λ g → is-prop→is-set
+              (squash (inc (germs-discrete X g)) g))
+            (λ φ → refl)
+            λ φ φ' r → is-prop→pathp
+              (λ i → squash (inc (germs-discrete X (quot r i))) (quot r i))
+              refl refl)
+          (λ φ → refl)))
+      ∙e (germs-map (discrete-nbhd U) F , li U)
+      ∙e (germs-discrete Y , germs-discrete-is-equiv Y)) .snd)
+```
+
+The paper's (7), for trivial-coverage sites, is then the composite of
+three facts: every presheaf is a sheaf; the discrete local
+isomorphisms are invertible; and [[localising at
+isomorphisms|localisation-at-isomorphisms]] is inessential. The
+localisation functor is an isomorphism of precategories, so
+$m{Sh} = m{PSh} \simeq L^{m{liso}}m{PSh}$ on the nose.
+
+```agda
+Localise-discrete-is-precat-iso
+  : is-precat-iso (Localise (PSh ℓ C)
+      (local-isos {probe = λ U → U} discrete-nbhd))
+Localise-discrete-is-precat-iso = Localise-is-precat-iso _ _
+  λ F li → discrete-local-iso→invertible F li
+```
+
+What remains of (7) is exactly its analytic content: over the smooth
+site, the neighbourhood structures are the *shrinking* open
+neighbourhoods of a basepoint, germ-locality is strictly weaker than
+globality, and the identification of the localisation with the sheaf
+topos for the good-open-cover coverage is where the classical theory
+of $R^n$ enters.
