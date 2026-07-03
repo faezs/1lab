@@ -44,6 +44,7 @@ import Algebra.Ring.Grassmann
 import Algebra.Ring.Center
 import Cat.CartesianClosed.Free.Model
 import Cat.Instances.NegativeSpheres
+import Physics.Oscillator
 import Cat.Instances.SimplicialPresheaves.Cech
 import Cat.Instances.SimplicialSets.ActionGroupoid
 import Cat.Instances.SuperSmoothSets
@@ -68,7 +69,7 @@ open Functor
 module Physics where
 ```
 
-# Higher topos theory in physics
+# Higher topos theory in physics {defines="higher-topos-theory-in-physics"}
 
 This page maps the numbered diagrams and constructions of Urs
 Schreiber's encyclopedia survey *Higher Topos Theory in Physics*
@@ -505,6 +506,23 @@ fields" mean the same thing before and after compilation.
 _ = SetsModel.model.compile-cartesian
 _ = SetsModel.model.compile-closed
 _ = Cartesian-closed-functor
+```
+
+The heliostat aims; for a system that *moves*, see the [[harmonic
+oscillator|harmonic-oscillator]], which exercises every column built
+below: its compiled dynamics conserve energy and close their orbits
+*by theorem*, its force law is derived synthetically from the
+potential, its fermionic partner satisfies Pauli exclusion as ring
+algebra, and its parity symmetry is gauged with the homotopy
+quotient remembering the stabilizer of the origin.
+
+```agda
+_ = Physics.Oscillator.step
+_ = Physics.Oscillator.period-four
+_ = Physics.Oscillator.energy-conserved
+_ = Physics.Oscillator.force-from-potential.hooke
+_ = Physics.Oscillator.fermionic.modes-nilpotent
+_ = Physics.Oscillator.gauge-loops-differ
 ```
 
 ## Gauge transformations and simplicial shapes
