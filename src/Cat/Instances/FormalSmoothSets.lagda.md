@@ -58,7 +58,11 @@ probe $\bA^n \times \bD^k$ *is* the algebra
 $R[x_1, \dots, x_n][\epsilon_1]\cdots[\epsilon_k]$ — a [[polynomial
 ring|polynomial-ring]] with $k$ layers of [[dual
 numbers|dual-numbers]]. "Smooth" here means *polynomial*: the honest
-constructive content of coordinate manipulation.
+constructive content of coordinate manipulation. Classically, sheaves
+on this site (with all Weil algebras, and $C^\infty$-rings for the
+smooth column) form the *Cahiers topos* of Dubuc, the standard
+well-adapted model of synthetic differential geometry; what follows
+is its constructive core.
 
 ```agda
 data ThAff : Type ℓ where

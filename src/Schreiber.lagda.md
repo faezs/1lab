@@ -502,7 +502,10 @@ sheaves — the infinitesimal directions carry the trivial coverage
 either way); Weil algebras of higher order $\epsilon^{k+1} = 0$,
 $k \ge 2$ (we have all iterated first-order thickenings), and *super*
 sites ((17)–(21)), which await $\mathbb{Z}/2$-graded commutative
-algebra; the Dold–Kan
+algebra; the non-concrete classifiers of differential forms
+$\Omega^p_{\rm{dR}}$ and their Deligne refinements
+$\mathbf{B}^d\rm{U}(1)_{\rm{conn}}$, home of anomaly polynomials
+and gauge potentials ((12) ff., (39), (40)); the Dold–Kan
 correspondence ((29)–(31)); Eilenberg–MacLane spaces
 $\mathbf{B}^n A$ for $n \ge 2$, hence Eilenberg–MacLane spectra;
 simplicial *presheaves* and their local homotopy theory ((35)–(37)),
