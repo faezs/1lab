@@ -23,6 +23,7 @@ module Algebra.Ring.Kahler.Exterior {ℓ} (R : CRing ℓ) where
 ```agda
 private
   module CR = Cat.Reasoning (CRings ℓ)
+  module R = CRing-on (R .snd)
 
 open Algebra.Ring.Kahler R
 ```
@@ -160,3 +161,107 @@ definitional — it is exactly the `+ω`{.Agda} clause of the recursion.
   wedge-+ : ∀ a ω ω' → wedge a (ω +ω ω') ≡ wedge a ω +² wedge a ω'
   wedge-+ a ω ω' = refl
 ```
+
+## Algebraic lemmas for the exterior derivative
+
+A short packet of group- and module-theoretic facts about $\Omega^2$
+feeds directly into the module-law clauses of the exterior derivative
+below, plus additivity, the Leibniz rule, and unit-vanishing for
+`wedge`{.Agda} in its scalar slot — all three proved by induction on
+the $1$-form argument, reducing to the corresponding law of
+$\mathrm{d}{\wedge}\mathrm{d}$ at the generators.
+
+<!--
+```agda
+module _ {A : CRing ℓ} {φ : CR.Hom R A} where
+  private module A = CRing-on (A .snd)
+
+  +²-interchange
+    : ∀ (p q r s : Ω² A φ)
+    → (p +² q) +² (r +² s) ≡ (p +² r) +² (q +² s)
+  +²-interchange p q r s =
+    (p +² q) +² (r +² s)   ≡˘⟨ +²-assoc p q (r +² s) ⟩
+    p +² (q +² (r +² s))   ≡⟨ ap (p +²_) (+²-assoc q r s) ⟩
+    p +² ((q +² r) +² s)   ≡⟨ ap (λ e → p +² (e +² s)) (+²-comm q r) ⟩
+    p +² ((r +² q) +² s)   ≡˘⟨ ap (p +²_) (+²-assoc r q s) ⟩
+    p +² (r +² (q +² s))   ≡⟨ +²-assoc p r (q +² s) ⟩
+    (p +² r) +² (q +² s)   ∎
+
+  +²-inv-unique : ∀ (x y : Ω² A φ) → x +² y ≡ 0² → y ≡ -² x
+  +²-inv-unique x y p =
+    y                     ≡˘⟨ +²-idl y ⟩
+    0² +² y               ≡˘⟨ ap (_+² y) (+²-invl x) ⟩
+    ((-² x) +² x) +² y    ≡⟨ sym (+²-assoc (-² x) x y) ⟩
+    (-² x) +² (x +² y)    ≡⟨ ap ((-² x) +²_) p ⟩
+    (-² x) +² 0²          ≡⟨ +²-idr (-² x) ⟩
+    -² x                  ∎
+
+  neg-+² : ∀ (p q : Ω² A φ) → -² (p +² q) ≡ (-² p) +² (-² q)
+  neg-+² p q = sym (+²-inv-unique (p +² q) ((-² p) +² (-² q))
+    ( +²-interchange p q (-² p) (-² q)
+    ∙ ap₂ _+²_ (+²-invr p) (+²-invr q)
+    ∙ +²-idl 0² ))
+
+  ·²-negr : ∀ (a : ⌞ A ⌟) (x : Ω² A φ) → a ·² (-² x) ≡ -² (a ·² x)
+  ·²-negr a x = +²-inv-unique (a ·² x) (a ·² (-² x))
+    (sym (·²-distl a x (-² x)) ∙ ap (a ·²_) (+²-invr x) ∙ ·²-absorb a)
+
+  wedge-+l : ∀ a b ω → wedge (a A.+ b) ω ≡ wedge a ω +² wedge b ω
+  wedge-+l a b = Ω¹-elim-prop A φ
+    (λ ω → wedge (a A.+ b) ω ≡ wedge a ω +² wedge b ω)
+    (λ _ → squash² _ _)
+    (λ c → d∧d-+l a b c)
+    (λ c ω ih → ap (c ·²_) ih ∙ ·²-distl c (wedge a ω) (wedge b ω))
+    (λ ω ihω ω' ihω' →
+        ap₂ _+²_ ihω ihω'
+      ∙ +²-interchange (wedge a ω) (wedge b ω) (wedge a ω') (wedge b ω'))
+    (sym (+²-idl 0²))
+    (λ ω ih →
+        ap -²_ ih
+      ∙ neg-+² (wedge a ω) (wedge b ω))
+
+  wedge-leib : ∀ a b ω → wedge (a A.* b) ω ≡ (a ·² wedge b ω) +² (b ·² wedge a ω)
+  wedge-leib a b = Ω¹-elim-prop A φ
+    (λ ω → wedge (a A.* b) ω ≡ (a ·² wedge b ω) +² (b ·² wedge a ω))
+    (λ _ → squash² _ _)
+    (λ c → d∧d-leibl a b c)
+    (λ c ω ih →
+        ap (c ·²_) ih
+      ∙ ·²-distl c (a ·² wedge b ω) (b ·² wedge a ω)
+      ∙ ap₂ _+²_ (·²-assoc c a (wedge b ω) ∙ ap (_·² wedge b ω) (A.*-commutes {c} {a}) ∙ sym (·²-assoc a c (wedge b ω)))
+                 (·²-assoc c b (wedge a ω) ∙ ap (_·² wedge a ω) (A.*-commutes {c} {b}) ∙ sym (·²-assoc b c (wedge a ω))))
+    (λ ω ihω ω' ihω' →
+        ap₂ _+²_ ihω ihω'
+      ∙ +²-interchange (a ·² wedge b ω) (b ·² wedge a ω) (a ·² wedge b ω') (b ·² wedge a ω')
+      ∙ ap₂ _+²_ (sym (·²-distl a (wedge b ω) (wedge b ω'))) (sym (·²-distl b (wedge a ω) (wedge a ω'))))
+    ( sym (+²-idl 0²)
+    ∙ ap₂ _+²_ (sym (·²-absorb a)) (sym (·²-absorb b)))
+    (λ ω ih →
+        ap -²_ ih
+      ∙ neg-+² (a ·² wedge b ω) (b ·² wedge a ω)
+      ∙ ap₂ _+²_ (sym (·²-negr a (wedge b ω))) (sym (·²-negr b (wedge a ω))))
+
+  wedge-one : ∀ ω → wedge A.1r ω ≡ 0² {A = A} {φ}
+  wedge-one = Ω¹-elim-prop A φ
+    (λ ω → wedge A.1r ω ≡ 0²)
+    (λ _ → squash² _ _)
+    one-base
+    (λ c ω ih → ap (c ·²_) ih ∙ ·²-absorb c)
+    (λ ω ihω ω' ihω' → ap₂ _+²_ ihω ihω' ∙ +²-idl 0²)
+    refl
+    (λ ω ih → ap -²_ ih ∙ neg-+²-zero)
+    where
+    one-image : φ .∫Hom.fst R.1r ≡ A.1r
+    one-image = is-ring-hom.pres-id (φ .∫Hom.snd)
+
+    one-base : ∀ b → A.1r d∧d b ≡ 0²
+    one-base b =
+      A.1r d∧d b               ≡˘⟨ (λ i → one-image i d∧d b) ⟩
+      φ .∫Hom.fst R.1r d∧d b   ≡⟨ d∧d-constl R.1r b ⟩
+      0²                       ∎
+
+    neg-+²-zero : -² 0² {A = A} {φ} ≡ 0²
+    neg-+²-zero = sym (+²-inv-unique 0² 0² (+²-idl 0²))
+```
+-->
+
