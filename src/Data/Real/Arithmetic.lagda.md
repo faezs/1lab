@@ -321,3 +321,100 @@ archimedean a b ε 0<ε = ∥-∥-map bound (bound-above ((b +ℚ (-ℚ a)) /ℚ
           ((-ℚ u) +ℚ (-ℚ v)) +ℚ (u +ℚ v)           ∎)
 ```
 -->
+
+## Approximation within $\varepsilon$
+
+The archimedean property lets us find, for a real number $x$ and any
+positive rational slack $\varepsilon$, rationals $u$ in the lower cut
+and $v$ in the upper cut with $v - u < \varepsilon$: a finite search
+along an arithmetic progression, climbing from a starting point in the
+lower cut in steps of size $\tfrac{1}{4}\varepsilon$ until locatedness
+forces the upper cut to be hit.
+
+<!--
+```agda
+private module cut (x : ℝ) = is-cut (x .has-is-cut)
+```
+-->
+
+```agda
+approx
+  : (x : ℝ) (ε : Ratio) → 0 < ε
+  → ∥ Σ Ratio (λ u → Σ Ratio (λ v →
+      ∣ x .lower u ∣ × ∣ x .upper v ∣ × ((v +ℚ (-ℚ u)) < ε))) ∥
+```
+
+<!--
+```agda
+private abstract
+  nℚ-zero : nℚ zero ≡ 0
+  nℚ-zero = refl
+
+  ring-lemma-climb
+    : ∀ u h n → (u +ℚ h) +ℚ nℚ n *ℚ h ≡ u +ℚ nℚ (suc n) *ℚ h
+  ring-lemma-climb u h n =
+    (u +ℚ h) +ℚ nℚ n *ℚ h      ≡˘⟨ +ℚ-associative u h (nℚ n *ℚ h) ⟩
+    u +ℚ (h +ℚ nℚ n *ℚ h)      ≡˘⟨ ap (λ e → u +ℚ (e +ℚ nℚ n *ℚ h)) (*ℚ-idl h) ⟩
+    u +ℚ (1 *ℚ h +ℚ nℚ n *ℚ h) ≡˘⟨ ap (u +ℚ_) (*ℚ-distribr h 1 (nℚ n)) ⟩
+    u +ℚ (1 +ℚ nℚ n) *ℚ h      ≡˘⟨ ap (λ e → u +ℚ e *ℚ h) (nℚ-suc n) ⟩
+    u +ℚ nℚ (suc n) *ℚ h       ∎
+
+  gap-lemma
+    : ∀ u h → ((u +ℚ h) +ℚ h) +ℚ (-ℚ u) ≡ h +ℚ h
+  gap-lemma u h = +ℚ-cancelr u
+    ( (((u +ℚ h) +ℚ h) +ℚ (-ℚ u)) +ℚ u ≡⟨ sym (+ℚ-associative ((u +ℚ h) +ℚ h) (-ℚ u) u) ⟩
+      ((u +ℚ h) +ℚ h) +ℚ ((-ℚ u) +ℚ u) ≡⟨ ap (((u +ℚ h) +ℚ h) +ℚ_) (+ℚ-invl u) ⟩
+      ((u +ℚ h) +ℚ h) +ℚ 0             ≡⟨ +ℚ-idr _ ⟩
+      (u +ℚ h) +ℚ h                    ≡˘⟨ +ℚ-associative u h h ⟩
+      u +ℚ (h +ℚ h)                    ≡⟨ +ℚ-commutative u (h +ℚ h) ⟩
+      (h +ℚ h) +ℚ u ∎)
+
+approx x ε 0<ε = do
+  (a , la) ← cut.lower-inhab x
+  (b , ub) ← cut.upper-inhab x
+  (n , bnd) ← archimedean a b h h-pos
+  climb b ub n a la bnd
+  where
+  h : Ratio
+  h = half (half ε)
+
+  h-pos : 0 < h
+  h-pos = half-pos (half-pos 0<ε)
+
+  hh<ε : h +ℚ h < ε
+  hh<ε = transport (λ i → half-sum (half ε) (~ i) < ε) (half-lt 0<ε)
+
+  climb
+    : ∀ b → ∣ x .upper b ∣
+    → ∀ n u → ∣ x .lower u ∣ → b < u +ℚ nℚ n *ℚ h
+    → ∥ Σ Ratio (λ u' → Σ Ratio (λ v →
+        ∣ x .lower u' ∣ × ∣ x .upper v ∣ × ((v +ℚ (-ℚ u')) < ε))) ∥
+  climb b ub zero u lu bnd = absurd (<-irrefl refl (<-trans u<b b<u))
+    where
+    zero-lemma : u +ℚ nℚ zero *ℚ h ≡ u
+    zero-lemma = ap (u +ℚ_) (ap (_*ℚ h) nℚ-zero ∙ *ℚ-zerol h) ∙ +ℚ-idr u
+
+    b<u : b < u
+    b<u = transport (λ i → b < zero-lemma i) bnd
+
+    u<b : u < b
+    u<b = lower<upper x lu ub
+  climb b ub (suc m) u lu bnd = ∥-∥-rec squash cases (cut.cut-located x {u +ℚ h} {(u +ℚ h) +ℚ h} step-<)
+    where
+    step-< : u +ℚ h < (u +ℚ h) +ℚ h
+    step-< = transport (λ i → +ℚ-idr (u +ℚ h) i < (u +ℚ h) +ℚ h) (+ℚ-preserves-<l (u +ℚ h) h-pos)
+
+    cases
+      : ∣ x .lower (u +ℚ h) ∣ ⊎ ∣ x .upper ((u +ℚ h) +ℚ h) ∣
+      → ∥ Σ Ratio (λ u' → Σ Ratio (λ v →
+          ∣ x .lower u' ∣ × ∣ x .upper v ∣ × ((v +ℚ (-ℚ u')) < ε))) ∥
+    cases (inl l') = climb b ub m (u +ℚ h) l' bnd'
+      where
+      bnd' : b < (u +ℚ h) +ℚ nℚ m *ℚ h
+      bnd' = transport (λ i → b < ring-lemma-climb u h m (~ i)) bnd
+    cases (inr u') = inc (u , (u +ℚ h) +ℚ h , lu , u' , gap)
+      where
+      gap : ((u +ℚ h) +ℚ h) +ℚ (-ℚ u) < ε
+      gap = subst (_< ε) (sym (gap-lemma u h)) hh<ε
+```
+-->
