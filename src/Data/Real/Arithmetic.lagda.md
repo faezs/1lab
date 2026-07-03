@@ -37,8 +37,8 @@ locatedness of the sum of two cuts.
 
 The 1Lab's interface to `Ratio`{.Agda} does not (yet) expose
 strict-order arithmetic, halving, or the archimedean property. We
-rebuild the small toolkit of [[dedekind-real|Data.Real.Base]] here
-privately, since it is not exported from that module.
+rebuild the private toolkit of the [[Dedekind reals|dedekind-real]]
+module here, since it is not exported from there.
 
 <!--
 ```agda

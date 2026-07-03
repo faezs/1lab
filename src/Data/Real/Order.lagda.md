@@ -70,11 +70,6 @@ private abstract
   ... | yes _ = q
   ... | no _  = p
 
-  maxℚ-choice : ∀ {x y} → (maxℚ x y ≡ x) ⊎ (maxℚ x y ≡ y)
-  maxℚ-choice {x} {y} with holds? (x ≤ y)
-  ... | yes _ = inr refl
-  ... | no _  = inl refl
-
   minℚ-≤l : ∀ {x y} → minℚ x y ≤ x
   minℚ-≤l {x} {y} with holds? (x ≤ y)
   ... | yes _ = ≤-refl
@@ -89,11 +84,6 @@ private abstract
   minℚ-glb {x} {y} {z} p q with holds? (x ≤ y)
   ... | yes _ = p
   ... | no _  = q
-
-  minℚ-choice : ∀ {x y} → (minℚ x y ≡ x) ⊎ (minℚ x y ≡ y)
-  minℚ-choice {x} {y} with holds? (x ≤ y)
-  ... | yes _ = inl refl
-  ... | no _  = inr refl
 ```
 -->
 
