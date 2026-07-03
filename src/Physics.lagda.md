@@ -48,6 +48,7 @@ import Cat.Instances.Singular
 import Algebra.ChainComplex.DoldKan
 import Cat.Site.Sheafification.Lex
 import Cat.Site.Sheafification.Locality
+import Cat.Site.Sheafification.Plus
 import Physics.Oscillator
 import Physics.Maxwell
 import Physics.Newton
@@ -658,6 +659,8 @@ _ = Algebra.ChainComplex.DoldKan.H[_,_]⟨_⟩
 _ = Cat.Site.Sheafification.Lex.Sheafification-pres-⊤
 _ = Cat.Site.Sheafification.Locality.locally-equal→inc-path
 _ = Cat.Site.Sheafification.Locality.sheaf-detects
+_ = Cat.Site.Sheafification.Plus.loc-trans
+_ = Cat.Site.Sheafification.Plus.A₁-is-separated
 ```
 
 On the homotopy-theoretic side of the dictionary, the delooping of a
@@ -727,12 +730,16 @@ the smooth-site instance of (7) (localisation over the
 good-open-cover coverage, with shrinking-neighbourhood germs); the
 pullback half of left exactness for the higher-inductive
 sheafification (terminal-preservation is proven for arbitrary
-coverages, and the path-space problem for the unit is now
-half-solved in `Cat.Site.Sheafification.Locality`{.Agda}: locally
-equal sections have equal units, and every sheaf detects local
-equality — what remains is the converse encode, requiring the
-formalised two-step plus-construction, the last gap between
-`Sh[_,_]`{.Agda} and `Topos`{.Agda}); Weil algebras beyond
+coverages, and the path-space problem for the unit is
+solved up to gluing: `Cat.Site.Sheafification.Plus`{.Agda} builds
+saturated local equality as a proposition-valued HIT — making
+transitivity and restriction-stability theorems — and delivers the
+first half of the plus-construction: the effective separated
+quotient $A_1$, proven separated over any coverage; locally equal
+sections have equal units, and every sheaf detects local equality.
+What remains is the gluing half — for separated $B$, patches modulo
+agreement form a sheaf receiving $B$ injectively — the last gap
+between `Sh[_,_]`{.Agda} and `Topos`{.Agda}); Weil algebras beyond
 second order (the second-order algebra, its jet derivative, and
 Newton's law as a theorem now exist — see
 `Physics.Newton`{.Agda}) and coverages on the thickened site; the odd-plot
