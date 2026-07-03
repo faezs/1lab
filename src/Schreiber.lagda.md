@@ -39,8 +39,14 @@ open import Algebra.ChainComplex
 
 open import Topoi.Base
 
+import Algebra.ChainComplex.Moore
 import Algebra.Ring.Grassmann
+import Algebra.Ring.Center
 import Cat.CartesianClosed.Free.Model
+import Cat.Instances.NegativeSpheres
+import Cat.Instances.SimplicialPresheaves.Cech
+import Cat.Instances.SimplicialSets.ActionGroupoid
+import Cat.Instances.SuperSmoothSets
 import Cat.Instances.FormalSmoothSets.DeRham
 import Cat.Instances.Presheaf.Germs
 import Cat.Instances.SimplicialPresheaves
@@ -323,6 +329,25 @@ _ = Algebra.Ring.Grassmann.σ-parity
 _ = Algebra.Ring.Grassmann.σ-σ
 ```
 
+The Grassmann algebra carries its full universal property — a map
+out of it is a map on the base landing in the [[centre|
+centre-of-a-ring]] of the target, together with anticommuting
+square-zero images for the odd generators — and with it the paper's
+super site ((19)–(20)) assembles: probes are polynomial affine
+spaces with anticommuting directions, morphisms are
+parity-respecting algebra maps under the base, the super point
+$\bA^{0|0}$ is terminal by composing the two universal properties
+through the centre, and [[super smooth sets|super-smooth-sets]] are
+the presheaves on this site, cohesive as before.
+
+```agda
+_ = Algebra.Ring.Grassmann.grassmann-extend
+_ = Algebra.Ring.Center.Centre
+_ = Cat.Instances.SuperSmoothSets.SupCartSp
+_ = Cat.Instances.SuperSmoothSets.pt-terminal
+_ = Cat.Instances.SuperSmoothSets.SupSmthSet
+```
+
 Finally, on the last column of the table: stable homotopy theory. A
 [[prespectrum]] is a tower of ever-higher deloopings
 $E_0 \to \Omega E_1 \to \Omega^2 E_2 \to \cdots$, an
@@ -551,6 +576,31 @@ _ = Cat.Instances.SimplicialPresheaves.plots-Δ²-BM
 _ = Prespectrum-over
 ```
 
+The bridge from the gauge column to the linear one — the direction
+of the Dold–Kan correspondence (30) that physics uses, from
+simplicial data to a BRST-style complex — is the [[Moore
+complex|moore-complex]] of normalized chains of a simplicial abelian
+group, where normalization makes $\partial \partial = 0$ a single
+simplicial identity. The [[Čech object|cech-object]] of a map of
+presheaves packages descent data along an atlas, augmented over its
+base ((38)); the [[action groupoid|action-groupoid]] realises the
+homotopy quotient of a gauge action, with configurations as vertices
+and gauge transformations as edges; and the probes of the stable
+column form the site of [[negative-dimensional
+spheres|negative-sphere]], whose presheaves are families pointed
+over a common base — parameterized spectra before stabilisation.
+
+```agda
+_ = Algebra.ChainComplex.Moore.Moore
+_ = Cat.Instances.SimplicialPresheaves.Cech.Čech
+_ = Cat.Instances.SimplicialPresheaves.Cech.cech-aug
+_ = Cat.Instances.SimplicialSets.ActionGroupoid.Action-groupoid
+_ = Cat.Instances.SimplicialSets.ActionGroupoid.homotopy-quotient
+_ = Cat.Instances.SimplicialSets.ActionGroupoid.quotient-edges
+_ = Cat.Instances.NegativeSpheres.Lin
+_ = Cat.Instances.NegativeSpheres.base-section
+```
+
 On the homotopy-theoretic side of the dictionary, the delooping of a
 group exists as a higher inductive type with $G \simeq \Omega
 \mathbf{B} G$ — the paper's (34) in the case $n = 1$ — and first
@@ -569,16 +619,18 @@ the smooth-site instance of (7) (localisation over the
 good-open-cover coverage, with shrinking-neighbourhood germs); the
 proof that the higher-inductive sheafification is left exact
 (connecting `Sh[_,_]`{.Agda} to `Topos`{.Agda}); Weil algebras of
-higher order and coverages on the thickened site; the *assembly* of
-the super site from the Grassmann and polynomial algebras, and the
-odd-plot description of spinor fields ((19)–(21)); higher de Rham
-forms $\Omega^p$, the de Rham differential as a map of smooth sets,
-and Deligne/connection refinements ((39), (40)); the Dold–Kan
-correspondence (30) and Eilenberg–MacLane spaces $\mathbf{B}^n A$
-for $n \ge 2$ (31); closure of Kan complexes under mapping spaces
-and the simplicial localisations $L^{\rm{heq}}, L^{\rm{lheq}}$
-((32)–(36)), the genuinely $\infty$-categorical part; Čech nerves
-and cofibrant resolutions ((38), full (39)); the orbifold site and
-homotopy quotients; and the site $\rm{Lin}$ with its stable
-localisation presenting the tangent topos (41). Each
-is a well-posed project over the infrastructure assembled above.
+higher order and coverages on the thickened site; the odd-plot
+description of spinor fields (21) and super-thickenings combining
+the fermionic and infinitesimal sites; higher de Rham forms
+$\Omega^p$, the de Rham differential as a map of smooth sets, and
+Deligne/connection refinements ((39), (40)); the inverse half of the
+Dold–Kan correspondence (30) — reassembling a simplicial abelian
+group from its normalized chains — and Eilenberg–MacLane spaces
+$\mathbf{B}^n A$ for $n \ge 2$ (31); closure of Kan complexes under
+mapping spaces and the simplicial localisations $L^{\rm{heq}},
+L^{\rm{lheq}}$ ((32)–(36)), the genuinely $\infty$-categorical part;
+the local weak equivalence of the Čech augmentation over covers,
+giving cofibrant resolutions (full (39)); the orbi-singular site of
+(28); and the stable localisation of presheaves on $\rm{Lin}$
+presenting the tangent topos (41). Each is a well-posed project over
+the infrastructure assembled above.
