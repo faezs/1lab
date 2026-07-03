@@ -200,3 +200,89 @@ topos of super smooth sets (20) assemble from this module and the
 polynomial ring exactly as the thickened site did from the dual
 numbers; the assembly, and the odd-plot description of spinor fields
 (21), remain future work.
+
+## The universal property
+
+An algebra map out of the Grassmann algebra into any ring $C$ is
+exactly: a ring map on the constants landing *centrally* in $C$,
+together with images for the generators that anticommute and square
+to zero. Centrality of the constants is forced by the relation
+`con-comm`{.Agda}, which quantifies over every element.
+
+```agda
+module _ (C : Ring ℓ)
+         (ψf : ⌞ R ⌟ → ⌞ C ⌟)
+         (ψh : is-ring-hom (R .snd .CRing-on.has-ring-on) (C .snd) ψf)
+         (central : ∀ a y →
+           C .snd .Ring-on._*_ (ψf a) y ≡ C .snd .Ring-on._*_ y (ψf a))
+         (c : Fin q → ⌞ C ⌟)
+         (anti : ∀ i j →
+           C .snd .Ring-on._*_ (c i) (c j)
+           ≡ Ring-on.-_ (C .snd) (C .snd .Ring-on._*_ (c j) (c i)))
+         (sq : ∀ i →
+           C .snd .Ring-on._*_ (c i) (c i) ≡ Ring-on.0r (C .snd))
+  where
+
+  private
+    module C = Ring-on (C .snd)
+    module ψ = is-ring-hom ψh
+
+  grassmann-extend : Grassmann → ⌞ C ⌟
+  grassmann-extend (θ i) = c i
+  grassmann-extend (con a) = ψf a
+  grassmann-extend (x +g y) = grassmann-extend x C.+ grassmann-extend y
+  grassmann-extend (x *g y) = grassmann-extend x C.* grassmann-extend y
+  grassmann-extend (negg x) = C.- grassmann-extend x
+
+  grassmann-extend (+g-idl x i) =
+    (ap (C._+ grassmann-extend x) ψ.pres-0 ∙ C.+-idl) i
+  grassmann-extend (+g-invr x i) =
+    (C.+-invr {grassmann-extend x} ∙ sym ψ.pres-0) i
+  grassmann-extend (+g-assoc x y z i) =
+    C.+-associative
+      {grassmann-extend x} {grassmann-extend y} {grassmann-extend z} i
+  grassmann-extend (+g-comm x y i) =
+    C.+-commutes {grassmann-extend x} {grassmann-extend y} i
+  grassmann-extend (*g-idl x i) =
+    (ap (C._* grassmann-extend x) ψ.pres-id ∙ C.*-idl) i
+  grassmann-extend (*g-idr x i) =
+    (ap (grassmann-extend x C.*_) ψ.pres-id ∙ C.*-idr) i
+  grassmann-extend (*g-assoc x y z i) =
+    C.*-associative
+      {grassmann-extend x} {grassmann-extend y} {grassmann-extend z} i
+  grassmann-extend (*g-distribl x y z i) =
+    C.*-distribl
+      {grassmann-extend x} {grassmann-extend y} {grassmann-extend z} i
+  grassmann-extend (*g-distribr x y z i) =
+    C.*-distribr
+      {grassmann-extend x} {grassmann-extend y} {grassmann-extend z} i
+  grassmann-extend (con-+ a b i) = ψ.pres-+ a b i
+  grassmann-extend (con-* a b i) = ψ.pres-* a b i
+  grassmann-extend (con-comm a x i) = central a (grassmann-extend x) i
+  grassmann-extend (θ-anticomm i j k) = anti i j k
+  grassmann-extend (θ-sq i k) = (sq i ∙ sym ψ.pres-0) k
+  grassmann-extend (squashg x y p q i j) = C.has-is-set
+    (grassmann-extend x) (grassmann-extend y)
+    (λ i → grassmann-extend (p i)) (λ i → grassmann-extend (q i)) i j
+
+  grassmann-extend-is-ring-hom
+    : is-ring-hom (Λ[q] .snd) (C .snd) grassmann-extend
+  grassmann-extend-is-ring-hom .pres-id = ψ.pres-id
+  grassmann-extend-is-ring-hom .pres-+ x y = refl
+  grassmann-extend-is-ring-hom .pres-* x y = refl
+
+  grassmann-extend-unique
+    : (h : Grassmann → ⌞ C ⌟)
+    → is-ring-hom (Λ[q] .snd) (C .snd) h
+    → (∀ a → h (con a) ≡ ψf a)
+    → (∀ i → h (θ i) ≡ c i)
+    → ∀ x → h x ≡ grassmann-extend x
+  grassmann-extend-unique h hh hcon hθ = Grassmann-elim-prop
+    (λ x → h x ≡ grassmann-extend x)
+    (λ _ → C.has-is-set _ _)
+    hθ
+    hcon
+    (λ x ihx y ihy → is-ring-hom.pres-+ hh x y ∙ ap₂ C._+_ ihx ihy)
+    (λ x ihx y ihy → is-ring-hom.pres-* hh x y ∙ ap₂ C._*_ ihx ihy)
+    (λ x ih → is-ring-hom.pres-neg hh ∙ ap C.-_ ih)
+```
