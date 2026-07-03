@@ -46,6 +46,8 @@ import Cat.CartesianClosed.Free.Model
 import Cat.Instances.NegativeSpheres
 import Physics.Oscillator
 import Homotopy.Modality
+import Data.Real.Arithmetic
+import Data.Real.Order
 import Data.Real.Base
 import Cat.Instances.SimplicialPresheaves.Cech
 import Cat.Instances.SimplicialSets.ActionGroupoid
@@ -661,6 +663,12 @@ _ = Homotopy.Modality.Truncation
 _ = Homotopy.Modality.Open-is-lex
 _ = Data.Real.Base.ℝ
 _ = Data.Real.Base.rational-density
+_ = Data.Real.Arithmetic.archimedean
+_ = Data.Real.Arithmetic._+ᴿ_
+_ = Data.Real.Arithmetic.+ᴿ-invr
+_ = Data.Real.Arithmetic.ratℝ-+
+_ = Data.Real.Order.maxᴿ
+_ = Data.Real.Order.absᴿ
 ```
 
 ## What is missing
@@ -675,10 +683,14 @@ calculus needs only $\bQ$-algebras and higher-order thickenings; but
 open covers of the classical smooth site — needs a genuine
 real-numbers object. The [[Dedekind reals|dedekind-real]] now exist,
 as a small type of located two-sided cuts, with their order theory,
-density of the rationals, and negation; their field structure (whose
-locatedness proofs need an archimedean interface for the rationals)
-and a constructive theory of $C^\infty$ maps remain before the
-classical smooth site is in reach. Concretely missing, then:
+density of the rationals, negation, the archimedean property,
+Bishop approximation within any positive slack, an additive abelian
+group structure ([[Minkowski addition|real-addition]] of cuts, with
+the rational embedding an additive homomorphism), and the
+[[lattice|real-lattice]] of join, meet and absolute value.
+Multiplication of cuts and a constructive theory of $C^\infty$ maps
+remain before the classical smooth site is in reach. Concretely
+missing, then:
 the smooth-site instance of (7) (localisation over the
 good-open-cover coverage, with shrinking-neighbourhood germs); the
 proof that the higher-inductive sheafification is left exact
