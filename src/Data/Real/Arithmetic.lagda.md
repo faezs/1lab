@@ -136,5 +136,54 @@ private abstract
   mid-<r {x} {y} p = transport
     (λ i → midpoint x y < half-double y i)
     (half-< (+ℚ-preserves-<r y p))
+
+  <→positive-diff : ∀ {x y} → x < y → 0 < y +ℚ (-ℚ x)
+  <→positive-diff {x} {y} p = transport
+    (λ i → +ℚ-invr x i < y +ℚ (-ℚ x))
+    (+ℚ-preserves-<r (-ℚ x) p)
+
+  positive-diff→< : ∀ {x y} → 0 < y +ℚ (-ℚ x) → x < y
+  positive-diff→< {x} {y} p = transport (λ i → lhs i < rhs i) step
+    where
+    step : x +ℚ 0 < x +ℚ (y +ℚ (-ℚ x))
+    step = +ℚ-preserves-<l x p
+
+    lhs : x +ℚ 0 ≡ x
+    lhs = +ℚ-idr x
+
+    rhs : x +ℚ (y +ℚ (-ℚ x)) ≡ y
+    rhs =
+      x +ℚ (y +ℚ (-ℚ x))   ≡⟨ ap (x +ℚ_) (+ℚ-commutative y (-ℚ x)) ⟩
+      x +ℚ ((-ℚ x) +ℚ y)   ≡⟨ +ℚ-associative x (-ℚ x) y ⟩
+      (x +ℚ (-ℚ x)) +ℚ y   ≡⟨ ap (_+ℚ y) (+ℚ-invr x) ⟩
+      0 +ℚ y               ≡⟨ +ℚ-idl y ⟩
+      y                    ∎
+
+  negatel : ∀ a b → (-ℚ a) *ℚ b ≡ -ℚ (a *ℚ b)
+  negatel a b = +ℚ-cancelr (a *ℚ b)
+    ( (-ℚ a) *ℚ b +ℚ a *ℚ b   ≡˘⟨ *ℚ-distribr b (-ℚ a) a ⟩
+      ((-ℚ a) +ℚ a) *ℚ b      ≡⟨ ap (_*ℚ b) (+ℚ-invl a) ⟩
+      0 *ℚ b                  ≡⟨ *ℚ-zerol b ⟩
+      0                       ≡˘⟨ +ℚ-invl (a *ℚ b) ⟩
+      (-ℚ (a *ℚ b)) +ℚ a *ℚ b ∎)
+
+  half-pos : ∀ {ε} → 0 < ε → 0 < half ε
+  half-pos {ε} p = transport (λ i → half-zero i < half ε) (half-< p)
+    where
+    half-zero : half 0 ≡ 0
+    half-zero = ap (_*ℚ invℚ 2) (sym (*ℚ-zerol 1)) ∙ sym (*ℚ-associative 0 1 (invℚ 2)) ∙ *ℚ-zerol (1 *ℚ invℚ 2)
+
+  half-lt : ∀ {ε} → 0 < ε → half ε < ε
+  half-lt {ε} p = transport (λ i → +ℚ-idl (half ε) i < half-sum ε i)
+    (+ℚ-preserves-<r (half ε) (half-pos p))
+
+  *ℚ-preserves-<r : ∀ {u v w} → u < v → 0 < w → (u *ℚ w) < (v *ℚ w)
+  *ℚ-preserves-<r {u} {v} {w} p q = positive-diff→< (transport (λ i → 0 < expand i) diff-pos)
+    where
+    diff-pos : 0 < (v +ℚ (-ℚ u)) *ℚ w
+    diff-pos = from-positive (*ℚ-positive (to-positive (<→positive-diff p)) (to-positive q))
+
+    expand : (v +ℚ (-ℚ u)) *ℚ w ≡ (v *ℚ w) +ℚ (-ℚ (u *ℚ w))
+    expand = *ℚ-distribr w v (-ℚ u) ∙ ap (v *ℚ w +ℚ_) (negatel u w)
 ```
 -->
