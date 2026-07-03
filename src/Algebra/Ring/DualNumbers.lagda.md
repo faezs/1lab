@@ -8,6 +8,7 @@ open import Algebra.Ring
 
 open import Cat.Displayed.Total
 
+import Algebra.Ring.Reasoning
 import Cat.Reasoning
 ```
 -->
@@ -185,4 +186,160 @@ aug-dual .∫Hom.snd .pres-* x y = refl
 
 aug-ι : aug-dual CR.∘ ι-dual ≡ CR.id
 aug-ι = ∫Hom-path _ refl prop!
+```
+
+## The universal property {defines="universal-property-of-dual-numbers"}
+
+$R[\epsilon]$ is the universal $R$-algebra containing a square-zero
+element: an algebra map out of $R[\epsilon]$ is exactly the choice of
+a square-zero element of the codomain, the image of $\epsilon$. This
+is what makes the formal dual of $R[\epsilon]$ the *walking tangent
+vector*: maps from it into a space are single tangent vectors, and the
+universal property below is the engine of the Kock–Lawvere theorem.
+
+```agda
+module _ {C : CRing ℓ} (ψ : CR.Hom R C)
+         (d : ⌞ C ⌟) (dd : C .snd .CRing-on._*_ d d ≡ C .snd .CRing-on.0r)
+  where
+
+  private
+    module C = CRing-on (C .snd)
+    module ψ = is-ring-hom (ψ .∫Hom.snd)
+    module Cr = Algebra.Ring.Reasoning
+      (C .fst , C .snd .CRing-on.has-ring-on)
+
+    ψf : ⌞ R ⌟ → ⌞ C ⌟
+    ψf = ψ .∫Hom.fst
+```
+
+The underlying function sends $a + b\epsilon$ to $\psi(a) + d\psi(b)$;
+that this is a ring homomorphism is a computation in $C$ whose only
+interesting step is the disappearance of the $d^2$ term.
+
+<!--
+```agda
+    +-inner
+      : ∀ w x y z
+      → (w C.+ x) C.+ (y C.+ z) ≡ (w C.+ y) C.+ (x C.+ z)
+    +-inner w x y z =
+      (w C.+ x) C.+ (y C.+ z)   ≡˘⟨ C.+-associative ⟩
+      w C.+ (x C.+ (y C.+ z))   ≡⟨ ap (w C.+_) C.+-associative ⟩
+      w C.+ ((x C.+ y) C.+ z)   ≡⟨ ap (w C.+_) (ap (C._+ z) C.+-commutes) ⟩
+      w C.+ ((y C.+ x) C.+ z)   ≡˘⟨ ap (w C.+_) C.+-associative ⟩
+      w C.+ (y C.+ (x C.+ z))   ≡⟨ C.+-associative ⟩
+      (w C.+ y) C.+ (x C.+ z)   ∎
+
+    pull-d : ∀ u v → u C.* (d C.* v) ≡ d C.* (u C.* v)
+    pull-d u v =
+      u C.* (d C.* v)   ≡⟨ C.*-associative ⟩
+      (u C.* d) C.* v   ≡⟨ ap (C._* v) C.*-commutes ⟩
+      (d C.* u) C.* v   ≡˘⟨ C.*-associative ⟩
+      d C.* (u C.* v)   ∎
+
+    kill-dd : ∀ u v → (d C.* u) C.* (d C.* v) ≡ C.0r
+    kill-dd u v =
+      (d C.* u) C.* (d C.* v)   ≡˘⟨ C.*-associative ⟩
+      d C.* (u C.* (d C.* v))   ≡⟨ ap (d C.*_) (pull-d u v) ⟩
+      d C.* (d C.* (u C.* v))   ≡⟨ C.*-associative ⟩
+      (d C.* d) C.* (u C.* v)   ≡⟨ ap (C._* (u C.* v)) dd ⟩
+      C.0r C.* (u C.* v)        ≡⟨ Cr.*-zerol ⟩
+      C.0r                      ∎
+```
+-->
+
+```agda
+  ε-extendᶠ : ⌞ R[ε] ⌟ → ⌞ C ⌟
+  ε-extendᶠ (a , b) = ψ .∫Hom.fst a C.+ d C.* ψ .∫Hom.fst b
+
+  ε-extend : CR.Hom R[ε] C
+  ε-extend .∫Hom.fst = ε-extendᶠ
+```
+
+<details>
+<summary>The homomorphism proofs are unenlightening equational
+reasoning.</summary>
+
+```agda
+  ε-extend .∫Hom.snd .pres-id =
+      ap₂ C._+_ ψ.pres-id (ap (d C.*_) ψ.pres-0 ∙ Cr.*-zeror)
+    ∙ C.+-idr
+  ε-extend .∫Hom.snd .pres-+ (a , b) (c , e) =
+      ap₂ C._+_ (ψ.pres-+ a c)
+        (ap (d C.*_) (ψ.pres-+ b e) ∙ C.*-distribl)
+    ∙ +-inner _ _ _ _
+  ε-extend .∫Hom.snd .pres-* (a , b) (c , e) = sym $
+    (ψf a C.+ d C.* ψf b) C.* (ψf c C.+ d C.* ψf e)
+      ≡⟨ C.*-distribl ⟩
+    (ψf a C.+ d C.* ψf b) C.* ψf c C.+
+    (ψf a C.+ d C.* ψf b) C.* (d C.* ψf e)
+      ≡⟨ ap₂ C._+_ C.*-distribr C.*-distribr ⟩
+    (ψf a C.* ψf c C.+ (d C.* ψf b) C.* ψf c) C.+
+    (ψf a C.* (d C.* ψf e) C.+ (d C.* ψf b) C.* (d C.* ψf e))
+      ≡⟨ ap₂ C._+_
+           (ap (ψf a C.* ψf c C.+_) (sym C.*-associative))
+           (ap₂ C._+_ (pull-d (ψf a) (ψf e)) (kill-dd (ψf b) (ψf e))) ⟩
+    (ψf a C.* ψf c C.+ d C.* (ψf b C.* ψf c)) C.+
+    (d C.* (ψf a C.* ψf e) C.+ C.0r)
+      ≡⟨ ap₂ C._+_ refl C.+-idr ⟩
+    (ψf a C.* ψf c C.+ d C.* (ψf b C.* ψf c)) C.+ d C.* (ψf a C.* ψf e)
+      ≡˘⟨ C.+-associative ⟩
+    ψf a C.* ψf c C.+ (d C.* (ψf b C.* ψf c) C.+ d C.* (ψf a C.* ψf e))
+      ≡⟨ ap (ψf a C.* ψf c C.+_) C.+-commutes ⟩
+    ψf a C.* ψf c C.+ (d C.* (ψf a C.* ψf e) C.+ d C.* (ψf b C.* ψf c))
+      ≡˘⟨ ap (ψf a C.* ψf c C.+_) C.*-distribl ⟩
+    ψf a C.* ψf c C.+ d C.* (ψf a C.* ψf e C.+ ψf b C.* ψf c)
+      ≡˘⟨ ap₂ C._+_ (ψ.pres-* a c)
+            (ap (d C.*_)
+              ( ψ.pres-+ (a R.* e) (b R.* c)
+              ∙ ap₂ C._+_ (ψ.pres-* a e) (ψ.pres-* b c))) ⟩
+    ψf (a R.* c) C.+ d C.* ψf (a R.* e R.+ b R.* c)
+      ∎
+```
+
+</details>
+
+The two computation rules — restricting to the constants gives back
+$\psi$, and $\epsilon$ goes to $d$ — and the uniqueness rule, which
+together say that "algebra maps $R[\epsilon] \to C$ are square-zero
+elements of $C$":
+
+```agda
+  ε-extend-ι : ε-extend CR.∘ ι-dual ≡ ψ
+  ε-extend-ι = ∫Hom-path _
+    (funext λ a →
+      ap (ψ .∫Hom.fst a C.+_) (ap (d C.*_) ψ.pres-0 ∙ Cr.*-zeror)
+      ∙ C.+-idr)
+    prop!
+
+  ε-extend-ε : ε-extendᶠ εᴿ ≡ d
+  ε-extend-ε =
+      ap₂ C._+_ ψ.pres-0 (ap (d C.*_) ψ.pres-id ∙ C.*-idr)
+    ∙ C.+-idl
+
+  ε-extend-unique
+    : (h : CR.Hom R[ε] C)
+    → (∀ a → h .∫Hom.fst (a , R.0r) ≡ ψ .∫Hom.fst a)
+    → h .∫Hom.fst εᴿ ≡ d
+    → h ≡ ε-extend
+  ε-extend-unique h hι hε = ∫Hom-path _ (funext go) prop! where
+    module h = is-ring-hom (h .∫Hom.snd)
+
+    decompose : ∀ a b → Path ⌞ R[ε] ⌟ (a , b) ((a , R.0r) Rε.+ (εᴿ Rε.* (b , R.0r)))
+    decompose a b = ap₂ _,_ p q where
+      p : a ≡ a R.+ R.0r R.* b
+      p = cring! R
+      q : b ≡ R.0r R.+ (R.0r R.* R.0r R.+ R.1r R.* b)
+      q = cring! R
+
+    go : ∀ x → h .∫Hom.fst x ≡ ε-extendᶠ x
+    go (a , b) =
+      h .∫Hom.fst (a , b)
+        ≡⟨ ap (h .∫Hom.fst) (decompose a b) ⟩
+      h .∫Hom.fst ((a , R.0r) Rε.+ (εᴿ Rε.* (b , R.0r)))
+        ≡⟨ h.pres-+ (a , R.0r) (εᴿ Rε.* (b , R.0r)) ⟩
+      h .∫Hom.fst (a , R.0r) C.+ h .∫Hom.fst (εᴿ Rε.* (b , R.0r))
+        ≡⟨ ap₂ C._+_ (hι a)
+             (h.pres-* εᴿ (b , R.0r) ∙ ap₂ C._*_ hε (hι b)) ⟩
+      ψ .∫Hom.fst a C.+ d C.* ψ .∫Hom.fst b
+        ∎
 ```
