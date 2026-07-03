@@ -45,6 +45,10 @@ import Algebra.Ring.Center
 import Cat.CartesianClosed.Free.Model
 import Cat.Instances.NegativeSpheres
 import Physics.Oscillator
+import Physics.Maxwell
+import Physics.Newton
+import Algebra.Ring.Kahler.Exterior
+import Algebra.Ring.Weil
 import Homotopy.Modality
 import Data.Real.Arithmetic
 import Data.Real.Order
@@ -532,6 +536,8 @@ _ = Physics.Oscillator.hamiltonian-mechanics.conserved
 _ = Physics.Oscillator.euler-energy-defect
 _ = Physics.Oscillator.fermionic.modes-nilpotent
 _ = Physics.Oscillator.gauge-loops-differ
+_ = Physics.Newton.second-order-flow.newton
+_ = Physics.Maxwell.electromagnetism.same-field
 ```
 
 ## Gauge transformations and simplicial shapes
@@ -694,12 +700,17 @@ missing, then:
 the smooth-site instance of (7) (localisation over the
 good-open-cover coverage, with shrinking-neighbourhood germs); the
 proof that the higher-inductive sheafification is left exact
-(connecting `Sh[_,_]`{.Agda} to `Topos`{.Agda}); Weil algebras of
-higher order and coverages on the thickened site; the odd-plot
+(connecting `Sh[_,_]`{.Agda} to `Topos`{.Agda}); Weil algebras beyond
+second order (the second-order algebra, its jet derivative, and
+Newton's law as a theorem now exist — see
+`Physics.Newton`{.Agda}) and coverages on the thickened site; the odd-plot
 description of spinor fields (21) and super-thickenings combining
-the fermionic and infinitesimal sites; higher de Rham forms
-$\Omega^p$, the de Rham differential as a map of smooth sets, and
-Deligne/connection refinements ((39), (40)); the inverse half of the
+the fermionic and infinitesimal sites; de Rham forms beyond degree two (Kähler 2-forms, the exterior
+derivative with $d \circ d = 0$, gauge invariance of the field
+strength, and electromagnetism in Landau gauge now exist — see
+`Physics.Maxwell`{.Agda}; $\Omega^{\ge 3}$, the Bianchi identity in
+degree two, the differential as a map of smooth sets, and
+Deligne/connection refinements ((39), (40)) remain); the inverse half of the
 Dold–Kan correspondence (30) — reassembling a simplicial abelian
 group from its normalized chains — and Eilenberg–MacLane spaces
 $\mathbf{B}^n A$ for $n \ge 2$ (31); closure of Kan complexes under

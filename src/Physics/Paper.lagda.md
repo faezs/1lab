@@ -20,6 +20,7 @@ import Cat.Instances.Localisation.Invertible
 import Cat.CartesianClosed.Free.Model
 
 import Algebra.ChainComplex.Moore
+import Algebra.Ring.Kahler.Exterior
 import Algebra.Ring.Grassmann
 
 import Data.Real.Arithmetic
@@ -29,6 +30,8 @@ import Data.Real.Base
 import Homotopy.Modality
 
 import Physics.Oscillator
+import Physics.Maxwell
+import Physics.Newton
 ```
 -->
 
@@ -152,6 +155,20 @@ _ = Physics.Oscillator.hamiltonian-mechanics.conserved
 _ = Physics.Oscillator.euler-energy-defect
 ```
 
+Second-order mechanics needs second-order infinitesimals: over the
+Weil algebra $R[\delta]/\delta^3$, the Taylor expansion of the
+potential computes value, force, and curvature in one evaluation,
+and **Newton's second law is a theorem**: any jet-level solution of
+Hamilton's equations has twice its acceleration coefficient equal to
+the force — $F = ma$ with the $\tfrac12$ of $x + vt +
+\tfrac12at^2$ made algebraically explicit, over any commutative
+ring.
+
+```agda
+_ = Physics.Newton.second-order.V-jet
+_ = Physics.Newton.second-order-flow.newton
+```
+
 The de Rham classifier of 1-forms is constructed from Kähler
 differentials and proven *non-concrete* — it has one point but a
 non-vanishing $\mathrm{d}x$ — witnessing, constructively, that
@@ -196,6 +213,21 @@ _ = Physics.Oscillator.gauge-loops-differ
 _ = Cat.Instances.SimplicialSets.Nerve.H¹[_,_]
 _ = Cat.Instances.SimplicialPresheaves.Cech.cech-aug
 _ = Algebra.ChainComplex.Moore.Moore
+```
+
+Gauge *fields* are differential forms, and the electromagnetic core
+of that story is now formalized: Kähler 2-forms, the wedge, and the
+exterior derivative with $d \circ d = 0$, whence **gauge invariance
+of the field strength** — a vector potential in Landau gauge has $F
+= \mathrm{d}A = \mathrm{d}x \wedge \mathrm{d}y$, a constant
+magnetic field, and shifting $A$ by any exact form provably leaves
+$F$ unchanged. The potential is gauge-dependent; the physics is
+not; both facts are theorems.
+
+```agda
+_ = Algebra.Ring.Kahler.Exterior.gauge
+_ = Physics.Maxwell.electromagnetism.F-value
+_ = Physics.Maxwell.electromagnetism.same-field
 ```
 
 All of this lives over an adjoint-quadruple cohesion
