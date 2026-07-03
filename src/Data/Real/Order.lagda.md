@@ -180,3 +180,61 @@ maxᴿ x y .has-is-cut = record
       (cut.cut-located x q<r) (cut.cut-located y q<r)
   }
 ```
+
+## The meet of two reals
+
+Dually, a rational lies below $\min(x,y)$ exactly when it lies below
+*both*, and lies above $\min(x,y)$ exactly when it lies above one of
+$x, y$.
+
+```agda
+minᴿ : ℝ → ℝ → ℝ
+minᴿ x y .lower q = el (∣ x .lower q ∣ × ∣ y .lower q ∣)
+  (×-is-hlevel 1 ((x .lower q) .is-tr) ((y .lower q) .is-tr))
+minᴿ x y .upper q = elΩ (∣ x .upper q ∣ ⊎ ∣ y .upper q ∣)
+minᴿ x y .has-is-cut = record
+  { lower-inhab = ∥-∥-rec₂ squash
+      (λ (v , lx) (w , ly) → inc
+        ( minℚ v w
+        , ≤-transport-lower x (minℚ-≤l {v} {w}) lx
+        , ≤-transport-lower y (minℚ-≤r {v} {w}) ly
+        ))
+      (cut.lower-inhab x) (cut.lower-inhab y)
+
+  ; upper-inhab = ∥-∥-map (λ (q , uq) → q , inc (inl uq)) (cut.upper-inhab x)
+
+  ; lower-round = λ q (lx , ly) → ∥-∥-rec₂ squash
+      (λ (v , q<v , lx') (w , q<w , ly') → inc
+        ( minℚ v w
+        , minℚ-glb q<v q<w
+        , ≤-transport-lower x (minℚ-≤l {v} {w}) lx'
+        , ≤-transport-lower y (minℚ-≤r {v} {w}) ly'
+        ))
+      (cut.lower-round x q lx) (cut.lower-round y q ly)
+
+  ; lower-close = λ q<r (lr , lr') →
+      cut.lower-close x q<r lr , cut.lower-close y q<r lr'
+
+  ; upper-round = λ r → □-rec squash
+      (λ where
+        (inl uq) → ∥-∥-map (λ (q , q<r , uq') → q , q<r , inc (inl uq')) (cut.upper-round x r uq)
+        (inr uq) → ∥-∥-map (λ (q , q<r , uq') → q , q<r , inc (inr uq')) (cut.upper-round y r uq))
+
+  ; upper-close = λ q<r → □-map (λ where
+      (inl uq) → inl (cut.upper-close x q<r uq)
+      (inr uq) → inr (cut.upper-close y q<r uq))
+
+  ; cut-disjoint = λ q (lq , lq') → □-rec (hlevel 1)
+      (λ where
+        (inl uq) → cut.cut-disjoint x q lq uq
+        (inr uq) → cut.cut-disjoint y q lq' uq)
+
+  ; cut-located = λ q<r → ∥-∥-rec₂ squash
+      (λ where
+        (inl lq)  (inl lq') → inc (inl (lq , lq'))
+        (inl lq)  (inr uq)  → inc (inr (inc (inr uq)))
+        (inr uq)  _         → inc (inr (inc (inl uq)))
+      )
+      (cut.cut-located x q<r) (cut.cut-located y q<r)
+  }
+```
