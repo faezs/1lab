@@ -745,3 +745,50 @@ private abstract
       neg-lt-swap u v q gap)
 ```
 -->
+
+## Associativity
+
+Associativity reassociates witnesses; the only subtlety is that the
+exact sum of two witnesses is not itself usable as a witness (its
+membership needs strict slack), so we round up first.
+
+```agda
++ᴿ-assoc : ∀ x y z → x +ᴿ (y +ᴿ z) ≡ (x +ᴿ y) +ᴿ z
+```
+
+<!--
+```agda
+private abstract
+  sum-lower-mem : ∀ x y r t → ∣ x .lower r ∣ → ∣ y .lower t ∣ → ∣ (x +ᴿ y) .lower (r +ℚ t) ∣
+  sum-lower-mem x y r t lr lt = □-map
+    (λ (r' , r<r' , lr') → r' , t , lr' , lt , +ℚ-preserves-<r t r<r')
+    (tr-□ (cut.lower-round x r lr))
+
+  sum-upper-mem : ∀ x y v w → ∣ x .upper v ∣ → ∣ y .upper w ∣ → ∣ (x +ᴿ y) .upper (v +ℚ w) ∣
+  sum-upper-mem x y v w uv uw = □-map
+    (λ (v' , v'<v , uv') → v' , w , uv' , uw , +ℚ-preserves-<r w v'<v)
+    (tr-□ (cut.upper-round x v uv))
+
++ᴿ-assoc x y z = ≤ᴿ-antisym fwd bwd
+  where
+  fwd : ∀ q → ∣ (x +ᴿ (y +ᴿ z)) .lower q ∣ → ∣ ((x +ᴿ y) +ᴿ z) .lower q ∣
+  fwd q lq = □-elim (λ _ → hlevel 1)
+    (λ (r , s , lr , lyz , q<rs) → □-elim (λ _ → hlevel 1)
+      (λ (t , u , lt , lu , s<tu) →
+        inc (r +ℚ t , u , sum-lower-mem x y r t lr lt , lu ,
+          transport (λ i → q < +ℚ-associative r t u i)
+            (<-trans q<rs (+ℚ-preserves-<l r s<tu))))
+      lyz)
+    lq
+
+  bwd : ∀ q → ∣ ((x +ᴿ y) +ᴿ z) .lower q ∣ → ∣ (x +ᴿ (y +ᴿ z)) .lower q ∣
+  bwd q lq = □-elim (λ _ → hlevel 1)
+    (λ (p , u , lxy , lu , q<pu) → □-elim (λ _ → hlevel 1)
+      (λ (r , t , lr , lt , p<rt) →
+        inc (r , t +ℚ u , lr , sum-lower-mem y z t u lt lu ,
+          transport (λ i → q < +ℚ-associative r t u (~ i))
+            (<-trans q<pu (+ℚ-preserves-<r u p<rt))))
+      lxy)
+    lq
+```
+-->
