@@ -91,19 +91,17 @@ pointwise contractible sheaf receives a unique map from anything.
 
 ## What remains
 
-The second half of left exactness — preservation of pullbacks — is
-the genuinely hard part, and we record precisely where the
-difficulty lives. Pullbacks of sheaves are computed as presheaf
-pullbacks, so preservation amounts to: the canonical map from the
-sheafification of a pullback to the pullback of sheafifications is
-an isomorphism, pointwise. Surjectivity-up-to-covers is within reach
-of the induction principle above (every point of a sheafification
-is locally an inclusion). The obstruction is *injectivity*: one must
-characterise when two inclusions `inc x ≡ inc y`{.Agda} agree, and
-for a one-step higher-inductive sheafification this is a path-space
-problem — the classical plus-construction is applied *twice*
-precisely to make such equalities locally detectable in the
-original presheaf. A proof will need either an encode–decode
-characterisation of the HIT's path spaces or a formalisation of the
-two-step construction; we leave it, precisely delimited, as the
-remaining gap between `Sh[_,_]`{.Agda} and `Topos`{.Agda}.
+The second half of left exactness — preservation of pullbacks —
+reduces to the path-space problem for the unit, and the reduction is
+now half-solved in
+[`Locality`](Cat.Site.Sheafification.Locality.html): *locally equal
+sections have equal units* (the decode direction, over an arbitrary
+coverage), and *every map into every sheaf identifies locally equal
+sections*, which pins the unit's kernel between local equality and
+equality-in-every-sheaf. The remaining ingredient is the converse
+encode — that equal units are locally equal — for which one sheaf
+reflecting local equality must be constructed: the sheafification of
+the separated quotient, i.e. the classical two-step
+plus-construction. That construction (patches modulo refinement,
+separatedness of the first step, sheafness of the second) is the
+single remaining gap between `Sh[_,_]`{.Agda} and `Topos`{.Agda}.

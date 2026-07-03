@@ -47,6 +47,7 @@ import Cat.Instances.NegativeSpheres
 import Cat.Instances.Singular
 import Algebra.ChainComplex.DoldKan
 import Cat.Site.Sheafification.Lex
+import Cat.Site.Sheafification.Locality
 import Physics.Oscillator
 import Physics.Maxwell
 import Physics.Newton
@@ -655,6 +656,8 @@ _ = Algebra.ChainComplex.DoldKan.Γ
 _ = Algebra.ChainComplex.DoldKan.K
 _ = Algebra.ChainComplex.DoldKan.H[_,_]⟨_⟩
 _ = Cat.Site.Sheafification.Lex.Sheafification-pres-⊤
+_ = Cat.Site.Sheafification.Locality.locally-equal→inc-path
+_ = Cat.Site.Sheafification.Locality.sheaf-detects
 ```
 
 On the homotopy-theoretic side of the dictionary, the delooping of a
@@ -723,12 +726,13 @@ missing, then:
 the smooth-site instance of (7) (localisation over the
 good-open-cover coverage, with shrinking-neighbourhood germs); the
 pullback half of left exactness for the higher-inductive
-sheafification (terminal-preservation is now proven for arbitrary
-coverages; the remaining obstruction — characterising the path
-spaces of the one-step HIT, where the classical construction
-applies the plus-construction twice — is delimited in
-`Cat.Site.Sheafification.Lex`{.Agda}, and is what still separates
-`Sh[_,_]`{.Agda} from `Topos`{.Agda}); Weil algebras beyond
+sheafification (terminal-preservation is proven for arbitrary
+coverages, and the path-space problem for the unit is now
+half-solved in `Cat.Site.Sheafification.Locality`{.Agda}: locally
+equal sections have equal units, and every sheaf detects local
+equality — what remains is the converse encode, requiring the
+formalised two-step plus-construction, the last gap between
+`Sh[_,_]`{.Agda} and `Topos`{.Agda}); Weil algebras beyond
 second order (the second-order algebra, its jet derivative, and
 Newton's law as a theorem now exist — see
 `Physics.Newton`{.Agda}) and coverages on the thickened site; the odd-plot
