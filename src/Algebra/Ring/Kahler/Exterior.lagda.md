@@ -265,3 +265,216 @@ module _ {A : CRing ℓ} {φ : CR.Hom R A} where
 ```
 -->
 
+## The exterior derivative
+
+The exterior derivative $\mathrm{d} : \Omega^1_{A/R} \to
+\Omega^2_{A/R}$ satisfies $\mathrm{d}(\mathrm{d}a) = 0$ on generators
+and the graded Leibniz rule $\mathrm{d}(a\,\omega) = \mathrm{d}a
+\wedge \omega + a\,\mathrm{d}\omega$ on the module action — a
+**paramorphism**: computing $\mathrm{d}(a\,\omega)$ needs not only
+the derivative of $\omega$ but $\omega$ itself, to wedge $\mathrm{d}a$
+against it. A plain HIT recursor only ever sees the recursive
+*results*, so we compute both at once, into the product $\Omega^1
+\times \Omega^2$ — the first component reconstructing the input, the
+second its derivative — and project.
+
+<!--
+```agda
+module _ {A : CRing ℓ} {φ : CR.Hom R A} where
+  private module A = CRing-on (A .snd)
+
+  d¹-aux : Ω¹ A φ → Ω¹ A φ × Ω² A φ
+  d¹-aux (dₖ a) = dₖ a , 0²
+  d¹-aux (a ·ω ω) =
+    let (copy , dω) = d¹-aux ω in
+    a ·ω copy , (wedge a copy +² (a ·² dω))
+  d¹-aux (ω +ω ω') =
+    let (copy , dω) = d¹-aux ω
+        (copy' , dω') = d¹-aux ω'
+    in copy +ω copy' , dω +² dω'
+  d¹-aux 0ω = 0ω , 0²
+  d¹-aux (-ω ω) =
+    let (copy , dω) = d¹-aux ω in
+    -ω copy , -² dω
+```
+
+Every path constructor of $\Omega^1$ needs a matching path between
+the images: the reconstruction (`fst`) side is forced — it is the
+very same law of $\Omega^1$, applied to the sub-copies — and the
+derivative (`snd`) side is a genuine computation with the laws of
+$\Omega^2$, worked out one clause at a time below.
+
+```agda
+  d¹-aux (+ω-idl x i) = +ω-idl (d¹-aux x .fst) i , +²-idl (d¹-aux x .snd) i
+  d¹-aux (+ω-invr x i) = +ω-invr (d¹-aux x .fst) i , +²-invr (d¹-aux x .snd) i
+  d¹-aux (+ω-assoc x y z i) =
+      +ω-assoc (d¹-aux x .fst) (d¹-aux y .fst) (d¹-aux z .fst) i
+    , +²-assoc (d¹-aux x .snd) (d¹-aux y .snd) (d¹-aux z .snd) i
+  d¹-aux (+ω-comm x y i) =
+      +ω-comm (d¹-aux x .fst) (d¹-aux y .fst) i
+    , +²-comm (d¹-aux x .snd) (d¹-aux y .snd) i
+```
+
+`·ω-distl`: $a(\omega+\omega') = a\omega + a\omega'$. Writing
+$c = \mathrm{copy}(\omega)$, $c' = \mathrm{copy}(\omega')$, $d =
+\mathrm{d}\omega$, $d' = \mathrm{d}\omega'$, the derivative of the
+left side is $\mathrm{wedge}\,a\,(c+c') + a(d+d')$, which unfolds
+(the `wedge` recursion is definitional on `+ω`{.Agda}, and `·²-distl`
+distributes the module action) to $(\mathrm{wedge}\,a\,c + a d) +
+(\mathrm{wedge}\,a\,c' + a d')$, the derivative of the right side,
+after the four-term interchange.
+
+```agda
+  d¹-aux (·ω-distl a x y i) =
+      ·ω-distl a (d¹-aux x .fst) (d¹-aux y .fst) i
+    , distl-deriv a x y i
+    where
+    distl-deriv
+      : ∀ a x y
+      → wedge a (d¹-aux x .fst +ω d¹-aux y .fst) +² (a ·² (d¹-aux x .snd +² d¹-aux y .snd))
+      ≡ (wedge a (d¹-aux x .fst) +² (a ·² d¹-aux x .snd)) +² (wedge a (d¹-aux y .fst) +² (a ·² d¹-aux y .snd))
+    distl-deriv a x y =
+      ap (_+² (a ·² (d¹-aux x .snd +² d¹-aux y .snd))) (wedge-+ a (d¹-aux x .fst) (d¹-aux y .fst))
+      ∙ ap (λ e → (wedge a (d¹-aux x .fst) +² wedge a (d¹-aux y .fst)) +² e)
+          (·²-distl a (d¹-aux x .snd) (d¹-aux y .snd))
+      ∙ +²-interchange (wedge a (d¹-aux x .fst)) (wedge a (d¹-aux y .fst))
+                        (a ·² d¹-aux x .snd) (a ·² d¹-aux y .snd)
+```
+
+`·ω-distr`: $(a+b)\omega = a\omega + b\omega$. The derivative of the
+left side is $\mathrm{wedge}\,(a+b)\,c + (a+b)d$, which reduces via
+`wedge-+l`{.Agda} and `·²-distr`{.Agda} to $(\mathrm{wedge}\,a\,c + a
+d) + (\mathrm{wedge}\,b\,c + b d)$, the derivative of the right side,
+again after the interchange.
+
+```agda
+  d¹-aux (·ω-distr a b x i) =
+      ·ω-distr a b (d¹-aux x .fst) i
+    , distr-deriv a b x i
+    where
+    distr-deriv
+      : ∀ a b x
+      → wedge (a A.+ b) (d¹-aux x .fst) +² ((a A.+ b) ·² d¹-aux x .snd)
+      ≡ (wedge a (d¹-aux x .fst) +² (a ·² d¹-aux x .snd)) +² (wedge b (d¹-aux x .fst) +² (b ·² d¹-aux x .snd))
+    distr-deriv a b x =
+      ap₂ _+²_ (wedge-+l a b (d¹-aux x .fst)) (·²-distr a b (d¹-aux x .snd))
+      ∙ +²-interchange (wedge a (d¹-aux x .fst)) (wedge b (d¹-aux x .fst))
+                        (a ·² d¹-aux x .snd) (b ·² d¹-aux x .snd)
+```
+
+`·ω-assoc`: $a(b\omega) = (ab)\omega$. The derivative of the left
+side is $\mathrm{wedge}\,a\,(bc) + a(\mathrm{wedge}\,b\,c + bd)$; the
+inner wedge unfolds definitionally to $b \cdot \mathrm{wedge}\,a\,c$,
+and distributing and reassociating the module action turns this into
+$(b\cdot\mathrm{wedge}\,a\,c + a\cdot\mathrm{wedge}\,b\,c) + (ab)d$ —
+exactly `wedge-leib`{.Agda} plus `·²-assoc`{.Agda} — matching the
+derivative $\mathrm{wedge}\,(ab)\,c + (ab)d$ of the right side.
+
+```agda
+  d¹-aux (·ω-assoc a b x i) =
+      ·ω-assoc a b (d¹-aux x .fst) i
+    , assoc-deriv a b x i
+    where
+    assoc-deriv
+      : ∀ a b x
+      → wedge a (b ·ω d¹-aux x .fst) +² (a ·² (wedge b (d¹-aux x .fst) +² (b ·² d¹-aux x .snd)))
+      ≡ wedge (a A.* b) (d¹-aux x .fst) +² ((a A.* b) ·² d¹-aux x .snd)
+    assoc-deriv a b x =
+      let c = d¹-aux x .fst ; d = d¹-aux x .snd in
+      wedge a (b ·ω c) +² (a ·² (wedge b c +² (b ·² d)))
+        ≡⟨⟩
+      (b ·² wedge a c) +² (a ·² (wedge b c +² (b ·² d)))
+        ≡⟨ ap ((b ·² wedge a c) +²_) (·²-distl a (wedge b c) (b ·² d)) ⟩
+      (b ·² wedge a c) +² ((a ·² wedge b c) +² (a ·² (b ·² d)))
+        ≡⟨ +²-assoc (b ·² wedge a c) (a ·² wedge b c) (a ·² (b ·² d)) ⟩
+      ((b ·² wedge a c) +² (a ·² wedge b c)) +² (a ·² (b ·² d))
+        ≡⟨ ap (_+² (a ·² (b ·² d))) (+²-comm (b ·² wedge a c) (a ·² wedge b c)) ⟩
+      ((a ·² wedge b c) +² (b ·² wedge a c)) +² (a ·² (b ·² d))
+        ≡˘⟨ ap (_+² (a ·² (b ·² d))) (wedge-leib a b c) ⟩
+      wedge (a A.* b) c +² (a ·² (b ·² d))
+        ≡⟨ ap (wedge (a A.* b) c +²_) (·²-assoc a b d) ⟩
+      wedge (a A.* b) c +² ((a A.* b) ·² d)
+        ∎
+```
+
+`·ω-idl`: $1\omega = \omega$. The derivative of the left side is
+$\mathrm{wedge}\,1\,c + 1\cdot d$, which is $d$ by
+`wedge-one`{.Agda} and `·²-idl`{.Agda}.
+
+```agda
+  d¹-aux (·ω-idl x i) = ·ω-idl (d¹-aux x .fst) i , idl-deriv x i
+    where
+    idl-deriv : ∀ x → wedge A.1r (d¹-aux x .fst) +² (A.1r ·² d¹-aux x .snd) ≡ d¹-aux x .snd
+    idl-deriv x =
+      ap₂ _+²_ (wedge-one (d¹-aux x .fst)) (·²-idl (d¹-aux x .snd)) ∙ +²-idl (d¹-aux x .snd)
+```
+
+`d-+`: $\mathrm{d}(a+b) = \mathrm{d}a + \mathrm{d}b$. Both derivatives
+are $0$.
+
+```agda
+  d¹-aux (d-+ a b i) = d-+ a b i , sym (+²-idl 0²) i
+```
+
+`d-leibniz`: $\mathrm{d}(ab) = a\,\mathrm{d}b + b\,\mathrm{d}a$. The
+left side has derivative $0$; the right side's derivative is
+$(\mathrm{wedge}\,a\,(\mathrm{d}b) + a\cdot 0) + (\mathrm{wedge}\,
+b\,(\mathrm{d}a) + b\cdot 0)$, which collapses (`·²-absorb`{.Agda},
+`+²-idr`{.Agda}) to $(a\, {\wedge}\, b) + (b\, {\wedge}\, a)$ — zero
+by antisymmetry (`d∧d-antisym`{.Agda}) and `+²-invl`{.Agda}.
+
+```agda
+  d¹-aux (d-leibniz a b i) = d-leibniz a b i , leibniz-deriv a b i
+    where
+    leibniz-deriv : ∀ a b → 0² ≡ (wedge a (dₖ b) +² (a ·² 0²)) +² (wedge b (dₖ a) +² (b ·² 0²))
+    leibniz-deriv a b =
+      0²
+        ≡˘⟨ +²-invl (b d∧d a) ⟩
+      (-² (b d∧d a)) +² (b d∧d a)
+        ≡˘⟨ ap (_+² (b d∧d a)) (d∧d-antisym a b) ⟩
+      (a d∧d b) +² (b d∧d a)
+        ≡˘⟨ ap₂ _+²_ (+²-idr (a d∧d b)) (+²-idr (b d∧d a)) ⟩
+      ((a d∧d b) +² 0²) +² ((b d∧d a) +² 0²)
+        ≡˘⟨ ap₂ (λ e f → ((a d∧d b) +² e) +² ((b d∧d a) +² f)) (·²-absorb a) (·²-absorb b) ⟩
+      ((a d∧d b) +² (a ·² 0²)) +² ((b d∧d a) +² (b ·² 0²))
+        ≡⟨⟩
+      (wedge a (dₖ b) +² (a ·² 0²)) +² (wedge b (dₖ a) +² (b ·² 0²))
+        ∎
+```
+
+`d-const`: $\mathrm{d}(\varphi(r)) = 0$. Both sides have derivative
+$0$.
+
+```agda
+  d¹-aux (d-const r i) = d-const r i , 0²
+```
+
+Finally, the target $\Omega^1 \times \Omega^2$ is a set, so the
+squash constructor goes through pointwise.
+
+```agda
+  d¹-aux (squashω x y p q i j) =
+    ×-is-hlevel 2 squashω squash²
+      (d¹-aux x) (d¹-aux y) (λ i → d¹-aux (p i)) (λ i → d¹-aux (q i)) i j
+```
+
+Projecting the second component gives the exterior derivative
+itself.
+
+```agda
+  d¹ : Ω¹ A φ → Ω² A φ
+  d¹ ω = d¹-aux ω .snd
+```
+
+The two defining properties of the exterior derivative hold
+definitionally, by the very clauses of `d¹-aux`{.Agda}: it kills
+exact forms, $\mathrm{d}\circ\mathrm{d} = 0$, and it is additive.
+
+```agda
+  d¹-d : ∀ a → d¹ (dₖ a) ≡ 0²
+  d¹-d a = refl
+
+  d¹-+ : ∀ ω ω' → d¹ (ω +ω ω') ≡ d¹ ω +² d¹ ω'
+  d¹-+ ω ω' = refl
+```
+
