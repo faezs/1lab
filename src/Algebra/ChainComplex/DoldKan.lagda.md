@@ -197,9 +197,8 @@ Chain-hom-ab A B = to-ab mk where
 ```agda
   module B (n : Nat) = Abelian-group-on (B .ob n .snd)
 
-  private
-    module H (n : Nat) =
-      Abelian-group-on (Abelian-group-on-hom (A .ob n) (B .ob n))
+  module H (n : Nat) =
+    Abelian-group-on (Abelian-group-on-hom (A .ob n) (B .ob n))
 
   mk : make-abelian-group (Chain-map A B)
   mk .ab-is-set = Chain-map-set

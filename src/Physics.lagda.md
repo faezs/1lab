@@ -44,6 +44,9 @@ import Algebra.Ring.Grassmann
 import Algebra.Ring.Center
 import Cat.CartesianClosed.Free.Model
 import Cat.Instances.NegativeSpheres
+import Cat.Instances.Singular
+import Algebra.ChainComplex.DoldKan
+import Cat.Site.Sheafification.Lex
 import Physics.Oscillator
 import Physics.Maxwell
 import Physics.Newton
@@ -634,6 +637,26 @@ _ = Cat.Instances.NegativeSpheres.Lin
 _ = Cat.Instances.NegativeSpheres.base-section
 ```
 
+Three more strata have since landed. The **orbi-singular site** of
+(28) is the global orbit category — groups, with conjugacy classes
+of homomorphisms — with the trivial cone as terminal probe. The
+**inverse Dold–Kan construction** gives the functor $\Gamma$ from
+chain complexes back to simplicial abelian groups, hom-theoretically
+(so no shuffle combinatorics), and with it the Eilenberg–MacLane
+objects $K(A,n)$ of (31) and ordinary **cohomology** as $\pi_0$ of
+mapping spaces. And toward the topos-theoretic completion of (8),
+sheafification over an *arbitrary* coverage is proven to preserve
+the terminal object.
+
+```agda
+_ = Cat.Instances.Singular.Snglr
+_ = Cat.Instances.Singular.Snglr-terminal
+_ = Algebra.ChainComplex.DoldKan.Γ
+_ = Algebra.ChainComplex.DoldKan.K
+_ = Algebra.ChainComplex.DoldKan.H[_,_]⟨_⟩
+_ = Cat.Site.Sheafification.Lex.Sheafification-pres-⊤
+```
+
 On the homotopy-theoretic side of the dictionary, the delooping of a
 group exists as a higher inductive type with $G \simeq \Omega
 \mathbf{B} G$ — the paper's (34) in the case $n = 1$ — and first
@@ -699,8 +722,13 @@ remain before the classical smooth site is in reach. Concretely
 missing, then:
 the smooth-site instance of (7) (localisation over the
 good-open-cover coverage, with shrinking-neighbourhood germs); the
-proof that the higher-inductive sheafification is left exact
-(connecting `Sh[_,_]`{.Agda} to `Topos`{.Agda}); Weil algebras beyond
+pullback half of left exactness for the higher-inductive
+sheafification (terminal-preservation is now proven for arbitrary
+coverages; the remaining obstruction — characterising the path
+spaces of the one-step HIT, where the classical construction
+applies the plus-construction twice — is delimited in
+`Cat.Site.Sheafification.Lex`{.Agda}, and is what still separates
+`Sh[_,_]`{.Agda} from `Topos`{.Agda}); Weil algebras beyond
 second order (the second-order algebra, its jet derivative, and
 Newton's law as a theorem now exist — see
 `Physics.Newton`{.Agda}) and coverages on the thickened site; the odd-plot
@@ -710,10 +738,10 @@ derivative with $d \circ d = 0$, gauge invariance of the field
 strength, and electromagnetism in Landau gauge now exist — see
 `Physics.Maxwell`{.Agda}; $\Omega^{\ge 3}$, the Bianchi identity in
 degree two, the differential as a map of smooth sets, and
-Deligne/connection refinements ((39), (40)) remain); the inverse half of the
-Dold–Kan correspondence (30) — reassembling a simplicial abelian
-group from its normalized chains — and Eilenberg–MacLane spaces
-$\mathbf{B}^n A$ for $n \ge 2$ (31); closure of Kan complexes under
+Deligne/connection refinements ((39), (40)) remain); the unit and counit of the
+Dold–Kan correspondence (30) — both functors now exist, the Moore
+complex $N$ and its inverse $\Gamma$, with $K(A,n)$ and ordinary
+cohomology defined — together with Kan fibrancy of $K(A,n)$; closure of Kan complexes under
 mapping spaces and the *external presentation* of the simplicial
 localisations $L^{\rm{heq}}, L^{\rm{lheq}}$ ((32)–(36)) — their
 internal shadow now exists as [[modalities|modality]], but
@@ -721,7 +749,8 @@ presenting a particular gros ∞-topos by simplicially localising
 simplicial presheaves needs quasicategory or complete-Segal-object
 infrastructure the 1Lab does not have;
 the local weak equivalence of the Čech augmentation over covers,
-giving cofibrant resolutions (full (39)); the orbi-singular site of
-(28); and the stable localisation of presheaves on $\rm{Lin}$
+giving cofibrant resolutions (full (39)); cohesion over the orbi-singular site (the site itself now exists,
+with terminal probe; the instantiation awaits level-polymorphic
+cohesion); and the stable localisation of presheaves on $\rm{Lin}$
 presenting the tangent topos (41). Each is a well-posed project over
 the infrastructure assembled above.
