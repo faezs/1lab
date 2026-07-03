@@ -65,7 +65,7 @@ open Functor
 -->
 
 ```agda
-module Schreiber where
+module Physics where
 ```
 
 # Higher topos theory in physics
