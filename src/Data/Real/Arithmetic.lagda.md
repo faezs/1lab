@@ -418,3 +418,163 @@ approx x ε 0<ε = do
       gap = subst (_< ε) (sym (gap-lemma u h)) hh<ε
 ```
 -->
+
+## Addition
+
+Addition of Dedekind cuts is Minkowski addition: the lower cut of
+$x + y$ consists of the rationals strictly below some sum of a
+witness from $x$'s lower cut and one from $y$'s, and dually for the
+upper cut. Downward/upward closure and roundedness follow from the
+existence of a midpoint; disjointness and locatedness are where the
+[[approximation|approx]] lemma above is spent.
+
+<!--
+```agda
+private abstract
+  <-sum : ∀ {p q r s} → p < q → r < s → p +ℚ r < q +ℚ s
+  <-sum {p} {q} {r} {s} p<q r<s = <-trans (+ℚ-preserves-<r r p<q) (+ℚ-preserves-<l q r<s)
+
+  +ℚ-swap-inner : ∀ a b c d → (a +ℚ b) +ℚ (c +ℚ d) ≡ (a +ℚ c) +ℚ (b +ℚ d)
+  +ℚ-swap-inner a b c d =
+    (a +ℚ b) +ℚ (c +ℚ d)   ≡˘⟨ +ℚ-associative a b (c +ℚ d) ⟩
+    a +ℚ (b +ℚ (c +ℚ d))   ≡⟨ ap (a +ℚ_) (+ℚ-associative b c d) ⟩
+    a +ℚ ((b +ℚ c) +ℚ d)   ≡⟨ ap (λ e → a +ℚ (e +ℚ d)) (+ℚ-commutative b c) ⟩
+    a +ℚ ((c +ℚ b) +ℚ d)   ≡˘⟨ ap (a +ℚ_) (+ℚ-associative c b d) ⟩
+    a +ℚ (c +ℚ (b +ℚ d))   ≡⟨ +ℚ-associative a c (b +ℚ d) ⟩
+    (a +ℚ c) +ℚ (b +ℚ d)   ∎
+
+  q+[r-q]≡r : ∀ q r → q +ℚ (r +ℚ (-ℚ q)) ≡ r
+  q+[r-q]≡r q r =
+    q +ℚ (r +ℚ (-ℚ q))   ≡⟨ ap (q +ℚ_) (+ℚ-commutative r (-ℚ q)) ⟩
+    q +ℚ ((-ℚ q) +ℚ r)   ≡⟨ +ℚ-associative q (-ℚ q) r ⟩
+    (q +ℚ (-ℚ q)) +ℚ r   ≡⟨ ap (_+ℚ r) (+ℚ-invr q) ⟩
+    0 +ℚ r               ≡⟨ +ℚ-idl r ⟩
+    r                    ∎
+
+  diff-swap : ∀ v v' u u' → (v +ℚ (-ℚ u)) +ℚ (v' +ℚ (-ℚ u')) ≡ (v +ℚ v') +ℚ (-ℚ (u +ℚ u'))
+  diff-swap v v' u u' =
+    (v +ℚ (-ℚ u)) +ℚ (v' +ℚ (-ℚ u'))   ≡⟨ +ℚ-swap-inner v (-ℚ u) v' (-ℚ u') ⟩
+    (v +ℚ v') +ℚ ((-ℚ u) +ℚ (-ℚ u'))   ≡˘⟨ ap ((v +ℚ v') +ℚ_) negsum ⟩
+    (v +ℚ v') +ℚ (-ℚ (u +ℚ u'))        ∎
+    where
+    negsum : -ℚ (u +ℚ u') ≡ (-ℚ u) +ℚ (-ℚ u')
+    negsum = +ℚ-cancelr (u +ℚ u')
+      ( (-ℚ (u +ℚ u')) +ℚ (u +ℚ u')             ≡⟨ +ℚ-invl (u +ℚ u') ⟩
+        0                                        ≡˘⟨ +ℚ-invl u ⟩
+        (-ℚ u) +ℚ u                              ≡˘⟨ ap ((-ℚ u) +ℚ_) (+ℚ-idl u) ⟩
+        (-ℚ u) +ℚ (0 +ℚ u)                       ≡˘⟨ ap (λ e → (-ℚ u) +ℚ (e +ℚ u)) (+ℚ-invl u') ⟩
+        (-ℚ u) +ℚ (((-ℚ u') +ℚ u') +ℚ u)         ≡⟨ ap ((-ℚ u) +ℚ_) (sym (+ℚ-associative (-ℚ u') u' u)) ⟩
+        (-ℚ u) +ℚ ((-ℚ u') +ℚ (u' +ℚ u))         ≡⟨ +ℚ-associative (-ℚ u) (-ℚ u') (u' +ℚ u) ⟩
+        ((-ℚ u) +ℚ (-ℚ u')) +ℚ (u' +ℚ u)         ≡⟨ ap (((-ℚ u) +ℚ (-ℚ u')) +ℚ_) (+ℚ-commutative u' u) ⟩
+        ((-ℚ u) +ℚ (-ℚ u')) +ℚ (u +ℚ u')         ∎)
+
+  located-lemma
+    : ∀ q r → q < r → ∀ u v u' v' → (u +ℚ u') ≤ q
+    → (v +ℚ (-ℚ u)) < half (half (r +ℚ (-ℚ q)))
+    → (v' +ℚ (-ℚ u')) < half (half (r +ℚ (-ℚ q)))
+    → (v +ℚ v') < r
+  located-lemma q r q<r u v u' v' uu'≤q gapx gapy =
+    subst (v +ℚ v' <_) (q+[r-q]≡r q r) vv'<q+[r-q]
+    where
+    ε : Ratio
+    ε = half (half (r +ℚ (-ℚ q)))
+
+    diffs<εε : ((v +ℚ v') +ℚ (-ℚ (u +ℚ u'))) < (ε +ℚ ε)
+    diffs<εε = subst (_< (ε +ℚ ε)) (diff-swap v v' u u') (<-sum gapx gapy)
+
+    vv'<uu'+εε : (v +ℚ v') < (u +ℚ u') +ℚ (ε +ℚ ε)
+    vv'<uu'+εε = transport (λ i → lhs i < rhs i) (+ℚ-preserves-<r (u +ℚ u') diffs<εε)
+      where
+      lhs : ((v +ℚ v') +ℚ (-ℚ (u +ℚ u'))) +ℚ (u +ℚ u') ≡ v +ℚ v'
+      lhs =
+        ((v +ℚ v') +ℚ (-ℚ (u +ℚ u'))) +ℚ (u +ℚ u')  ≡˘⟨ +ℚ-associative (v +ℚ v') (-ℚ (u +ℚ u')) (u +ℚ u') ⟩
+        (v +ℚ v') +ℚ ((-ℚ (u +ℚ u')) +ℚ (u +ℚ u'))  ≡⟨ ap ((v +ℚ v') +ℚ_) (+ℚ-invl (u +ℚ u')) ⟩
+        (v +ℚ v') +ℚ 0                              ≡⟨ +ℚ-idr (v +ℚ v') ⟩
+        v +ℚ v'                                     ∎
+
+      rhs : (ε +ℚ ε) +ℚ (u +ℚ u') ≡ (u +ℚ u') +ℚ (ε +ℚ ε)
+      rhs = +ℚ-commutative (ε +ℚ ε) (u +ℚ u')
+
+    uu'+εε≤q+εε : ((u +ℚ u') +ℚ (ε +ℚ ε)) ≤ (q +ℚ (ε +ℚ ε))
+    uu'+εε≤q+εε = +ℚ-preserves-≤ uu'≤q ≤-refl
+
+    vv'<q+εε : (v +ℚ v') < q +ℚ (ε +ℚ ε)
+    vv'<q+εε = <-≤-trans vv'<uu'+εε uu'+εε≤q+εε
+
+    εε<r-q : (ε +ℚ ε) < (r +ℚ (-ℚ q))
+    εε<r-q = transport (λ i → half-sum (half (r +ℚ (-ℚ q))) (~ i) < (r +ℚ (-ℚ q)))
+      (half-lt (<→positive-diff q<r))
+
+    vv'<q+[r-q] : (v +ℚ v') < q +ℚ (r +ℚ (-ℚ q))
+    vv'<q+[r-q] = <-trans vv'<q+εε (+ℚ-preserves-<l q εε<r-q)
+
+  sum-minus-one< : ∀ r s → (r +ℚ s) +ℚ (-ℚ 1) < r +ℚ s
+  sum-minus-one< r s = subst ((r +ℚ s) +ℚ (-ℚ 1) <_) (+ℚ-idr (r +ℚ s)) (+ℚ-preserves-<l (r +ℚ s) neg1<0)
+    where
+    neg1<0 : -ℚ 1 < 0
+    neg1<0 = decide!
+
+  sum<sum-plus-one : ∀ v w → v +ℚ w < (v +ℚ w) +ℚ 1
+  sum<sum-plus-one v w = subst (_< (v +ℚ w) +ℚ 1) (+ℚ-idr (v +ℚ w)) (+ℚ-preserves-<l (v +ℚ w) 0<1)
+    where
+    0<1 : 0 < 1
+    0<1 = decide!
+```
+-->
+
+```agda
+_+ᴿ_ : ℝ → ℝ → ℝ
+(x +ᴿ y) .lower q = elΩ (Σ Ratio λ r → Σ Ratio λ s →
+  ∣ x .lower r ∣ × ∣ y .lower s ∣ × (q < r +ℚ s))
+(x +ᴿ y) .upper q = elΩ (Σ Ratio λ v → Σ Ratio λ w →
+  ∣ x .upper v ∣ × ∣ y .upper w ∣ × (v +ℚ w < q))
+```
+
+<!--
+```agda
+(x +ᴿ y) .has-is-cut = record
+  { lower-inhab = ∥-∥-map₂
+      (λ (r , lr) (s , ls) →
+        (r +ℚ s) +ℚ (-ℚ 1) , inc (r , s , lr , ls , sum-minus-one< r s))
+      (cut.lower-inhab x) (cut.lower-inhab y)
+  ; upper-inhab = ∥-∥-map₂
+      (λ (v , uv) (w , uw) →
+        (v +ℚ w) +ℚ 1 , inc (v , w , uv , uw , sum<sum-plus-one v w))
+      (cut.upper-inhab x) (cut.upper-inhab y)
+  ; lower-round = λ q lq → □-tr lq >>= λ (r , s , lr , ls , q<rs) →
+      inc (midpoint q (r +ℚ s) , mid-<l q<rs ,
+           inc (r , s , lr , ls , mid-<r q<rs))
+  ; lower-close = λ q<q' lq' → □-elim (λ _ → hlevel 1)
+      (λ (r , s , lr , ls , q'<rs) → inc (r , s , lr , ls , <-trans q<q' q'<rs))
+      lq'
+  ; upper-round = λ r ur → □-tr ur >>= λ (v , w , uv , uw , vw<r) →
+      inc (midpoint (v +ℚ w) r , mid-<r vw<r ,
+           inc (v , w , uv , uw , mid-<l vw<r))
+  ; upper-close = λ q<r uq → □-elim (λ _ → hlevel 1)
+      (λ (v , w , uv , uw , vw<q) → inc (v , w , uv , uw , <-trans vw<q q<r))
+      uq
+  ; cut-disjoint = λ q lq uq → □-elim (λ _ → hlevel 1)
+      (λ (r , s , lr , ls , q<rs) → □-elim (λ _ → hlevel 1)
+        (λ (v , w , uv , uw , vw<q) →
+          <-irrefl refl (<-trans (<-sum (lower<upper x lr uv) (lower<upper y ls uw))
+                                  (<-trans vw<q q<rs)))
+        uq)
+      lq
+  ; cut-located = λ {q} {r} q<r → do
+      (u  , v  , lu  , uv  , gapx) ← approx x (half (half (r +ℚ (-ℚ q))))
+          (half-pos (half-pos (<→positive-diff q<r)))
+      (u' , v' , lu' , uv' , gapy) ← approx y (half (half (r +ℚ (-ℚ q))))
+          (half-pos (half-pos (<→positive-diff q<r)))
+      decide-side q r q<r u v lu uv gapx u' v' lu' uv' gapy
+  }
+  where
+  decide-side
+    : ∀ q r → q < r → ∀ u v → ∣ x .lower u ∣ → ∣ x .upper v ∣ → (v +ℚ (-ℚ u)) < half (half (r +ℚ (-ℚ q)))
+    → ∀ u' v' → ∣ y .lower u' ∣ → ∣ y .upper v' ∣ → (v' +ℚ (-ℚ u')) < half (half (r +ℚ (-ℚ q)))
+    → ∥ ∣ (x +ᴿ y) .lower q ∣ ⊎ ∣ (x +ᴿ y) .upper r ∣ ∥
+  decide-side q r q<r u v lu uv gapx u' v' lu' uv' gapy with holds? (q < u +ℚ u')
+  ... | yes q<uu' = inc (inl (inc (u , u' , lu , lu' , q<uu')))
+  ... | no ¬q<uu' = inc (inr (inc (v , v' , uv , uv' ,
+      located-lemma q r q<r u v u' v' (¬<→≥ ¬q<uu') gapx gapy)))
+```
+-->
