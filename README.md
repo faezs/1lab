@@ -1,11 +1,76 @@
-[![Build 1Lab](https://github.com/the1lab/1lab/actions/workflows/build.yml/badge.svg)](https://github.com/the1lab/1lab/actions/workflows/build.yml)
+# Physics, in the 1Lab
 
-# [1Lab](https://1lab.dev)
+> *Nothing in this development is asserted on authority. It typechecks,
+> so the theorems exist.*
 
-A formalised, cross-linked reference resource for mathematics done in
-Homotopy Type Theory. Unlike the HoTT book, the 1lab is not a “linear”
-resource: Concepts are presented as a directed graph, with links
-indicating dependencies.
+This is a fork of the [1Lab](https://1lab.dev) carrying the branch
+`physics`: a constructive, zero-postulate, **computing** formalization
+of the mathematical stack of Urs Schreiber's *Higher Topos Theory in
+Physics* (arXiv:2311.11026) — probe sites and their gros topoi,
+cohesion, nilpotent infinitesimals, fermionic algebra, gauge
+groupoids, Dedekind reals, and the internal theory of higher toposes
+— in cubical Agda, in the 1Lab's house style, on the 1Lab's
+infrastructure.
+
+The claim, bounded precisely: here the physics *is* the computation.
+A harmonic oscillator specified once as a λ-term is compiled into the
+topos of sets and **traces its orbit by `refl`**; its conservation
+laws, force law, exclusion principle, and gauge redundancy are
+theorems. The axioms of synthetic differential geometry are not
+postulated but **proven** for an explicitly constructed site — the
+Kock–Lawvere property is a theorem here, and mechanics proceeds with
+nilpotents in place of limits.
+
+## Where to start reading
+
+- **The paper**: [`src/Physics/Paper.lagda.md`](src/Physics/Paper.lagda.md)
+  — *Physics by refl*. Every claim is a typechecked hyperlink into the
+  formalization; the paper is itself a module that fails to build if a
+  theorem breaks.
+- **The reading guide**: [`src/Physics.lagda.md`](src/Physics.lagda.md)
+  — maps the paper's numbered diagrams, one by one, to their
+  formalizations, and maintains the honest list of what is still
+  missing.
+- **The physics**: [`src/Physics/Oscillator.lagda.md`](src/Physics/Oscillator.lagda.md)
+  — one system through every column of the probe table: compiled
+  dynamics (orbit by `refl`, energy conservation and exact period-four
+  time symmetry for *all* states), the force derived synthetically
+  from the potential, exact conservation along the infinitesimal
+  Hamiltonian flow (with the Euler integrator's energy drift computed
+  as precisely the `dt²` term nilpotency kills), Pauli exclusion as
+  ring algebra, and the gauged parity symmetry whose homotopy quotient
+  provably remembers the stabilizer a quotient set would destroy.
+
+Highlights elsewhere in the stack: the free-CCC compilation pipeline
+(`Cat.CartesianClosed.Free.*`), cohesion over any pointed probe site
+(`Cat.Instances.Presheaf.Cohesive`), the thickened site with the
+Kock–Lawvere theorem (`Cat.Instances.FormalSmoothSets`), the
+non-concrete de Rham classifier, the super site with its terminal
+super point (`Cat.Instances.SuperSmoothSets`), Grassmann algebras with
+the CAR/Pauli theorems, homotopy quotients and nonabelian `H¹`, Čech
+objects, Moore complexes, the site of negative-dimensional spheres,
+Dedekind reals with order, lattice and additive-group structure
+(`Data.Real.*`), and modalities à la Rijke–Shulman–Spitters with lex
+modalities as internal sub-∞-toposes (`Homotopy.Modality`).
+
+## Checking it
+
+Every module typechecks with the 1Lab's Mikan (Agda) toolchain — see
+the upstream build instructions below. The development discipline: one
+typechecker process at a time, every commit gated on a clean exit
+code, zero postulates throughout (`grep -r postulate src/Physics
+src/Data/Real` returns nothing).
+
+## Provenance
+
+All infrastructure, style, and the mathematical substrate belong to
+the [1Lab and its contributors](https://1lab.dev) — this fork adds a
+physics stack on top and is developed independently of upstream. The
+new modules were written by Claude (Anthropic) as a human-directed
+agent system, with the typechecker as sole arbiter; see the paper's
+colophon.
+
+---
 
 # Building
 
