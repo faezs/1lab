@@ -679,3 +679,69 @@ private abstract
     (tr-□ (cut.lower-round x q lq))
 ```
 -->
+
+A real number and its negation sum to zero: this is the one place
+[[approximation|approx]] is used symmetrically on both sides of an
+equation, rather than to establish locatedness.
+
+```agda
++ᴿ-invr : ∀ x → x +ᴿ (-ᴿ x) ≡ 0ᴿ
+```
+
+<!--
+```agda
+private abstract
+  r<negs→rs<0 : ∀ r s → r < (-ℚ s) → r +ℚ s < 0
+  r<negs→rs<0 r s r<negs = subst (r +ℚ s <_) (+ℚ-invl s) (+ℚ-preserves-<r s r<negs)
+
+  neg-diff-swap : ∀ u v → -ℚ (v +ℚ (-ℚ u)) ≡ u +ℚ (-ℚ v)
+  neg-diff-swap u v = +ℚ-cancelr (v +ℚ (-ℚ u))
+    ( (-ℚ (v +ℚ (-ℚ u))) +ℚ (v +ℚ (-ℚ u))               ≡⟨ +ℚ-invl (v +ℚ (-ℚ u)) ⟩
+      0                                                  ≡˘⟨ rhs-vanishes ⟩
+      (u +ℚ (-ℚ v)) +ℚ (v +ℚ (-ℚ u))                     ∎)
+    where
+    rhs-vanishes : (u +ℚ (-ℚ v)) +ℚ (v +ℚ (-ℚ u)) ≡ 0
+    rhs-vanishes =
+      (u +ℚ (-ℚ v)) +ℚ (v +ℚ (-ℚ u))   ≡⟨ +ℚ-swap-inner u (-ℚ v) v (-ℚ u) ⟩
+      (u +ℚ v) +ℚ ((-ℚ v) +ℚ (-ℚ u))   ≡˘⟨ ap ((u +ℚ v) +ℚ_) negsum ⟩
+      (u +ℚ v) +ℚ (-ℚ (v +ℚ u))        ≡⟨ ap (λ e → (u +ℚ v) +ℚ (-ℚ e)) (+ℚ-commutative v u) ⟩
+      (u +ℚ v) +ℚ (-ℚ (u +ℚ v))        ≡⟨ +ℚ-invr (u +ℚ v) ⟩
+      0                                 ∎
+      where
+      negsum : -ℚ (v +ℚ u) ≡ (-ℚ v) +ℚ (-ℚ u)
+      negsum = +ℚ-cancelr (v +ℚ u)
+        ( (-ℚ (v +ℚ u)) +ℚ (v +ℚ u)             ≡⟨ +ℚ-invl (v +ℚ u) ⟩
+          0                                      ≡˘⟨ +ℚ-invl v ⟩
+          (-ℚ v) +ℚ v                            ≡˘⟨ ap ((-ℚ v) +ℚ_) (+ℚ-idl v) ⟩
+          (-ℚ v) +ℚ (0 +ℚ v)                     ≡˘⟨ ap (λ e → (-ℚ v) +ℚ (e +ℚ v)) (+ℚ-invl u) ⟩
+          (-ℚ v) +ℚ (((-ℚ u) +ℚ u) +ℚ v)         ≡⟨ ap ((-ℚ v) +ℚ_) (sym (+ℚ-associative (-ℚ u) u v)) ⟩
+          (-ℚ v) +ℚ ((-ℚ u) +ℚ (u +ℚ v))         ≡⟨ +ℚ-associative (-ℚ v) (-ℚ u) (u +ℚ v) ⟩
+          ((-ℚ v) +ℚ (-ℚ u)) +ℚ (u +ℚ v)         ≡⟨ ap (((-ℚ v) +ℚ (-ℚ u)) +ℚ_) (+ℚ-commutative u v) ⟩
+          ((-ℚ v) +ℚ (-ℚ u)) +ℚ (v +ℚ u)         ∎)
+
+  neg-lt-swap : ∀ u v q → (v +ℚ (-ℚ u)) < (-ℚ q) → q < (u +ℚ (-ℚ v))
+  neg-lt-swap u v q p =
+    subst₂ _<_ (negℚ-invol q) (neg-diff-swap u v) (negℚ-anti-< p)
+
+  0<-q→positive : ∀ q → q < 0 → 0 < (-ℚ q)
+  0<-q→positive q q<0 = transport (λ i → +ℚ-invr q i < +ℚ-idl (-ℚ q) i) (+ℚ-preserves-<r (-ℚ q) q<0)
+
++ᴿ-invr x = ≤ᴿ-antisym shrink grow
+  where
+  shrink : ∀ q → ∣ (x +ᴿ (-ᴿ x)) .lower q ∣ → ∣ 0ᴿ .lower q ∣
+  shrink q lq = □-elim (λ _ → hlevel 1)
+    (λ (r , s , lr , ux' , q<rs) →
+      <-trans q<rs (r<negs→rs<0 r s (lower<upper x lr ux')))
+    lq
+
+  grow : ∀ q → ∣ 0ᴿ .lower q ∣ → ∣ (x +ᴿ (-ᴿ x)) .lower q ∣
+  grow q q<0 = ∥-∥-rec (hlevel 1) mk (approx x (-ℚ q) (0<-q→positive q q<0))
+    where
+    mk : (Σ Ratio λ u → Σ Ratio λ v →
+           ∣ x .lower u ∣ × ∣ x .upper v ∣ × ((v +ℚ (-ℚ u)) < (-ℚ q)))
+       → ∣ (x +ᴿ (-ᴿ x)) .lower q ∣
+    mk (u , v , lu , uv , gap) = inc (u , -ℚ v , lu ,
+      subst (λ z → ∣ x .upper z ∣) (sym (negℚ-invol v)) uv ,
+      neg-lt-swap u v q gap)
+```
+-->
