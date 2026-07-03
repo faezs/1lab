@@ -238,3 +238,181 @@ minᴿ x y .has-is-cut = record
       (cut.cut-located x q<r) (cut.cut-located y q<r)
   }
 ```
+
+## Lattice laws
+
+Every law below reduces, via `≤ᴿ-antisym`{.Agda}, to a manipulation
+of lower-cut inclusions — plain logic on `□`{.Agda} and `_⊎_`, with no
+further appeal to the cut axioms. First, the two injections and the
+universal property of the join.
+
+```agda
+maxᴿ-≤l : ∀ x y → x ≤ᴿ maxᴿ x y
+maxᴿ-≤l x y q lq = inc (inl lq)
+
+maxᴿ-≤r : ∀ x y → y ≤ᴿ maxᴿ x y
+maxᴿ-≤r x y q lq = inc (inr lq)
+
+maxᴿ-universal : ∀ {x y z} → x ≤ᴿ z → y ≤ᴿ z → maxᴿ x y ≤ᴿ z
+maxᴿ-universal {x} {y} {z} p q r = □-rec ((z .lower r) .is-tr)
+  (λ where
+    (inl lx) → p r lx
+    (inr ly) → q r ly)
+```
+
+The commutative, idempotent, and associative laws all follow purely
+formally from the universal property together with the two
+injections.
+
+Every application of the universal properties below names its
+implicit arguments explicitly: the goal types are inclusions of
+*record projections* `_.lower`{.Agda} applied to the (as yet
+unknown) join or meet, and Agda's unifier cannot invert through a
+projection blocked on a metavariable, however obvious the intended
+solution looks on paper.
+
+```agda
+maxᴿ-comm : ∀ x y → maxᴿ x y ≡ maxᴿ y x
+maxᴿ-comm x y = ≤ᴿ-antisym p q
+  where
+  p : maxᴿ x y ≤ᴿ maxᴿ y x
+  p = maxᴿ-universal {x = x} {y = y} {z = maxᴿ y x} (maxᴿ-≤r y x) (maxᴿ-≤l y x)
+  q : maxᴿ y x ≤ᴿ maxᴿ x y
+  q = maxᴿ-universal {x = y} {y = x} {z = maxᴿ x y} (maxᴿ-≤r x y) (maxᴿ-≤l x y)
+
+maxᴿ-idem : ∀ x → maxᴿ x x ≡ x
+maxᴿ-idem x = ≤ᴿ-antisym p (maxᴿ-≤l x x)
+  where
+  p : maxᴿ x x ≤ᴿ x
+  p = maxᴿ-universal {x = x} {y = x} {z = x} (≤ᴿ-refl {x = x}) (≤ᴿ-refl {x = x})
+
+maxᴿ-assoc : ∀ x y z → maxᴿ (maxᴿ x y) z ≡ maxᴿ x (maxᴿ y z)
+maxᴿ-assoc x y z = ≤ᴿ-antisym p q
+  where
+  y≤yz : y ≤ᴿ maxᴿ y z
+  y≤yz = maxᴿ-≤l y z
+  z≤yz : z ≤ᴿ maxᴿ y z
+  z≤yz = maxᴿ-≤r y z
+  x≤xy : x ≤ᴿ maxᴿ x y
+  x≤xy = maxᴿ-≤l x y
+  y≤xy : y ≤ᴿ maxᴿ x y
+  y≤xy = maxᴿ-≤r x y
+
+  y≤xyz : y ≤ᴿ maxᴿ x (maxᴿ y z)
+  y≤xyz = ≤ᴿ-trans {x = y} {y = maxᴿ y z} {z = maxᴿ x (maxᴿ y z)} y≤yz
+            (maxᴿ-≤r x (maxᴿ y z))
+  z≤xyz : z ≤ᴿ maxᴿ x (maxᴿ y z)
+  z≤xyz = ≤ᴿ-trans {x = z} {y = maxᴿ y z} {z = maxᴿ x (maxᴿ y z)} z≤yz
+            (maxᴿ-≤r x (maxᴿ y z))
+  x≤xyz' : x ≤ᴿ maxᴿ (maxᴿ x y) z
+  x≤xyz' = ≤ᴿ-trans {x = x} {y = maxᴿ x y} {z = maxᴿ (maxᴿ x y) z} x≤xy
+             (maxᴿ-≤l (maxᴿ x y) z)
+  y≤xyz' : y ≤ᴿ maxᴿ (maxᴿ x y) z
+  y≤xyz' = ≤ᴿ-trans {x = y} {y = maxᴿ x y} {z = maxᴿ (maxᴿ x y) z} y≤xy
+             (maxᴿ-≤l (maxᴿ x y) z)
+
+  p : maxᴿ (maxᴿ x y) z ≤ᴿ maxᴿ x (maxᴿ y z)
+  p = maxᴿ-universal {x = maxᴿ x y} {y = z} {z = maxᴿ x (maxᴿ y z)}
+        (maxᴿ-universal {x = x} {y = y} {z = maxᴿ x (maxᴿ y z)} (maxᴿ-≤l x (maxᴿ y z)) y≤xyz)
+        z≤xyz
+  q : maxᴿ x (maxᴿ y z) ≤ᴿ maxᴿ (maxᴿ x y) z
+  q = maxᴿ-universal {x = x} {y = maxᴿ y z} {z = maxᴿ (maxᴿ x y) z}
+        x≤xyz'
+        (maxᴿ-universal {x = y} {y = z} {z = maxᴿ (maxᴿ x y) z} y≤xyz' (maxᴿ-≤r (maxᴿ x y) z))
+```
+
+Dually for the meet: two projections, a universal property landing
+*into* $\min(x,y)$, and the same three laws.
+
+```agda
+minᴿ-≥l : ∀ x y → minᴿ x y ≤ᴿ x
+minᴿ-≥l x y q (lx , ly) = lx
+
+minᴿ-≥r : ∀ x y → minᴿ x y ≤ᴿ y
+minᴿ-≥r x y q (lx , ly) = ly
+
+minᴿ-universal : ∀ {x y z} → z ≤ᴿ x → z ≤ᴿ y → z ≤ᴿ minᴿ x y
+minᴿ-universal {x} {y} {z} p q r lr = p r lr , q r lr
+
+minᴿ-comm : ∀ x y → minᴿ x y ≡ minᴿ y x
+minᴿ-comm x y = ≤ᴿ-antisym p q
+  where
+  p : minᴿ x y ≤ᴿ minᴿ y x
+  p = minᴿ-universal {x = y} {y = x} {z = minᴿ x y} (minᴿ-≥r x y) (minᴿ-≥l x y)
+  q : minᴿ y x ≤ᴿ minᴿ x y
+  q = minᴿ-universal {x = x} {y = y} {z = minᴿ y x} (minᴿ-≥r y x) (minᴿ-≥l y x)
+
+minᴿ-idem : ∀ x → minᴿ x x ≡ x
+minᴿ-idem x = ≤ᴿ-antisym (minᴿ-≥l x x) p
+  where
+  p : x ≤ᴿ minᴿ x x
+  p = minᴿ-universal {x = x} {y = x} {z = x} (≤ᴿ-refl {x = x}) (≤ᴿ-refl {x = x})
+
+minᴿ-assoc : ∀ x y z → minᴿ (minᴿ x y) z ≡ minᴿ x (minᴿ y z)
+minᴿ-assoc x y z = ≤ᴿ-antisym p q
+  where
+  xy≤x : minᴿ x y ≤ᴿ x
+  xy≤x = minᴿ-≥l x y
+  xy≤y : minᴿ x y ≤ᴿ y
+  xy≤y = minᴿ-≥r x y
+  yz≤y : minᴿ y z ≤ᴿ y
+  yz≤y = minᴿ-≥l y z
+  yz≤z : minᴿ y z ≤ᴿ z
+  yz≤z = minᴿ-≥r y z
+
+  xyz≤x : minᴿ (minᴿ x y) z ≤ᴿ x
+  xyz≤x = ≤ᴿ-trans {x = minᴿ (minᴿ x y) z} {y = minᴿ x y} {z = x}
+            (minᴿ-≥l (minᴿ x y) z) xy≤x
+  xyz≤y : minᴿ (minᴿ x y) z ≤ᴿ y
+  xyz≤y = ≤ᴿ-trans {x = minᴿ (minᴿ x y) z} {y = minᴿ x y} {z = y}
+            (minᴿ-≥l (minᴿ x y) z) xy≤y
+  xyz≤y' : minᴿ x (minᴿ y z) ≤ᴿ y
+  xyz≤y' = ≤ᴿ-trans {x = minᴿ x (minᴿ y z)} {y = minᴿ y z} {z = y}
+             (minᴿ-≥r x (minᴿ y z)) yz≤y
+  xyz≤z' : minᴿ x (minᴿ y z) ≤ᴿ z
+  xyz≤z' = ≤ᴿ-trans {x = minᴿ x (minᴿ y z)} {y = minᴿ y z} {z = z}
+             (minᴿ-≥r x (minᴿ y z)) yz≤z
+
+  p : minᴿ (minᴿ x y) z ≤ᴿ minᴿ x (minᴿ y z)
+  p = minᴿ-universal {x = x} {y = minᴿ y z} {z = minᴿ (minᴿ x y) z}
+        xyz≤x
+        (minᴿ-universal {x = y} {y = z} {z = minᴿ (minᴿ x y) z} xyz≤y (minᴿ-≥r (minᴿ x y) z))
+  q : minᴿ x (minᴿ y z) ≤ᴿ minᴿ (minᴿ x y) z
+  q = minᴿ-universal {x = minᴿ x y} {y = z} {z = minᴿ x (minᴿ y z)}
+        (minᴿ-universal {x = x} {y = y} {z = minᴿ x (minᴿ y z)} (minᴿ-≥l x (minᴿ y z)) xyz≤y')
+        xyz≤z'
+```
+
+## Absolute value
+
+The absolute value is the join of a real with its negation — the
+smallest real that dominates both $x$ and $-x$.
+
+```agda
+absᴿ : ℝ → ℝ
+absᴿ x = maxᴿ x (-ᴿ x)
+
+absᴿ-≥ : ∀ x → x ≤ᴿ absᴿ x
+absᴿ-≥ x = maxᴿ-≤l x (-ᴿ x)
+
+absᴿ-≥' : ∀ x → (-ᴿ x) ≤ᴿ absᴿ x
+absᴿ-≥' x = maxᴿ-≤r x (-ᴿ x)
+
+absᴿ-neg : ∀ x → absᴿ (-ᴿ x) ≡ absᴿ x
+absᴿ-neg x =
+  maxᴿ (-ᴿ x) (-ᴿ (-ᴿ x))  ≡⟨ ap (maxᴿ (-ᴿ x)) (-ᴿ-invol x) ⟩
+  maxᴿ (-ᴿ x) x            ≡⟨ maxᴿ-comm (-ᴿ x) x ⟩
+  maxᴿ x (-ᴿ x)            ∎
+```
+
+Finally, the absorption law linking the two operations: joining $x$
+with anything smaller than it — in particular with $\min(x,y)$ — just
+gives back $x$.
+
+```agda
+max-min-absorb : ∀ x y → maxᴿ x (minᴿ x y) ≡ x
+max-min-absorb x y = ≤ᴿ-antisym p (maxᴿ-≤l x (minᴿ x y))
+  where
+  p : maxᴿ x (minᴿ x y) ≤ᴿ x
+  p = maxᴿ-universal {x = x} {y = minᴿ x y} {z = x} (≤ᴿ-refl {x = x}) (minᴿ-≥l x y)
+```
