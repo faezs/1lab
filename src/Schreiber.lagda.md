@@ -38,6 +38,8 @@ open import Topoi.Base
 
 import Cat.CartesianClosed.Free.Model
 import Algebra.Ring.DualNumbers
+import Algebra.Ring.Polynomial
+import Cat.Instances.FormalSmoothSets
 import Cat.Instances.Presheaf.Cohesive
 import Cat.Instances.Presheaf.Concrete
 import Cat.Instances.FormalSets
@@ -241,6 +243,32 @@ _ = Cat.Instances.FormalSets.𝔻
 _ = Cat.Instances.FormalSets.T
 _ = Cat.Instances.FormalSets.T-proj
 _ = Cat.Instances.FormalSets.T-at-point
+```
+
+And then, *properly*: the paper's site (13) of [[thickened Cartesian
+spaces|thickened-cartesian-space]] itself, with both columns of the
+probe table — affine spaces *and* infinitesimal thickenings — read
+constructively through their function algebras. The smooth column is
+the free commutative algebra — the [[polynomial
+ring|polynomial-ring]], constructed as a higher inductive type with
+its full universal property — and the site is closed under products
+with the disk, which is what makes those products *representable*.
+Over this site, [[formal smooth sets|formal-smooth-sets]] form a
+cohesive gros topos containing the affine line, and the
+**Kock–Lawvere axiom** of synthetic differential geometry — plots of
+$\rm{Maps}(\bD, \bA^1)$ are pairs, value and derivative — is a
+[[theorem|kock-lawvere]], proved by composing the universal
+properties of the polynomial ring and the dual numbers with the
+Yoneda lemma.
+
+```agda
+_ = Algebra.Ring.Polynomial.R[_]
+_ = Algebra.Ring.Polynomial.extend
+_ = Cat.Instances.FormalSmoothSets.ThCartSp
+_ = Cat.Instances.FormalSmoothSets.FrmlSmthSet
+_ = Cat.Instances.FormalSmoothSets.𝔸¹
+_ = Cat.Instances.FormalSmoothSets.𝔻-product
+_ = Cat.Instances.FormalSmoothSets.Kock-Lawvere
 ```
 
 Finally, on the last column of the table: stable homotopy theory. A
@@ -468,9 +496,13 @@ For honesty, the items of the paper with no 1Lab counterpart yet:
 germs of plots ((5), (6)); the identification of sheaves with the
 localisation of presheaves at local isomorphisms (7); the proof that
 the higher-inductive sheafification is left exact (connecting
-`Sh[_,_]`{.Agda} to `Topos`{.Agda}); the general Weil-algebra site
-$\bD^m_k$ beyond the first-order disk, and *super* sites ((17)–(21)),
-which await $\mathbb{Z}/2$-graded commutative algebra; the Dold–Kan
+`Sh[_,_]`{.Agda} to `Topos`{.Agda}); the good-open-cover *coverage*
+on the thickened site (our topos is presheaves; the paper's is
+sheaves — the infinitesimal directions carry the trivial coverage
+either way); Weil algebras of higher order $\epsilon^{k+1} = 0$,
+$k \ge 2$ (we have all iterated first-order thickenings), and *super*
+sites ((17)–(21)), which await $\mathbb{Z}/2$-graded commutative
+algebra; the Dold–Kan
 correspondence ((29)–(31)); Eilenberg–MacLane spaces
 $\mathbf{B}^n A$ for $n \ge 2$, hence Eilenberg–MacLane spectra;
 simplicial *presheaves* and their local homotopy theory ((35)–(37)),
