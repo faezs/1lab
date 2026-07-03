@@ -138,3 +138,60 @@ module _ {A B : CRing ℓ} {φA : CR.Hom R A} {φB : CR.Hom R B}
   Ω¹-map (squashω x y p q i j) = squashω
     (Ω¹-map x) (Ω¹-map y) (λ i → Ω¹-map (p i)) (λ i → Ω¹-map (q i)) i j
 ```
+
+## Derived module laws
+
+<!--
+```agda
+module _ {A : CRing ℓ} {φ : CR.Hom R A} where
+  private module A = CRing-on (A .snd)
+
+  +ω-idr : ∀ (x : Ω¹ A φ) → x +ω 0ω ≡ x
+  +ω-idr x = +ω-comm x 0ω ∙ +ω-idl x
+
+  ·ω-absorb : ∀ (a : ⌞ A ⌟) → (a ·ω 0ω) ≡ 0ω {A = A} {φ}
+  ·ω-absorb a =
+    a ·ω 0ω                                       ≡˘⟨ +ω-idr (a ·ω 0ω) ⟩
+    (a ·ω 0ω) +ω 0ω                               ≡˘⟨ ap ((a ·ω 0ω) +ω_) (+ω-invr (a ·ω 0ω)) ⟩
+    (a ·ω 0ω) +ω ((a ·ω 0ω) +ω (-ω (a ·ω 0ω)))   ≡⟨ +ω-assoc _ _ _ ⟩
+    ((a ·ω 0ω) +ω (a ·ω 0ω)) +ω (-ω (a ·ω 0ω))   ≡˘⟨ ap (_+ω (-ω (a ·ω 0ω))) (·ω-distl a 0ω 0ω) ⟩
+    (a ·ω (0ω +ω 0ω)) +ω (-ω (a ·ω 0ω))          ≡⟨ ap (λ e → (a ·ω e) +ω (-ω (a ·ω 0ω))) (+ω-idl 0ω) ⟩
+    (a ·ω 0ω) +ω (-ω (a ·ω 0ω))                  ≡⟨ +ω-invr (a ·ω 0ω) ⟩
+    0ω                                            ∎
+```
+-->
+
+<!--
+```agda
+module _ {A : CRing ℓ} {φ : CR.Hom R A} where
+  Ω¹-map-id
+    : (comm : CR.id CR.∘ φ ≡ φ)
+    → ∀ x → Ω¹-map CR.id comm x ≡ x
+  Ω¹-map-id comm = Ω¹-elim-prop A φ
+    (λ x → Ω¹-map CR.id comm x ≡ x)
+    (λ _ → squashω _ _)
+    (λ a → refl)
+    (λ a x ih → ap (a ·ω_) ih)
+    (λ x ihx y ihy → ap₂ _+ω_ ihx ihy)
+    refl
+    (λ x ih → ap -ω_ ih)
+
+module _ {A B C : CRing ℓ} {φA : CR.Hom R A} {φB : CR.Hom R B}
+         {φC : CR.Hom R C}
+         (f : CR.Hom B C) (g : CR.Hom A B)
+         (cf : f CR.∘ φB ≡ φC) (cg : g CR.∘ φA ≡ φB)
+         (cfg : (f CR.∘ g) CR.∘ φA ≡ φC)
+  where
+
+  Ω¹-map-∘
+    : ∀ x → Ω¹-map (f CR.∘ g) cfg x ≡ Ω¹-map f cf (Ω¹-map g cg x)
+  Ω¹-map-∘ = Ω¹-elim-prop A φA
+    (λ x → Ω¹-map (f CR.∘ g) cfg x ≡ Ω¹-map f cf (Ω¹-map g cg x))
+    (λ _ → squashω _ _)
+    (λ a → refl)
+    (λ a x ih → ap (f .∫Hom.fst (g .∫Hom.fst a) ·ω_) ih)
+    (λ x ihx y ihy → ap₂ _+ω_ ihx ihy)
+    refl
+    (λ x ih → ap -ω_ ih)
+```
+-->
