@@ -456,3 +456,34 @@ affine spaces, containing the line $\bA^1$, in which mapping spaces
 exist, tangent bundles are mapping spaces out of $\bD$, and the
 infinitesimal analysis of variational calculus is valid — with
 "smooth" read, constructively, as "polynomial".
+
+## Plots of mapping spaces out of the point
+
+The bottom row of the paper's (16) says $\rm{Maps}(\ast, X) \simeq X$:
+mapping out of the terminal probe is invisible. In plots, over any
+stage:
+
+```agda
+Maps-point : ∀ (X : ⌞ FrmlSmthSet ⌟) U
+  → ∣ PC.[ よ₀ ThCartSp (𝔸 0 0) , X ] .F₀ U ∣ ≃ ∣ X .F₀ U ∣
+Maps-point X U = Iso→Equiv (to , iso from ri li) where
+  to : ∣ PC.[ よ₀ ThCartSp (𝔸 0 0) , X ] .F₀ U ∣ → ∣ X .F₀ U ∣
+  to f = f .η U (ThCartSp .id , pt-terminal .has⊤ U .centre)
+
+  from : ∣ X .F₀ U ∣ → ∣ PC.[ よ₀ ThCartSp (𝔸 0 0) , X ] .F₀ U ∣
+  from x .η V (u , p) = X .F₁ u x
+  from x .is-natural V W g = funext λ (u , p) →
+    happly (X .F-∘ g u) x
+
+  ri : is-right-inverse from to
+  ri x = happly (X .F-id) x
+
+  li : is-left-inverse from to
+  li f = Nat-path {C = ThCartSp ^op} {D = Sets ℓ} λ V →
+    funext λ (u , p) →
+        sym (happly (f .is-natural U V u)
+          (ThCartSp .id , pt-terminal .has⊤ U .centre))
+      ∙ ap (f .η V) (Σ-pathp
+          (ThCartSp .idl u)
+          (is-contr→is-prop (pt-terminal .has⊤ V) _ _))
+```

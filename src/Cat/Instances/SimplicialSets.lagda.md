@@ -134,3 +134,14 @@ gauge-of-gauge transformations are 2-simplices, and so on.
 Kan-complexes : Precategory (lsuc lzero) lzero
 Kan-complexes = Restrict {C = sSet} is-kan
 ```
+
+## Connected components
+
+The set of **connected components** of a simplicial set is the
+coequaliser of the two face maps: two vertices land in the same
+component when some edge connects them.
+
+```agda
+π₀ˢ : ⌞ sSet ⌟ → Type
+π₀ˢ X = Coeq (X .F₁ (δ {n = 0} fzero)) (X .F₁ (δ {n = 0} (fsuc fzero)))
+```

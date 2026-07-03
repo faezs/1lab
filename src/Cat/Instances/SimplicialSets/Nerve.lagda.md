@@ -4,6 +4,7 @@ open import Cat.Instances.SimplicialSets
 open import Cat.Instances.Delooping
 open import Cat.Instances.StrictCat
 open import Cat.Instances.Simplex
+open import Cat.Diagram.Exponential
 open import Cat.Functor.Base
 open import Cat.Prelude
 
@@ -255,3 +256,29 @@ For a *group*, every horn of this simplicial set has a filler — the
 delooping is a [[Kan complex]], the delooping *groupoid* $\B{G}$ of
 gauge theory — but we leave the general filling argument for future
 work.
+
+## Nonabelian cohomology, combinatorially
+
+With mapping simplicial sets and connected components in hand, the
+paper's (39) has a combinatorial core: the **first nonabelian
+cohomology** of a simplicial set with coefficients in a monoid — for
+gauge theory, a group — is the set of connected components of the
+mapping space into the delooping: maps are cocycles, edges between
+them are gauge transformations.
+
+<!--
+```agda
+private module SC = Cartesian-closed sSet-closed
+```
+-->
+
+```agda
+H¹[_,_] : ⌞ sSet ⌟ → ∀ {M : Type} → Monoid-on M → Type
+H¹[ X , mm ] = π₀ˢ SC.[ X , nerve-B mm ]
+```
+
+For this to compute the cohomology of a *space* (rather than of a
+chosen combinatorial model), the argument should be a cofibrant
+resolution — the paper's Čech nerve of a good cover — which is where
+the localisation of the previous sections re-enters; that comparison
+remains future work.

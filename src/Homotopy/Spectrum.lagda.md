@@ -50,3 +50,22 @@ to all heights — the Eilenberg–MacLane spectrum — requires the higher
 deloopings $K(A, n)$, which the 1Lab does not yet have. The site
 $\rm{Lin}$ of negative-dimensional spheres, presenting *parameterized*
 spectra as a gros higher topos, is likewise future work.
+
+## Parameterized spectra
+
+A **parameterized spectrum** over a base $B$ is a family of spectra,
+one for each point. In the language of homotopy type theory this is
+simply a function into the type of (pre)spectra — the families that
+the paper presents as presheaves on the site $\rm{Lin}$ of
+negative-dimensional spheres. The site presentation, together with
+its stable localisation making these a higher *tangent topos*, is
+future work; the objects themselves are already available.
+
+```agda
+Prespectrum-over : ∀ {ℓb} (B : Type ℓb) (ℓ : Level) → Type (ℓb ⊔ lsuc ℓ)
+Prespectrum-over B ℓ = B → Prespectrum ℓ
+
+is-Ω-spectrum-over
+  : ∀ {ℓb ℓ} {B : Type ℓb} → Prespectrum-over B ℓ → Type (ℓb ⊔ ℓ)
+is-Ω-spectrum-over E = ∀ b → is-Ω-spectrum (E b)
+```
