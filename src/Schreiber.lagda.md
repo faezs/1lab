@@ -35,10 +35,15 @@ open import Data.Bool
 open import Homotopy.Space.Delooping
 open import Homotopy.Spectrum
 
+open import Algebra.ChainComplex
+
 open import Topoi.Base
 
+import Algebra.Ring.Grassmann
 import Cat.CartesianClosed.Free.Model
+import Cat.Instances.FormalSmoothSets.DeRham
 import Cat.Instances.Presheaf.Germs
+import Cat.Instances.SimplicialPresheaves
 import Cat.Site.Instances.Trivial
 import Algebra.Ring.DualNumbers
 import Algebra.Ring.Polynomial
@@ -288,6 +293,34 @@ _ = Cat.Instances.FormalSmoothSets.FrmlSmthSet
 _ = Cat.Instances.FormalSmoothSets.𝔸¹
 _ = Cat.Instances.FormalSmoothSets.𝔻-product
 _ = Cat.Instances.FormalSmoothSets.Kock-Lawvere
+_ = Cat.Instances.FormalSmoothSets.Maps-point
+```
+
+In this topos the paper's flagship *non-concrete* smooth set also
+exists: the [[de Rham classifier|de-rham-classifier]] of 1-forms,
+whose plots are [[Kähler differentials|kahler-differentials]]. It has
+a contractible set of points, and — over a nontrivial ring — a
+nonvanishing differential $\mathrm{d}x$ on the line, witnessed by
+the derivative functional obtained by evaluating into the dual
+numbers at $x + \epsilon$. So it is *not* concrete: smooth sets see
+strictly more than diffeological spaces, which is where anomaly
+polynomials live.
+
+```agda
+_ = Cat.Instances.FormalSmoothSets.DeRham.Ω¹-dR
+_ = Cat.Instances.FormalSmoothSets.DeRham.Ω¹-dR-point
+_ = Cat.Instances.FormalSmoothSets.DeRham.Ω¹-dR-not-concrete
+```
+
+For the fermionic column ((17), (18)): the [[Grassmann
+algebra|grassmann-algebra]] over any commutative ring, with the
+anticommutation relation as a constructor and the
+$\mathbb{Z}/2$-grading carried by the parity involution.
+
+```agda
+_ = Algebra.Ring.Grassmann.Grassmann
+_ = Algebra.Ring.Grassmann.σ-parity
+_ = Algebra.Ring.Grassmann.σ-σ
 ```
 
 Finally, on the last column of the table: stable homotopy theory. A
@@ -498,6 +531,26 @@ _ = nerve-B₁≃M
 _ = nerve-B₂≃M×M
 ```
 
+Chain complexes ((29)) exist as a category; connected components of
+simplicial sets give the combinatorial core of nonabelian cohomology
+((39)): $H^1$ with coefficients in a group is $\pi_0$ of the mapping
+space into the delooping. [[Simplicial
+presheaves|simplicial-presheaf]] over any site realise the shape of
+(36), and the computation (37) of $\Delta^2$-plots of the delooping
+at every geometric stage follows from the nerve computation by
+Yoneda. Parameterized spectra — the objects of the tangent topos
+(41) — are families of [[prespectra|prespectrum]].
+
+```agda
+_ = Chain-complex
+_ = Ch
+_ = π₀ˢ
+_ = H¹[_,_]
+_ = Cat.Instances.SimplicialPresheaves.sPSh
+_ = Cat.Instances.SimplicialPresheaves.plots-Δ²-BM
+_ = Prespectrum-over
+```
+
 On the homotopy-theoretic side of the dictionary, the delooping of a
 group exists as a higher inductive type with $G \simeq \Omega
 \mathbf{B} G$ — the paper's (34) in the case $n = 1$ — and first
@@ -514,23 +567,18 @@ _ = G≃ΩB
 For honesty, the items of the paper with no 1Lab counterpart yet:
 the smooth-site instance of (7) (localisation over the
 good-open-cover coverage, with shrinking-neighbourhood germs); the
-proof that
-the higher-inductive sheafification is left exact (connecting
-`Sh[_,_]`{.Agda} to `Topos`{.Agda}); the good-open-cover *coverage*
-on the thickened site (our topos is presheaves; the paper's is
-sheaves — the infinitesimal directions carry the trivial coverage
-either way); Weil algebras of higher order $\epsilon^{k+1} = 0$,
-$k \ge 2$ (we have all iterated first-order thickenings), and *super*
-sites ((17)–(21)), which await $\mathbb{Z}/2$-graded commutative
-algebra; the non-concrete classifiers of differential forms
-$\Omega^p_{\rm{dR}}$ and their Deligne refinements
-$\mathbf{B}^d\rm{U}(1)_{\rm{conn}}$, home of anomaly polynomials
-and gauge potentials ((12) ff., (39), (40)); the Dold–Kan
-correspondence ((29)–(31)); Eilenberg–MacLane spaces
-$\mathbf{B}^n A$ for $n \ge 2$, hence Eilenberg–MacLane spectra;
-simplicial *presheaves* and their local homotopy theory ((35)–(37)),
-the genuinely $\infty$-categorical part of the story; Čech nerves and
-the cofibrant-resolution presentation of nonabelian cohomology ((38),
-(39)); orbifold singularities; and the site $\rm{Lin}$ of
-negative-dimensional spheres presenting the tangent topos (41). Each
+proof that the higher-inductive sheafification is left exact
+(connecting `Sh[_,_]`{.Agda} to `Topos`{.Agda}); Weil algebras of
+higher order and coverages on the thickened site; the *assembly* of
+the super site from the Grassmann and polynomial algebras, and the
+odd-plot description of spinor fields ((19)–(21)); higher de Rham
+forms $\Omega^p$, the de Rham differential as a map of smooth sets,
+and Deligne/connection refinements ((39), (40)); the Dold–Kan
+correspondence (30) and Eilenberg–MacLane spaces $\mathbf{B}^n A$
+for $n \ge 2$ (31); closure of Kan complexes under mapping spaces
+and the simplicial localisations $L^{\rm{heq}}, L^{\rm{lheq}}$
+((32)–(36)), the genuinely $\infty$-categorical part; Čech nerves
+and cofibrant resolutions ((38), full (39)); the orbifold site and
+homotopy quotients; and the site $\rm{Lin}$ with its stable
+localisation presenting the tangent topos (41). Each
 is a well-posed project over the infrastructure assembled above.
