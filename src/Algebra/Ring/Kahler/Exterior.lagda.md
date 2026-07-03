@@ -478,3 +478,16 @@ exact forms, $\mathrm{d}\circ\mathrm{d} = 0$, and it is additive.
   d¹-+ ω ω' = refl
 ```
 
+## Gauge invariance
+
+The field strength built from a potential $1$-form is unchanged by
+adding an *exact* form $\mathrm{d}\chi$ — a **gauge transformation**:
+this is nothing but $\mathrm{d}\circ\mathrm{d} = 0$ together with
+additivity, and it is the algebraic core of why the physical field
+strength does not see the choice of gauge.
+
+```agda
+  gauge : ∀ ω χ → d¹ (ω +ω dₖ χ) ≡ d¹ ω
+  gauge ω χ = d¹-+ ω (dₖ χ) ∙ ap (d¹ ω +²_) (d¹-d χ) ∙ +²-idr (d¹ ω)
+```
+
