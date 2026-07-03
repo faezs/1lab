@@ -258,4 +258,66 @@ bound-above = ℚ-elim-prop (λ _ → squash) go
   go : ∀ f → ∥ Σ Nat (λ n → toℚ f < nℚ n) ∥
   go (x / s [ p ]) = inc (suc (ℤ.abs x) , toℚ< (bound-reduce x p))
 ```
+-->
 
+From boundedness above, the full archimedean property follows: given a
+positive step $\varepsilon$, any gap between two rationals $a \le b$
+can be crossed by finitely many steps of size $\varepsilon$ starting
+from $a$.
+
+```agda
+archimedean
+  : ∀ a b ε → 0 < ε
+  → ∥ Σ Nat (λ n → b < a +ℚ nℚ n *ℚ ε) ∥
+```
+
+<!--
+```agda
+private abstract
+  /ℚ-cancel : ∀ x y ⦃ p : Nonzero y ⦄ → (x /ℚ y) *ℚ y ≡ x
+  /ℚ-cancel x y = ap (_*ℚ y) /ℚ-def ∙ sym (*ℚ-associative x (invℚ y) y) ∙ ap (x *ℚ_) *ℚ-invl ∙ *ℚ-idr x
+
+archimedean a b ε 0<ε = ∥-∥-map bound (bound-above ((b +ℚ (-ℚ a)) /ℚ ε))
+  where
+  instance
+    ε-nonzero : Nonzero ε
+    ε-nonzero = inc (positive→nonzero (to-positive 0<ε))
+
+  bound : Σ Nat (λ n → ((b +ℚ (-ℚ a)) /ℚ ε) < nℚ n) → Σ Nat (λ n → b < a +ℚ nℚ n *ℚ ε)
+  bound (n , p) = n , positive-diff→< (transport (λ i → 0 < step i) diff-pos)
+    where
+    diff-pos : 0 < (nℚ n +ℚ (-ℚ ((b +ℚ (-ℚ a)) /ℚ ε))) *ℚ ε
+    diff-pos = from-positive (*ℚ-positive (to-positive (<→positive-diff p)) (to-positive 0<ε))
+
+    step
+      : (nℚ n +ℚ (-ℚ ((b +ℚ (-ℚ a)) /ℚ ε))) *ℚ ε
+      ≡ (a +ℚ nℚ n *ℚ ε) +ℚ (-ℚ b)
+    step =
+      (nℚ n +ℚ (-ℚ ((b +ℚ (-ℚ a)) /ℚ ε))) *ℚ ε
+        ≡⟨ *ℚ-distribr ε (nℚ n) (-ℚ ((b +ℚ (-ℚ a)) /ℚ ε)) ⟩
+      nℚ n *ℚ ε +ℚ (-ℚ ((b +ℚ (-ℚ a)) /ℚ ε)) *ℚ ε
+        ≡⟨ ap (nℚ n *ℚ ε +ℚ_) (negatel ((b +ℚ (-ℚ a)) /ℚ ε) ε) ⟩
+      nℚ n *ℚ ε +ℚ (-ℚ (((b +ℚ (-ℚ a)) /ℚ ε) *ℚ ε))
+        ≡⟨ ap (λ e → nℚ n *ℚ ε +ℚ (-ℚ e)) (/ℚ-cancel (b +ℚ (-ℚ a)) ε) ⟩
+      nℚ n *ℚ ε +ℚ (-ℚ (b +ℚ (-ℚ a)))
+        ≡⟨ ap (nℚ n *ℚ ε +ℚ_) (negate-diff b (-ℚ a) ∙ ap ((-ℚ b) +ℚ_) (negℚ-invol a)) ⟩
+      nℚ n *ℚ ε +ℚ ((-ℚ b) +ℚ a)
+        ≡⟨ ap (nℚ n *ℚ ε +ℚ_) (+ℚ-commutative (-ℚ b) a) ⟩
+      nℚ n *ℚ ε +ℚ (a +ℚ (-ℚ b))
+        ≡⟨ +ℚ-associative (nℚ n *ℚ ε) a (-ℚ b) ⟩
+      (nℚ n *ℚ ε +ℚ a) +ℚ (-ℚ b)
+        ≡⟨ ap (_+ℚ (-ℚ b)) (+ℚ-commutative (nℚ n *ℚ ε) a) ⟩
+      (a +ℚ nℚ n *ℚ ε) +ℚ (-ℚ b) ∎
+      where
+      negate-diff : ∀ u v → -ℚ (u +ℚ v) ≡ (-ℚ u) +ℚ (-ℚ v)
+      negate-diff u v = +ℚ-cancelr (u +ℚ v)
+        ( (-ℚ (u +ℚ v)) +ℚ (u +ℚ v)               ≡⟨ +ℚ-invl (u +ℚ v) ⟩
+          0                                        ≡˘⟨ +ℚ-invl u ⟩
+          (-ℚ u) +ℚ u                              ≡˘⟨ ap ((-ℚ u) +ℚ_) (+ℚ-idl u) ⟩
+          (-ℚ u) +ℚ (0 +ℚ u)                       ≡˘⟨ ap (λ e → (-ℚ u) +ℚ (e +ℚ u)) (+ℚ-invl v) ⟩
+          (-ℚ u) +ℚ (((-ℚ v) +ℚ v) +ℚ u)           ≡⟨ ap ((-ℚ u) +ℚ_) (sym (+ℚ-associative (-ℚ v) v u)) ⟩
+          (-ℚ u) +ℚ ((-ℚ v) +ℚ (v +ℚ u))           ≡⟨ +ℚ-associative (-ℚ u) (-ℚ v) (v +ℚ u) ⟩
+          ((-ℚ u) +ℚ (-ℚ v)) +ℚ (v +ℚ u)           ≡⟨ ap (((-ℚ u) +ℚ (-ℚ v)) +ℚ_) (+ℚ-commutative v u) ⟩
+          ((-ℚ u) +ℚ (-ℚ v)) +ℚ (u +ℚ v)           ∎)
+```
+-->
