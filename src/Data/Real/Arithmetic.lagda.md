@@ -792,3 +792,151 @@ private abstract
     lq
 ```
 -->
+
+## The embedding preserves addition
+
+Finally, the embedding of the rationals into the reals is a ring
+homomorphism for addition: splitting the slack between $p$ and $q$ in
+half recovers exactly the witnesses the sum-cut asks for.
+
+```agda
+ratℝ-+ : ∀ p q → ratℝ (p +ℚ q) ≡ ratℝ p +ᴿ ratℝ q
+```
+
+<!--
+```agda
+private abstract
+  neg-zero : -ℚ 0 ≡ 0
+  neg-zero = +ℚ-cancelr 0 (+ℚ-invl 0 ∙ sym (+ℚ-idr 0))
+
+  sub-neg-pos : ∀ x h → 0 < h → (x +ℚ (-ℚ h)) < x
+  sub-neg-pos x h h-pos = transport (λ i → x+neg i < +ℚ-idr x i)
+    (+ℚ-preserves-<l x (transport (λ i → -ℚ h < neg-zero i) (negℚ-anti-< h-pos)))
+    where
+    x+neg : x +ℚ (-ℚ h) ≡ x +ℚ (-ℚ h)
+    x+neg = refl
+
+  split-slack
+    : ∀ p q s → s < p +ℚ q
+    → Σ Ratio λ r → Σ Ratio λ t → (r < p) × (t < q) × (s < r +ℚ t)
+  split-slack p q s s<pq = r , t , r<p , t<q , s<rt
+    where
+    d : Ratio
+    d = (p +ℚ q) +ℚ (-ℚ s)
+
+    d-pos : 0 < d
+    d-pos = <→positive-diff s<pq
+
+    h : Ratio
+    h = half (half d)
+
+    h-pos : 0 < h
+    h-pos = half-pos (half-pos d-pos)
+
+    r t : Ratio
+    r = p +ℚ (-ℚ h)
+    t = q +ℚ (-ℚ h)
+
+    r<p : r < p
+    r<p = sub-neg-pos p h h-pos
+
+    t<q : t < q
+    t<q = sub-neg-pos q h h-pos
+
+    r+t≡pq-hh : r +ℚ t ≡ (p +ℚ q) +ℚ (-ℚ (h +ℚ h))
+    r+t≡pq-hh =
+      (p +ℚ (-ℚ h)) +ℚ (q +ℚ (-ℚ h))     ≡⟨ +ℚ-swap-inner p (-ℚ h) q (-ℚ h) ⟩
+      (p +ℚ q) +ℚ ((-ℚ h) +ℚ (-ℚ h))     ≡˘⟨ ap ((p +ℚ q) +ℚ_) negsum ⟩
+      (p +ℚ q) +ℚ (-ℚ (h +ℚ h))          ∎
+      where
+      negsum : -ℚ (h +ℚ h) ≡ (-ℚ h) +ℚ (-ℚ h)
+      negsum = +ℚ-cancelr (h +ℚ h)
+        ( (-ℚ (h +ℚ h)) +ℚ (h +ℚ h)             ≡⟨ +ℚ-invl (h +ℚ h) ⟩
+          0                                      ≡˘⟨ +ℚ-invl h ⟩
+          (-ℚ h) +ℚ h                            ≡˘⟨ ap ((-ℚ h) +ℚ_) (+ℚ-idl h) ⟩
+          (-ℚ h) +ℚ (0 +ℚ h)                     ≡˘⟨ ap (λ e → (-ℚ h) +ℚ (e +ℚ h)) (+ℚ-invl h) ⟩
+          (-ℚ h) +ℚ (((-ℚ h) +ℚ h) +ℚ h)         ≡⟨ ap ((-ℚ h) +ℚ_) (sym (+ℚ-associative (-ℚ h) h h)) ⟩
+          (-ℚ h) +ℚ ((-ℚ h) +ℚ (h +ℚ h))         ≡⟨ +ℚ-associative (-ℚ h) (-ℚ h) (h +ℚ h) ⟩
+          ((-ℚ h) +ℚ (-ℚ h)) +ℚ (h +ℚ h)         ∎)
+
+    hh≡halfd : h +ℚ h ≡ half d
+    hh≡halfd = half-sum (half d)
+
+    halfd<d : half d < d
+    halfd<d = half-lt d-pos
+
+    s<rt : s < r +ℚ t
+    s<rt = transport (λ i → lhs i < r+t≡pq-hh (~ i)) step
+      where
+      lhs : (p +ℚ q) +ℚ (-ℚ d) ≡ s
+      lhs = ap ((p +ℚ q) +ℚ_) (neg-diff-swap s (p +ℚ q)) ∙ q+[r-q]≡r (p +ℚ q) s
+
+      step : ((p +ℚ q) +ℚ (-ℚ d)) < ((p +ℚ q) +ℚ (-ℚ (h +ℚ h)))
+      step = +ℚ-preserves-<l (p +ℚ q) (negℚ-anti-< (transport (λ i → hh≡halfd (~ i) < d) halfd<d))
+
+  split-slack-upper
+    : ∀ p q s → p +ℚ q < s
+    → Σ Ratio λ v → Σ Ratio λ w → (p < v) × (q < w) × (v +ℚ w < s)
+  split-slack-upper p q s pq<s = v , w , p<v , q<w , vw<s
+    where
+    d : Ratio
+    d = s +ℚ (-ℚ (p +ℚ q))
+
+    d-pos : 0 < d
+    d-pos = <→positive-diff pq<s
+
+    h : Ratio
+    h = half (half d)
+
+    h-pos : 0 < h
+    h-pos = half-pos (half-pos d-pos)
+
+    v w : Ratio
+    v = p +ℚ h
+    w = q +ℚ h
+
+    p<v : p < v
+    p<v = transport (λ i → +ℚ-idr p i < v) (+ℚ-preserves-<l p h-pos)
+
+    q<w : q < w
+    q<w = transport (λ i → +ℚ-idr q i < w) (+ℚ-preserves-<l q h-pos)
+
+    v+w≡pq+hh : v +ℚ w ≡ (p +ℚ q) +ℚ (h +ℚ h)
+    v+w≡pq+hh = +ℚ-swap-inner p h q h
+
+    hh≡halfd : h +ℚ h ≡ half d
+    hh≡halfd = half-sum (half d)
+
+    halfd<d : half d < d
+    halfd<d = half-lt d-pos
+
+    vw<s : v +ℚ w < s
+    vw<s = transport (λ i → v+w≡pq+hh (~ i) < lhs i) step
+      where
+      lhs : (p +ℚ q) +ℚ d ≡ s
+      lhs = q+[r-q]≡r (p +ℚ q) s
+
+      step : ((p +ℚ q) +ℚ (h +ℚ h)) < ((p +ℚ q) +ℚ d)
+      step = +ℚ-preserves-<l (p +ℚ q) (transport (λ i → hh≡halfd (~ i) < d) halfd<d)
+
+ratℝ-+ p q = ℝ-path
+  (funext λ s → Ω-ua (grow s) (shrink s))
+  (funext λ s → Ω-ua (ugrow s) (ushrink s))
+  where
+  grow : ∀ s → s < p +ℚ q → ∣ (ratℝ p +ᴿ ratℝ q) .lower s ∣
+  grow s s<pq = let (r , t , r<p , t<q , s<rt) = split-slack p q s s<pq
+                in inc (r , t , r<p , t<q , s<rt)
+
+  shrink : ∀ s → ∣ (ratℝ p +ᴿ ratℝ q) .lower s ∣ → s < p +ℚ q
+  shrink s = □-elim (λ _ → hlevel 1)
+    (λ (r , t , r<p , t<q , s<rt) → <-trans s<rt (<-sum r<p t<q))
+
+  ugrow : ∀ s → p +ℚ q < s → ∣ (ratℝ p +ᴿ ratℝ q) .upper s ∣
+  ugrow s pq<s = let (v , w , p<v , q<w , vw<s) = split-slack-upper p q s pq<s
+                 in inc (v , w , p<v , q<w , vw<s)
+
+  ushrink : ∀ s → ∣ (ratℝ p +ᴿ ratℝ q) .upper s ∣ → p +ℚ q < s
+  ushrink s = □-elim (λ _ → hlevel 1)
+    (λ (v , w , p<v , q<w , vw<s) → ≤-<-trans (<-weaken (<-sum p<v q<w)) vw<s)
+```
+-->
