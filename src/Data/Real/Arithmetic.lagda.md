@@ -613,3 +613,69 @@ sum in $\bQ$.
     w , v , uw , uv , subst (_< q) (+ℚ-commutative v w) vw<q
 ```
 -->
+
+Adding zero does nothing: the lower cut of $x + 0$ consists of
+rationals $q < r + s$ with $r$ below $x$ and $s < 0$, which is exactly
+the rationals below some element of $x$'s lower cut — by roundedness,
+exactly $x$'s lower cut.
+
+```agda
++ᴿ-idr : ∀ x → x +ᴿ 0ᴿ ≡ x
+```
+
+<!--
+```agda
+private abstract
+  half-zero : half 0 ≡ 0
+  half-zero = ap (_*ℚ invℚ 2) (sym (*ℚ-zerol 1)) ∙ sym (*ℚ-associative 0 1 (invℚ 2)) ∙ *ℚ-zerol (1 *ℚ invℚ 2)
+
+  r+s<r : ∀ r s → s < 0 → r +ℚ s < r
+  r+s<r r s s<0 = subst (r +ℚ s <_) (+ℚ-idr r) (+ℚ-preserves-<l r s<0)
+
+  r+[q-r]≡q : ∀ q r → r +ℚ (q +ℚ (-ℚ r)) ≡ q
+  r+[q-r]≡q q r =
+    r +ℚ (q +ℚ (-ℚ r))   ≡⟨ ap (r +ℚ_) (+ℚ-commutative q (-ℚ r)) ⟩
+    r +ℚ ((-ℚ r) +ℚ q)   ≡⟨ +ℚ-associative r (-ℚ r) q ⟩
+    (r +ℚ (-ℚ r)) +ℚ q   ≡⟨ ap (_+ℚ q) (+ℚ-invr r) ⟩
+    0 +ℚ q               ≡⟨ +ℚ-idl q ⟩
+    q                    ∎
+
+  slack-neg : ∀ q r → q < r → half (q +ℚ (-ℚ r)) < 0
+  slack-neg q r q<r = subst (half (q +ℚ (-ℚ r)) <_) half-zero (half-< diff-neg)
+    where
+    diff-neg : q +ℚ (-ℚ r) < 0
+    diff-neg = subst (q +ℚ (-ℚ r) <_) (+ℚ-invr r) (+ℚ-preserves-<r (-ℚ r) q<r)
+
+  q<r+slack : ∀ q r → q < r → q < r +ℚ half (q +ℚ (-ℚ r))
+  q<r+slack q r q<r = transport (λ i → r+[q-r]≡q q r i < rhs i) step
+    where
+    diff-neg : q +ℚ (-ℚ r) < 0
+    diff-neg = subst (q +ℚ (-ℚ r) <_) (+ℚ-invr r) (+ℚ-preserves-<r (-ℚ r) q<r)
+
+    diff<half : (q +ℚ (-ℚ r)) < half (q +ℚ (-ℚ r))
+    diff<half = transport (λ i → (q +ℚ (-ℚ r)) < midpoint-eq i) (mid-<l diff-neg)
+      where
+      midpoint-eq : midpoint (q +ℚ (-ℚ r)) 0 ≡ half (q +ℚ (-ℚ r))
+      midpoint-eq = ap half (+ℚ-idr (q +ℚ (-ℚ r)))
+
+    step : r +ℚ (q +ℚ (-ℚ r)) < r +ℚ half (q +ℚ (-ℚ r))
+    step = +ℚ-preserves-<l r diff<half
+
+    rhs : r +ℚ half (q +ℚ (-ℚ r)) ≡ r +ℚ half (q +ℚ (-ℚ r))
+    rhs = refl
+
++ᴿ-idr x = ≤ᴿ-antisym shrink grow
+  where
+  shrink : ∀ q → ∣ (x +ᴿ 0ᴿ) .lower q ∣ → ∣ x .lower q ∣
+  shrink q lq = □-elim (λ _ → hlevel 1)
+    (λ (r , s , lr , s<0 , q<rs) →
+      cut.lower-close x (<-trans q<rs (r+s<r r s s<0)) lr)
+    lq
+
+  grow : ∀ q → ∣ x .lower q ∣ → ∣ (x +ᴿ 0ᴿ) .lower q ∣
+  grow q lq = □-map
+    (λ (r , q<r , lr) →
+      r , half (q +ℚ (-ℚ r)) , lr , slack-neg q r q<r , q<r+slack q r q<r)
+    (tr-□ (cut.lower-round x q lq))
+```
+-->
