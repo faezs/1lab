@@ -13,6 +13,7 @@ open import Cat.Instances.Presheaf.Exponentials
 open import Cat.Instances.Sheaf.Limits.Finite
 open import Cat.Instances.Sets.Complete
 open import Cat.Instances.SimplicialSets
+open import Cat.Instances.Localisation.Invertible
 open import Cat.Instances.Localisation
 open import Cat.Instances.Sheaves
 open import Cat.Instances.Simplex
@@ -37,6 +38,8 @@ open import Homotopy.Spectrum
 open import Topoi.Base
 
 import Cat.CartesianClosed.Free.Model
+import Cat.Instances.Presheaf.Germs
+import Cat.Site.Instances.Trivial
 import Algebra.Ring.DualNumbers
 import Algebra.Ring.Polynomial
 import Cat.Instances.FormalSmoothSets
@@ -135,15 +138,31 @@ _ = yo
 _ = yo-is-equiv
 ```
 
-The paper's (7) presents the sheaf topos as a *localisation* of the
-presheaf topos at the local isomorphisms. The 1Lab has the general
-localisation of a category at a class of maps, as a higher inductive
-type with the full universal property; the identification of
-$\rm{Sh}(\cC)$ with $L^{\rm{liso}}\rm{PSh}(\cC)$ is future work, as
-is the theory of *germs* of plots ((5), (6)).
+The paper's (5) and (6) — *germs* of plots, and the restriction of
+maps to germs — hold over any category of probes equipped with
+directed families of [[neighbourhood
+inclusions|neighbourhood-structure]]: germs are a set-quotient of
+plots, and maps of presheaves descend. The paper's (7) presents the
+sheaf topos as the *localisation* of the presheaf topos at the
+[[local isomorphisms|local-isomorphism]]. For the sites this
+development actually builds — where the coverage is
+[[trivial|trivial-coverage]] — this is a *theorem*: every presheaf is
+a sheaf, germs along discrete neighbourhoods are plots, local
+isomorphisms are invertible, and [[localising at
+isomorphisms|localisation-at-isomorphisms]] is inessential, so
+$\rm{Sh} = \rm{PSh} \simeq L^{\rm{liso}}\rm{PSh}$ on the nose.
+What remains of (7) is precisely its analytic content: shrinking open
+neighbourhoods over the good-open-cover coverage of the smooth site.
 
 ```agda
 _ = Localisation
+_ = Cat.Instances.Presheaf.Germs.Germs
+_ = Cat.Instances.Presheaf.Germs.germs-map
+_ = Cat.Instances.Presheaf.Germs.is-local-iso
+_ = Cat.Site.Instances.Trivial.trivial-is-sheaf
+_ = Cat.Site.Instances.Trivial.forget-trivial-is-precat-iso
+_ = Localise-is-precat-iso
+_ = Cat.Instances.Presheaf.Germs.Localise-discrete-is-precat-iso
 ```
 
 ## Fields and mapping spaces
@@ -493,8 +512,9 @@ _ = G≃ΩB
 ## What is missing
 
 For honesty, the items of the paper with no 1Lab counterpart yet:
-germs of plots ((5), (6)); the identification of sheaves with the
-localisation of presheaves at local isomorphisms (7); the proof that
+the smooth-site instance of (7) (localisation over the
+good-open-cover coverage, with shrinking-neighbourhood germs); the
+proof that
 the higher-inductive sheafification is left exact (connecting
 `Sh[_,_]`{.Agda} to `Topos`{.Agda}); the good-open-cover *coverage*
 on the thickened site (our topos is presheaves; the paper's is
