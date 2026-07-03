@@ -578,3 +578,38 @@ _+ᴿ_ : ℝ → ℝ → ℝ
       located-lemma q r q<r u v u' v' (¬<→≥ ¬q<uu') gapx gapy)))
 ```
 -->
+
+## Additive laws
+
+The additive identity is the embedded rational zero.
+
+```agda
+0ᴿ : ℝ
+0ᴿ = ratℝ 0
+```
+
+Commutativity holds because the defining conditions of $x + y$ and $y +
+x$ are literally the same up to swapping witnesses and commuting their
+sum in $\bQ$.
+
+```agda
++ᴿ-comm : ∀ x y → x +ᴿ y ≡ y +ᴿ x
+```
+
+<!--
+```agda
++ᴿ-comm x y = ℝ-path
+  (funext λ q → Ω-ua (swap-lower x y) (swap-lower y x))
+  (funext λ q → Ω-ua (swap-upper x y) (swap-upper y x))
+  where
+  swap-lower
+    : ∀ x y {q} → ∣ (x +ᴿ y) .lower q ∣ → ∣ (y +ᴿ x) .lower q ∣
+  swap-lower x y {q} = □-map λ (r , s , lr , ls , q<rs) →
+    s , r , ls , lr , subst (q <_) (+ℚ-commutative r s) q<rs
+
+  swap-upper
+    : ∀ x y {q} → ∣ (x +ᴿ y) .upper q ∣ → ∣ (y +ᴿ x) .upper q ∣
+  swap-upper x y {q} = □-map λ (v , w , uv , uw , vw<q) →
+    w , v , uw , uv , subst (_< q) (+ℚ-commutative v w) vw<q
+```
+-->
