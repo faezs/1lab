@@ -45,6 +45,8 @@ import Algebra.Ring.Center
 import Cat.CartesianClosed.Free.Model
 import Cat.Instances.NegativeSpheres
 import Physics.Oscillator
+import Homotopy.Modality
+import Data.Real.Base
 import Cat.Instances.SimplicialPresheaves.Cech
 import Cat.Instances.SimplicialSets.ActionGroupoid
 import Cat.Instances.SuperSmoothSets
@@ -635,6 +637,32 @@ _ = Deloop
 _ = G≃ΩB
 ```
 
+## ∞-topoi, internally
+
+The paper's ambient objects are *∞*-topoi, and the 1Lab meets them
+from the inside: cubical type theory is the internal language of an
+∞-topos, with types as ∞-groupoids and [[univalence]] as the object
+classifier — the descent property by which Rezk and Lurie
+characterise ∞-topoi. On this foundation the 1Lab now has the
+internal theory of their subtopoi: [[modalities|modality]] à la
+Rijke–Shulman–Spitters, whose lex members are reflective
+sub-∞-topoi. The truncation modalities present the tower of
+$n$-topoi sitting inside the ∞-topos — the paper's $n$-groupoid
+approximations — and the open modality (proven left exact) presents
+open subtopoi. The simplicial localisations $L^{\rm{heq}}$ of
+(32)–(36) are externally-presented versions of exactly such
+reflections.
+
+```agda
+_ = Homotopy.Modality.Modality
+_ = Homotopy.Modality.is-lex
+_ = Homotopy.Modality.Modality.modal-Σ
+_ = Homotopy.Modality.Truncation
+_ = Homotopy.Modality.Open-is-lex
+_ = Data.Real.Base.ℝ
+_ = Data.Real.Base.rational-density
+```
+
 ## What is missing
 
 For honesty, the items of the paper with no 1Lab counterpart yet.
@@ -645,8 +673,12 @@ limits (see the oscillator's Hamiltonian mechanics), and Taylor-level
 calculus needs only $\bQ$-algebras and higher-order thickenings; but
 *integration* — finite-time evolution, convergence, and the good
 open covers of the classical smooth site — needs a genuine
-real-numbers object, Dedekind or Cauchy, which the 1Lab does not yet
-have. Concretely missing, then:
+real-numbers object. The [[Dedekind reals|dedekind-real]] now exist,
+as a small type of located two-sided cuts, with their order theory,
+density of the rationals, and negation; their field structure (whose
+locatedness proofs need an archimedean interface for the rationals)
+and a constructive theory of $C^\infty$ maps remain before the
+classical smooth site is in reach. Concretely missing, then:
 the smooth-site instance of (7) (localisation over the
 good-open-cover coverage, with shrinking-neighbourhood germs); the
 proof that the higher-inductive sheafification is left exact
@@ -659,8 +691,12 @@ Deligne/connection refinements ((39), (40)); the inverse half of the
 Dold–Kan correspondence (30) — reassembling a simplicial abelian
 group from its normalized chains — and Eilenberg–MacLane spaces
 $\mathbf{B}^n A$ for $n \ge 2$ (31); closure of Kan complexes under
-mapping spaces and the simplicial localisations $L^{\rm{heq}},
-L^{\rm{lheq}}$ ((32)–(36)), the genuinely $\infty$-categorical part;
+mapping spaces and the *external presentation* of the simplicial
+localisations $L^{\rm{heq}}, L^{\rm{lheq}}$ ((32)–(36)) — their
+internal shadow now exists as [[modalities|modality]], but
+presenting a particular gros ∞-topos by simplicially localising
+simplicial presheaves needs quasicategory or complete-Segal-object
+infrastructure the 1Lab does not have;
 the local weak equivalence of the Čech augmentation over covers,
 giving cofibrant resolutions (full (39)); the orbi-singular site of
 (28); and the stable localisation of presheaves on $\rm{Lin}$
