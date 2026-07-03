@@ -512,7 +512,10 @@ The heliostat aims; for a system that *moves*, see the [[harmonic
 oscillator|harmonic-oscillator]], which exercises every column built
 below: its compiled dynamics conserve energy and close their orbits
 *by theorem*, its force law is derived synthetically from the
-potential, its fermionic partner satisfies Pauli exclusion as ring
+potential, its continuous-time Hamiltonian flow conserves energy
+exactly over the dual numbers (with the Euler integrator's failure
+computed as exactly the $(\mathrm{d}t)^2$ term that nilpotency
+kills), its fermionic partner satisfies Pauli exclusion as ring
 algebra, and its parity symmetry is gauged with the homotopy
 quotient remembering the stabilizer of the origin.
 
@@ -521,6 +524,8 @@ _ = Physics.Oscillator.step
 _ = Physics.Oscillator.period-four
 _ = Physics.Oscillator.energy-conserved
 _ = Physics.Oscillator.force-from-potential.hooke
+_ = Physics.Oscillator.hamiltonian-mechanics.conserved
+_ = Physics.Oscillator.euler-energy-defect
 _ = Physics.Oscillator.fermionic.modes-nilpotent
 _ = Physics.Oscillator.gauge-loops-differ
 ```
@@ -632,7 +637,16 @@ _ = G≃ΩB
 
 ## What is missing
 
-For honesty, the items of the paper with no 1Lab counterpart yet:
+For honesty, the items of the paper with no 1Lab counterpart yet.
+On the analytic side, the boundary is sharp: the *differential*
+layer of real analysis — derivatives, forces, flows, conservation
+laws — is fully synthetic, with nilpotent infinitesimals in place of
+limits (see the oscillator's Hamiltonian mechanics), and Taylor-level
+calculus needs only $\bQ$-algebras and higher-order thickenings; but
+*integration* — finite-time evolution, convergence, and the good
+open covers of the classical smooth site — needs a genuine
+real-numbers object, Dedekind or Cauchy, which the 1Lab does not yet
+have. Concretely missing, then:
 the smooth-site instance of (7) (localisation over the
 good-open-cover coverage, with shrinking-neighbourhood germs); the
 proof that the higher-inductive sheafification is left exact

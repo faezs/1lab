@@ -8,13 +8,15 @@ open import Cat.Prelude
 
 open import Cat.CartesianClosed.Free.Signature
 
+open import Algebra.Ring.Solver
+
 open import Algebra.Group.Cat.Base
 open import Algebra.Group.Action
 open import Algebra.Ring.Commutative
 open import Algebra.Group
 open import Algebra.Ring
 
-open import Data.Fin using (Fin ; fzero)
+open import Data.Fin using (Fin ; fzero ; fsuc ; fin)
 open import Data.Bool
 open import Data.Int
 
@@ -248,6 +250,189 @@ field strength as a 1-form, the object classified by the
 Constant potentials exert no force — the paper's statement that the
 de Rham differential kills the constants is the constructor
 `d-const`{.Agda} itself.
+
+## Continuous time, synthetically
+
+Everything so far evolves in discrete hops, and the reading guide
+lists real analysis among the honestly-missing ingredients. How much
+of it does continuous-time mechanics actually need? The synthetic
+answer: *none at the differential level*. Classically, a velocity is
+a limit; topos-theoretically it is a *plot by an infinitesimal
+duration* — a map out of the walking tangent $\mathbb{D}$, whose
+function algebra is the [[dual numbers|dual-numbers]], as in the
+already-formalized synthetic tangent bundle and Kock–Lawvere
+theorem. The nilpotency $\epsilon^2 = 0$ is the algebraic residue of
+"second-order terms vanish in the limit" — and with it, Hamiltonian
+mechanics is exact ring algebra, over *any* commutative ring of
+scalars.
+
+Observables of the oscillator are polynomials in position and
+momentum, and their partial derivatives are computed by the same
+evaluate-at-$(x + \epsilon)$ recipe as before, one variable
+thickened at a time.
+
+```agda
+module hamiltonian-mechanics {ℓ} (R : CRing ℓ) where
+  open Algebra.Ring.Polynomial R
+```
+
+<!--
+```agda
+  private
+    Obs : CRing ℓ
+    Obs = R[ Lift ℓ (Fin 2) ]
+
+    ObsRing : Ring ℓ
+    ObsRing = Obs .fst , Obs .snd .CRing-on.has-ring-on
+
+    module R' = CRing-on (R .snd)
+    module Ro = CRing-on (Obs .snd)
+    module Rr = Algebra.Ring.Reasoning ObsRing
+    module CR = Cat.Reasoning (CRings ℓ)
+```
+-->
+
+```agda
+  x̂ p̂ : ⌞ Obs ⌟
+  x̂ = var (lift fzero)
+  p̂ = var (lift (fsuc fzero))
+```
+
+<!--
+```agda
+  private
+    dir-x dir-p : Lift ℓ (Fin 2) → ⌞ Dual.R[ε] Obs ⌟
+    dir-x (lift (fin 0))       = x̂ , con R'.1r
+    dir-x (lift (fin (suc k))) = p̂ , con R'.0r
+    dir-p (lift (fin 0))       = x̂ , con R'.0r
+    dir-p (lift (fin (suc k))) = p̂ , con R'.1r
+```
+-->
+
+```agda
+  ∂x ∂p : ⌞ Obs ⌟ → ⌞ Obs ⌟
+  ∂x F = extend (Dual.ι-dual Obs CR.∘ con-hom) dir-x .∫Hom.fst F .snd
+  ∂p F = extend (Dual.ι-dual Obs CR.∘ con-hom) dir-p .∫Hom.fst F .snd
+
+  H : ⌞ Obs ⌟
+  H = (x̂ *ₚ x̂) +ₚ (p̂ *ₚ p̂)
+
+  ∂x-H : ∂x H ≡ x̂ +ₚ x̂
+  ∂x-H =
+      ap₂ _+ₚ_
+        (ap₂ _+ₚ_ Ro.*-idr (*ₚ-idl x̂))
+        (ap₂ _+ₚ_ Rr.*-zeror Rr.*-zerol ∙ +ₚ-idl (con R'.0r))
+    ∙ Ro.+-idr
+
+  ∂p-H : ∂p H ≡ p̂ +ₚ p̂
+  ∂p-H =
+      ap₂ _+ₚ_
+        (ap₂ _+ₚ_ Rr.*-zeror Rr.*-zerol ∙ +ₚ-idl (con R'.0r))
+        (ap₂ _+ₚ_ Ro.*-idr (*ₚ-idl p̂))
+    ∙ +ₚ-idl (p̂ +ₚ p̂)
+```
+
+Hamilton's equations are now a *definition* rather than an ansatz:
+a state flows to a point of phase space over the dual numbers,
+its position and momentum acquiring the infinitesimal velocities
+$(\partial H/\partial p,\; -\partial H/\partial x)$.
+
+<!--
+```agda
+  private
+    at : ∀ {ℓ'} {A : Type ℓ'} → A → A → Lift ℓ (Fin 2) → A
+    at a b (lift (fin 0))       = a
+    at a b (lift (fin (suc k))) = b
+```
+-->
+
+```agda
+  ev : ⌞ R ⌟ → ⌞ R ⌟ → ⌞ Obs ⌟ → ⌞ R ⌟
+  ev a b = extendᵖ CR.id (at a b)
+
+  flow : ⌞ R ⌟ × ⌞ R ⌟ → ⌞ Dual.R[ε] R ⌟ × ⌞ Dual.R[ε] R ⌟
+  flow (a , b) = (a , ev a b (∂p H)) , (b , R'.- ev a b (∂x H))
+```
+
+The fundamental theorem of Hamiltonian mechanics — the energy is
+conserved along its own flow, the vanishing $\{H, H\} = 0$ of the
+Poisson bracket — holds *on the nose*: evaluating $H$ over the dual
+numbers at the flowed state returns exactly the original energy,
+with zero coefficient of $\epsilon$. The cross terms cancel by
+antisymmetry and the squares of velocities die by $\epsilon^2 = 0$;
+no limit is taken because none is needed.
+
+<!--
+```agda
+  private abstract
+    cancel
+      : ∀ a b
+      → (a R'.* (b R'.+ b) R'.+ (b R'.+ b) R'.* a) R'.+
+        (b R'.* (R'.- (a R'.+ a)) R'.+ (R'.- (a R'.+ a)) R'.* b)
+      ≡ R'.0r
+    cancel a b = cring! R
+```
+-->
+
+```agda
+  evε : ⌞ Dual.R[ε] R ⌟ → ⌞ Dual.R[ε] R ⌟ → ⌞ Obs ⌟ → ⌞ Dual.R[ε] R ⌟
+  evε X P = extendᵖ (Dual.ι-dual R) (at X P)
+
+  conserved
+    : ∀ a b
+    → evε (flow (a , b) .fst) (flow (a , b) .snd) H
+    ≡ Dual.ι-dual R .∫Hom.fst (ev a b H)
+  conserved a b =
+      ap₂ (λ u v → evε (a , u) (b , v) H)
+        (ap (ev a b) ∂p-H)
+        (ap R'.-_ (ap (ev a b) ∂x-H))
+    ∙ (λ i → ev a b H , cancel a b i)
+```
+
+To see that nilpotency is doing the *analysis*, return to the
+integers and take an honest finite time step: the Euler integrator.
+It fails to conserve energy — the bane of every naive numerical
+simulation — and the failure is not noise but a theorem: the defect
+is exactly the $(\mathrm{d}t)^2$ term, the very term that
+$\epsilon^2 = 0$ kills.
+
+<!--
+```agda
+private module defect-lemma {ℓ} (R : CRing ℓ) where
+  private module Q = CRing-on (R .snd)
+  abstract
+    square-growth
+      : ∀ d x p
+      → ((x Q.+ (d Q.* p)) Q.* (x Q.+ (d Q.* p))) Q.+
+        ((p Q.+ (Q.- (d Q.* x))) Q.* (p Q.+ (Q.- (d Q.* x))))
+      ≡ ((x Q.* x) Q.+ (p Q.* p)) Q.+
+        ((d Q.* d) Q.* ((x Q.* x) Q.+ (p Q.* p)))
+    square-growth d x p = cring! R
+```
+-->
+
+```agda
+euler : Int → Int × Int → Int × Int
+euler dt (x , p) = x +ℤ dt *ℤ p , p +ℤ negℤ (dt *ℤ x)
+
+euler-energy-defect
+  : ∀ dt s → energy (euler dt s) ≡ energy s +ℤ (dt *ℤ dt) *ℤ energy s
+euler-energy-defect dt (x , p) = defect-lemma.square-growth ℤ-comm dt x p
+```
+
+This fixes the division of labour precisely. Everything at the
+differential level — derivatives, forces, flows, conservation laws,
+and (by the same technology, through higher-order thickenings) jets
+and Taylor expansion — is synthetic: constructive algebra over any
+commutative ring, with nilpotent infinitesimals in place of limits.
+What irreducibly remains of real analysis is *integration*:
+assembling finite-time evolution from its infinitesimal generator
+needs inverses of the integers (Taylor coefficients $1/n!$, freely
+available over any $\bQ$-algebra), and convergence — as well as the
+good open covers of the classical smooth site — needs a genuine
+real-numbers object, Dedekind or Cauchy, which the 1Lab does not yet
+have. The boundary between synthetic and analytic physics is exactly
+the boundary between nilpotents and limits.
 
 ## The fermionic oscillator
 
