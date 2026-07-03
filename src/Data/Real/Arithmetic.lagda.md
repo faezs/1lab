@@ -11,6 +11,7 @@ open import Data.Sum
 open import Data.Dec
 open import Data.Nat.Base using (Nat ; zero ; suc)
 
+import Data.Nat.Base as Nat
 import Data.Nat.Order as Nat
 import Data.Nat.Properties as Nat
 import Data.Int.Order as ℤ
@@ -187,3 +188,74 @@ private abstract
     expand = *ℚ-distribr w v (-ℚ u) ∙ ap (v *ℚ w +ℚ_) (negatel u w)
 ```
 -->
+
+## The archimedean property
+
+Every rational is bounded above by some natural number, embedded into
+$\bQ$ through the integers.
+
+```agda
+nℚ : Nat → Ratio
+nℚ n = ℤ.pos n / 1
+```
+
+<!--
+```agda
+private abstract
+  nℚ-suc : ∀ n → nℚ (suc n) ≡ 1 +ℚ nℚ n
+  nℚ-suc n =
+    ℤ.pos (suc n) / 1        ≡˘⟨ ap (_/ 1) one+pos ⟩
+    (1 ℤ.+ℤ ℤ.pos n) / 1     ≡˘⟨ +ℚ-common-denom 1 1 (ℤ.pos n) ⟩
+    (1 / 1) +ℚ (ℤ.pos n / 1) ∎
+    where
+    one+pos : (1 ℤ.+ℤ ℤ.pos n) ≡ ℤ.pos (suc n)
+    one+pos = refl
+```
+-->
+
+The proof that every rational lies below some natural number goes
+through a fraction $x/s$: since $s$ is positive (hence $s \ge 1$), we
+have $x \le \abs x < \suc(\abs x) \le \suc(\abs x) \cdot s$, and this
+last inequality is precisely $q < \nQ(\suc(\abs x))$ unfolded at the
+level of fractions.
+
+```agda
+bound-above : ∀ q → ∥ Σ Nat (λ n → q < nℚ n) ∥
+```
+
+<!--
+```agda
+private abstract
+  x≤abs : ∀ (x : ℤ.Int) → x ℤ.≤ ℤ.pos (ℤ.abs x)
+  x≤abs (ℤ.pos m)    = ℤ.≤-refl
+  x≤abs (ℤ.negsuc m) = ℤ.<-weaken ℤ.neg<pos
+
+  s≥1 : ∀ {s} → ℤ.Positive s → (1 ℤ.≤ s)
+  s≥1 (ℤ.pos m) = ℤ.pos≤pos (Nat.s≤s Nat.0≤x)
+
+  abs<suc-abs : ∀ (x : ℤ.Int) → ℤ.pos (ℤ.abs x) ℤ.< ℤ.pos (suc (ℤ.abs x))
+  abs<suc-abs x = ℤ.pos<pos Nat.≤-refl
+
+  suc-abs≤suc-abs*s
+    : ∀ (x : ℤ.Int) {s : ℤ.Int} (p : ℤ.Positive s)
+    → ℤ.pos (suc (ℤ.abs x)) ℤ.≤ (ℤ.pos (suc (ℤ.abs x)) ℤ.*ℤ s)
+  suc-abs≤suc-abs*s x {s} p = ℤ.≤-trans
+    (ℤ.≤-refl' (sym (ℤ.*ℤ-oner (ℤ.pos (suc (ℤ.abs x))))))
+    (ℤ.≤-trans
+      (ℤ.≤-refl' (ℤ.*ℤ-commutative (ℤ.pos (suc (ℤ.abs x))) 1))
+      (ℤ.≤-trans
+        (ℤ.*ℤ-preserves-≤r {1} {s} (ℤ.pos (suc (ℤ.abs x))) (s≥1 p))
+        (ℤ.≤-refl' (ℤ.*ℤ-commutative s (ℤ.pos (suc (ℤ.abs x)))))))
+
+  bound-reduce
+    : ∀ (x : ℤ.Int) {s} (p : ℤ.Positive s)
+    → (x ℤ.*ℤ 1) ℤ.< (ℤ.pos (suc (ℤ.abs x)) ℤ.*ℤ s)
+  bound-reduce x {s} p = subst (λ z → z ℤ.< (ℤ.pos (suc (ℤ.abs x)) ℤ.*ℤ s)) (sym (ℤ.*ℤ-oner x))
+    (ℤ.≤-<-trans (x≤abs x) (ℤ.<-≤-trans (abs<suc-abs x) (suc-abs≤suc-abs*s x p)))
+
+bound-above = ℚ-elim-prop (λ _ → squash) go
+  where
+  go : ∀ f → ∥ Σ Nat (λ n → toℚ f < nℚ n) ∥
+  go (x / s [ p ]) = inc (suc (ℤ.abs x) , toℚ< (bound-reduce x p))
+```
+
