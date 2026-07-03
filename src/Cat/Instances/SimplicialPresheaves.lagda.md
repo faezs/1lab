@@ -44,6 +44,15 @@ constᵟ : ⌞ sSet ⌟ → ⌞ sPSh ⌟
 constᵟ K = K F∘ Functor.op (Snd {C = C} {D = Δ})
 ```
 
+Dually, every presheaf on the geometric site gives a simplicial
+presheaf constant in the gauge direction — a *simplicially discrete*
+object.
+
+```agda
+constᵍ : ⌞ PSh lzero C ⌟ → ⌞ sPSh ⌟
+constᵍ K = K F∘ Functor.op (Fst {C = C} {D = Δ})
+```
+
 The paper's (37): plots of shape $(U, \Delta^2)$ of the (constant)
 delooping of a monoid are exactly pairs of elements — the higher
 gauge structure of the delooping is visible at every geometric
