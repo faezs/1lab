@@ -51,6 +51,7 @@ import Cat.Site.Sheafification.Locality
 import Cat.Site.Sheafification.Plus
 import Cat.Site.Sheafification.Glue
 import Cat.Site.Sheafification.Kernel
+import Cat.Site.Sheafification.Topos
 import Physics.Oscillator
 import Physics.Maxwell
 import Physics.Newton
@@ -667,6 +668,8 @@ _ = Cat.Site.Sheafification.Glue.covering-stable
 _ = Cat.Site.Sheafification.Glue.B⁺-is-sheaf
 _ = Cat.Site.Sheafification.Glue.unit⁺-injective
 _ = Cat.Site.Sheafification.Kernel.unit-kernel
+_ = Cat.Site.Sheafification.Topos.Sheafification-is-lex
+_ = Cat.Site.Sheafification.Topos.Sheaves-topos
 ```
 
 On the homotopy-theoretic side of the dictionary, the delooping of a
@@ -752,10 +755,11 @@ assembly is done as well: `Cat.Site.Sheafification.Kernel`{.Agda}
 composes quotient and plus and proves, over an arbitrary coverage,
 that **the unit of sheafification identifies two sections exactly
 when they are locally equal** — the complete path-space
-characterisation of the higher-inductive sheafification. What
-remains is deducing pullback preservation from it and packaging
-left exactness — the last steps between `Sh[_,_]`{.Agda} and
-`Topos`{.Agda}); Weil algebras beyond
+characterisation of the higher-inductive sheafification. And
+`Cat.Site.Sheafification.Topos`{.Agda} finishes the item entirely:
+**sheafification is left exact**, so `Sh[ C , J ]`{.Agda
+ident=Sh[_,_]} is a `Topos`{.Agda} in the official sense, over any
+coverage — diagram (8) discharged in full); Weil algebras beyond
 second order (the second-order algebra, its jet derivative, and
 Newton's law as a theorem now exist — see
 `Physics.Newton`{.Agda}) and coverages on the thickened site; the odd-plot
