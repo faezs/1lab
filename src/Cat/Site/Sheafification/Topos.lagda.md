@@ -245,3 +245,130 @@ sheaf.
     Σ-prop-path (λ _ → LZ.squash _ _)
       (ap₂ _,_ (q₁ ηₚ U $ₚ t) (q₂ ηₚ U $ₚ t))
 ```
+
+## The comparison map
+
+The sheafification of `Pc`{.Agda} maps canonically into $Q$: on
+generators, include both components. This is where the universal
+property earns its keep — the comparison `θ`{.Agda} computes
+definitionally on `inc`{.Agda}, and is natural by `refl`.
+
+<!--
+```agda
+  private
+    module LPc = Sheafification J Pc
+    module PX  = Cat.Site.Sheafification.Plus J X
+    module PY  = Cat.Site.Sheafification.Plus J Y
+    module PZ  = Cat.Site.Sheafification.Plus J Z
+    module KX  = Cat.Site.Sheafification.Kernel J X
+    module KY  = Cat.Site.Sheafification.Kernel J Y
+    module KZ  = Cat.Site.Sheafification.Kernel J Z
+
+    inc-pc
+      : ∀ {U} {p p' : Pc ʻ U} → p ≡ p'
+      → Path (LPc.Sheafify₀ U) (LPc.inc p) (LPc.inc p')
+    inc-pc = ap LPc.inc
+```
+-->
+
+```agda
+  φ : Pc => Q
+  φ .η U ((x , y) , e) = (LX.inc x , LY.inc y) , ap LZ.inc e
+  φ .is-natural U V h = funext λ ((x , y) , e) →
+    Σ-prop-path (λ _ → LZ.squash _ _)
+      (ap₂ _,_ (LX.inc-natural x) (LY.inc-natural y))
+
+  θ : LPc.Sheafify => Q
+  θ = S.univ Q Q-is-sheaf φ
+```
+
+## Injectivity
+
+We first show `θ`{.Agda} is componentwise injective. The heart of
+the argument concerns generators: if $\theta$ identifies
+$\operatorname{inc}(x, y, e)$ and $\operatorname{inc}(x', y', e')$,
+then $\operatorname{inc} x = \operatorname{inc} x'$ in $X^+$ and
+likewise in $Y^+$, so by the [[kernel theorem|sheafification-kernel]]
+$x$ and $x'$ (resp. $y, y'$) are *locally equal* — untruncated data,
+by the design of `Loc-eq`{.Agda}. From a pair of local equalities we
+can build a path of `inc`{.Agda}s in the sheafification of
+`Pc`{.Agda} directly, by structural recursion: first rewrite along
+the first derivation (restricting the second as we go, exactly the
+shape of `loc-trans`{.Agda}), then along the second.
+
+```agda
+  private
+    pair-inc-path-r
+      : ∀ {U} {x : X ʻ U} {y y' : Y ʻ U}
+      → PY.Loc-eq y y'
+      → (e : f .η U x ≡ g .η U y) (e' : f .η U x ≡ g .η U y')
+      → Path (LPc.Sheafify₀ U) (LPc.inc ((x , y) , e)) (LPc.inc ((x , y') , e'))
+    pair-inc-path-r (PY.here q) e e' =
+      inc-pc (Σ-prop-path (λ _ → Z .F₀ _ .is-tr _ _) (ap₂ _,_ refl q))
+    pair-inc-path-r {x = x} {y} {y'} (PY.locally c k) e e' = LPc.sep c λ h hh →
+        sym (LPc.inc-natural _)
+      ∙∙ pair-inc-path-r (k h hh)
+          ((Pc ⟪ h ⟫ ((x , y) , e)) .snd)
+          ((Pc ⟪ h ⟫ ((x , y') , e')) .snd)
+      ∙∙ LPc.inc-natural _
+    pair-inc-path-r (PY.squash a b i) e e' =
+      LPc.squash _ _ (pair-inc-path-r a e e') (pair-inc-path-r b e e') i
+
+    pair-inc-path
+      : ∀ {U} {x x' : X ʻ U} {y y' : Y ʻ U}
+      → PX.Loc-eq x x' → PY.Loc-eq y y'
+      → (e : f .η U x ≡ g .η U y) (e' : f .η U x' ≡ g .η U y')
+      → Path (LPc.Sheafify₀ U) (LPc.inc ((x , y) , e)) (LPc.inc ((x' , y') , e'))
+    pair-inc-path {x = x} {x'} {y = y} (PX.here p) w e e' =
+        inc-pc {p' = (x' , y) , e-mid}
+          (Σ-prop-path (λ _ → Z .F₀ _ .is-tr _ _) (ap₂ _,_ p refl))
+      ∙ pair-inc-path-r w e-mid e'
+      where e-mid = subst (λ v → f .η _ v ≡ g .η _ y) p e
+    pair-inc-path {x = x} {x'} {y = y} {y'} (PX.locally c k) w e e' =
+      LPc.sep c λ h hh →
+          sym (LPc.inc-natural _)
+        ∙∙ pair-inc-path (k h hh) (PY.restrict h w)
+            ((Pc ⟪ h ⟫ ((x , y) , e)) .snd)
+            ((Pc ⟪ h ⟫ ((x' , y') , e')) .snd)
+        ∙∙ LPc.inc-natural _
+    pair-inc-path (PX.squash a b i) w e e' =
+      LPc.squash _ _ (pair-inc-path a w e e') (pair-inc-path b w e e') i
+```
+
+Injectivity itself is a double induction with the HIT's elimination
+principle. The inner induction generalises over the generator on the
+left, so that the motive stays inferable at every object; the
+`plocal`{.Agda} cases go through separatedness of the
+sheafification, using that `θ`{.Agda} commutes with restriction
+definitionally.
+
+```agda
+  private
+    θ-inj-inc
+      : ∀ {U} (ζ : LPc.Sheafify₀ U) (p : Pc ʻ U)
+      → θ .η U (LPc.inc p) ≡ θ .η U ζ
+      → Path (LPc.Sheafify₀ U) (LPc.inc p) ζ
+    θ-inj-inc = LPc.Sheafify-elim-prop
+      (λ {U} ζ → (p : Pc ʻ U) → θ .η U (LPc.inc p) ≡ θ .η U ζ → LPc.inc p ≡ ζ)
+      (λ ζ → Π-is-hlevel 1 λ p → Π-is-hlevel 1 λ w → LPc.squash _ _)
+      (λ {U} p' p w → pair-inc-path
+        (KX.encode {x = p .fst .fst} {y = p' .fst .fst} (ap (λ t → t .fst .fst) w))
+        (KY.encode {x = p .fst .snd} {y = p' .fst .snd} (ap (λ t → t .fst .snd) w))
+        (p .snd) (p' .snd))
+      (λ {U} c ζ ih p w → LPc.sep c λ h hh →
+          sym (LPc.inc-natural p)
+        ∙ ih h hh (Pc ⟪ h ⟫ p) (happly (φ .is-natural _ _ h) p ∙ ap (Q .F₁ h) w))
+
+  abstract
+    θ-inj
+      : ∀ {U} {ξ ζ : LPc.Sheafify₀ U}
+      → θ .η U ξ ≡ θ .η U ζ → ξ ≡ ζ
+    θ-inj {ξ = ξ} {ζ} w = go ξ ζ w where
+      go : ∀ {U} (ξ ζ : LPc.Sheafify₀ U) → θ .η U ξ ≡ θ .η U ζ → ξ ≡ ζ
+      go = LPc.Sheafify-elim-prop
+        (λ {U} ξ → (ζ : LPc.Sheafify₀ U) → θ .η U ξ ≡ θ .η U ζ → ξ ≡ ζ)
+        (λ ξ → Π-is-hlevel 1 λ ζ → Π-is-hlevel 1 λ w → LPc.squash _ _)
+        (λ p ζ w → θ-inj-inc ζ p w)
+        (λ {U} c ξ ih ζ w → LPc.sep c λ h hh →
+          ih h hh (LPc.map h ζ) (ap (Q .F₁ h) w))
+```
