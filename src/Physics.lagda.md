@@ -56,6 +56,7 @@ import Physics.Oscillator
 import Physics.Maxwell
 import Physics.Newton
 import Physics.Heliostat.Optics
+import Physics.Heliostat.Eikonal
 import Algebra.Ring.Kahler.Exterior
 import Algebra.Ring.Weil
 import Homotopy.Modality
@@ -559,14 +560,22 @@ is a genuine cross product of [[Kock–Lawvere|kock-lawvere]] tangent
 derivatives — *derived*, not posited — Fermat's principle is the
 Euler–Lagrange condition $\delta(\mathrm{path}) = 0$, and the
 parabola's perfect focusing is an exact ring identity: the axial ray
-reflects, at *every* surface point, onto the line through the focus. As
-with the oscillator, the Euler–Lagrange *equation* is reached
-synthetically while the optical *action integral* waits on integration.
+reflects, at *every* surface point, onto the line through the focus.
+Its finite counterpart is the [[eikonal|eikonal]]: the same mirror is
+equidistant from focus and directrix — the equal-optical-path principle
+that makes the reflected wavefront a sphere — again an exact ring
+identity, the wavefront order of the same Fermat principle whose ray
+order is the reflection law. As with the oscillator, the Euler–Lagrange
+*equation* is reached synthetically while the optical *action integral*,
+and the eikonal equation $|\nabla S|^2 = n^2$ as a field equation, wait
+on integration.
 
 ```agda
 _ = Physics.Heliostat.Optics.optics.normal-value
 _ = Physics.Heliostat.Optics.optics.focusing
 _ = Physics.Heliostat.Optics.optics.focusing-parallel
+_ = Physics.Heliostat.Eikonal.wavefront.equal-path
+_ = Physics.Heliostat.Eikonal.wavefront.mirror-on-sphere
 ```
 
 ## Gauge transformations and simplicial shapes
