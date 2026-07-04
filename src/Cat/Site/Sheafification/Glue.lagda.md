@@ -242,3 +242,145 @@ separatedness of $B$ at the pulled-back cover.
             ∙ Patch.app p' (idr (f ∘ g))
             ∙ sym (p' .patch f hf' g (S' .closed hf' g))
 ```
+
+## B⁺ is a sheaf
+
+Gluing is where the saturation pays for itself. The **total locus**
+of a class — the sieve of restrictions along which it becomes a unit
+— saturated-covers any representative's own cover, because
+restricting a patch-class along a member of its cover yields the
+unit of that part.
+
+<!--
+```agda
+  private
+    total-fibre : ∀ {W} → B⁺ ʻ W → Type (o ⊔ ℓ ⊔ ℓc ⊔ ℓs)
+    total-fibre ξ = Σ (B ʻ _) λ x → unit⁺ x ≡ ξ
+
+  restrict-inc
+    : ∀ {U V} (S : Sieve C U) (cov : is-covering S) (p : Patch B S)
+    → (h : Hom V U) (hh : h ∈ S)
+    → B⁺ ⟪ h ⟫ (inc (S , cov , p)) ≡ unit⁺ (p .part h hh)
+  restrict-inc S cov p h hh = quot λ k hk hk' →
+      Patch.app p refl
+    ∙ sym (p .patch h hh k (S .closed hh k))
+
+  private
+    T-sieve : ∀ {V} → B⁺ ʻ V → Sieve C V
+    T-sieve ξ .arrows g = elΩ (total-fibre (B⁺ ⟪ g ⟫ ξ))
+    T-sieve {V} ξ .closed {f = g} hg k = □-map
+      (λ (x , ux) →
+          B ⟪ k ⟫ x
+        , unit⁺-natural k x
+        ∙ ap (B⁺ .F₁ k) ux
+        ∙ sym (happly (B⁺ .F-∘ k g) ξ))
+      hg
+
+    T-covering : ∀ {V} (ξ : B⁺ ʻ V) → is-covering (T-sieve ξ)
+    T-covering = Coeq-elim-prop (λ _ → squash)
+      λ (S , cov , p) → covering-⊆
+        (λ g hg → inc (p .part g hg , sym (restrict-inc S cov p g hg)))
+        cov
+```
+-->
+
+Given a $J$-cover $d$ and a patch $P$ of $B^+$ over it, the glued
+class lives over the sieve $E$ of arrows factoring as $f \circ g$
+with $f \in d$ and the restriction of $P(f)$ along $g$ a unit; its
+part at such an arrow is the underlying section, which is unique by
+injectivity of the unit, hence extractable through the truncation.
+
+<!--
+```agda
+  module _ {U : ⌞ C ⌟} (d : J ʻ U) (P : Patch B⁺ (J .cover d)) where
+    private
+      E-data : ∀ {W} (h : Hom W U) → Type (o ⊔ ℓ ⊔ ℓc ⊔ ℓs)
+      E-data {W} h = Σ ⌞ C ⌟ λ V → Σ (Hom V U) λ f → Σ (Hom W V) λ g →
+        Σ (f ∈ d) λ hf →
+        (f ∘ g ≡ h) × total-fibre (B⁺ ⟪ g ⟫ (P .part f hf))
+
+      E : Sieve C U
+      E .arrows h = elΩ (E-data h)
+      E .closed {f = h} hh k = □-map
+        (λ (V , f , g , hf , e , x , ux) →
+            V , f , g ∘ k , hf
+          , assoc f g k ∙ ap (_∘ k) e
+          , B ⟪ k ⟫ x
+          , unit⁺-natural k x
+          ∙ ap (B⁺ .F₁ k) ux
+          ∙ sym (happly (B⁺ .F-∘ k g) (P .part f hf)))
+        hh
+
+      E-extract : ∀ {W} (h : Hom W U) → E-data h → B ʻ W
+      E-extract h (V , f , g , hf , e , x , ux) = x
+
+      E-const
+        : ∀ {W} (h : Hom W U) (α β : E-data h)
+        → E-extract h α ≡ E-extract h β
+      E-const h (V , f , g , hf , e , x , ux) (V' , f' , g' , hf' , e' , x' , ux') =
+        unit⁺-injective
+          (ux ∙ Patch.compatible P g g' (e ∙ sym e') ∙ sym ux')
+
+      qext : ∀ {W} (h : Hom W U) → ∥ E-data h ∥ → B ʻ W
+      qext h = ∥-∥-rec-set (B .F₀ _ .is-tr) (E-extract h) (E-const h)
+
+      q-patch
+        : ∀ {W W'} (h : Hom W U) (k : Hom W' W)
+        → (t : ∥ E-data h ∥) (t' : ∥ E-data (h ∘ k) ∥)
+        → B ⟪ k ⟫ (qext h t) ≡ qext (h ∘ k) t'
+      q-patch h k = ∥-∥-elim₂ (λ _ _ → B .F₀ _ .is-tr _ _)
+        λ (V , f , g , hf , e , x , ux) (V' , f' , g' , hf' , e' , x' , ux') →
+          unit⁺-injective
+            ( unit⁺-natural k x
+            ∙ ap (B⁺ .F₁ k) ux
+            ∙ sym (happly (B⁺ .F-∘ k g) (P .part f hf))
+            ∙ Patch.compatible P (g ∘ k) g'
+                (assoc f g k ∙ ap (_∘ k) e ∙ sym e')
+            ∙ sym ux')
+
+      q : Patch B E
+      q .part h hh = qext h (□-tr hh)
+      q .patch h hh k hhk = q-patch h k (□-tr hh) (□-tr hhk)
+
+      E-covering : is-covering E
+      E-covering = glue-cover d λ f hf →
+        covering-⊆
+          (λ g hg → □-map (λ (x , ux) → _ , f , g , hf , refl , x , ux) hg)
+          (T-covering (P .part f hf))
+
+    whole⁺ : B⁺ ʻ U
+    whole⁺ = inc (E , E-covering , q)
+
+    glues⁺
+      : ∀ {V} (f : Hom V U) (hf : f ∈ d)
+      → B⁺ ⟪ f ⟫ whole⁺ ≡ P .part f hf
+    glues⁺ f hf = separated-at {B = B⁺} B⁺-is-separated
+      (T-covering (P .part f hf))
+      λ g hg → □-rec (squash _ _)
+        (λ (x , ux) →
+            sym (happly (B⁺ .F-∘ g f) whole⁺)
+          ∙ restrict-inc E E-covering q (f ∘ g)
+              (inc (_ , f , g , hf , refl , x , ux))
+          ∙ ux)
+        hg
+```
+-->
+
+Assembling the three pieces: **the plus-construction of a separated
+presheaf is a sheaf**, receiving it injectively — the gluing half of
+the two-step sheafification, over an arbitrary coverage.
+
+```agda
+  B⁺-is-sheaf : is-sheaf J B⁺
+  B⁺-is-sheaf .is-sheaf.whole d P = whole⁺ d P
+  B⁺-is-sheaf .is-sheaf.glues d P f hf = glues⁺ d P f hf
+  B⁺-is-sheaf .is-sheaf.separate = B⁺-is-separated
+```
+
+Combined with the [[separated quotient|separated-quotient]] of the
+previous module, every ingredient of the classical two-step
+construction now exists; composing them — and extracting, via the
+universal property of the higher-inductive sheafification, the
+characterisation of the unit's kernel as saturated local equality,
+whence left exactness — is the remaining assembly, now purely
+mechanical in outline.
