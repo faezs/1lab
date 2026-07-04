@@ -44,12 +44,18 @@ Exactly as in the [[harmonic oscillator|harmonic-oscillator]]'s
 *synthetic*: the surface normal is a genuine
 [[cross product|parabolic-focusing]] of tangent vectors obtained by
 synthetic partial differentiation (`∂x`/`∂p` there, `∂u`/`∂v` here,
-both the Kock–Lawvere evaluate-at-$(x+\epsilon)$ recipe of the
+both the evaluate-at-$(x+\epsilon)$ recipe of the
 [[dual numbers|dual-numbers]] — the field strengths of
 `Physics.Maxwell`{.Agda} are the same $\epsilon$-coefficient read
 invariantly as a [[Kähler form|kahler-differentials]]), and the
 focusing identity is exact ring algebra over *any* commutative ring of
-scalars, discharged by the ring solver `cring!`{.Agda}.
+scalars, discharged by the ring solver `cring!`{.Agda}. That these
+by-hand $\epsilon$-coefficients are not merely a recipe but the genuine
+derivative-slot of a synthetic tangent vector — the actual content of the
+[[Kock–Lawvere|formal-smooth-set]] theorem — is proved separately in
+`Physics.Heliostat.Sheaf`{.Agda} (`∂u-is-KL-derivative`{.Agda}), where
+`∂u (σz Q)`{.Agda} is exhibited as the derivative component of an element
+of `T 𝔸¹`{.Agda} over the mirror probe.
 
 **Conventions.** Space is right-handed $R^3$; vectors are triples over
 a commutative ring. The mirror carries coordinates $(u,v)$, the

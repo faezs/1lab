@@ -15,6 +15,8 @@ open import Physics.Heliostat.Optics
 
 import Cat.Instances.Presheaf.Germs
 import Algebra.Ring.Polynomial
+import Cat.Instances.Presheaf.Concrete
+import Cat.Instances.FormalSmoothSets.DeRham
 
 open Precategory
 open Functor
@@ -86,6 +88,8 @@ this site.
   open Cat.Instances.FormalSmoothSets R
   open Physics.Heliostat.Optics.optics R
   open Physics.Heliostat.Optics.euclid (R[ Lift ℓ (Fin 2) ])
+  open Cat.Instances.Presheaf.Concrete ThCartSp pt-terminal
+  open Cat.Instances.FormalSmoothSets.DeRham R using (Ω¹-dR ; Ω¹-dR-not-concrete)
   module G = Cat.Instances.Presheaf.Germs ThCartSp
 ```
 
@@ -250,6 +254,120 @@ $z$-component viewed as a plot.
     → aim-z Q ≡ (four (con Q) ·s (focus F -v σ Q)) .snd .snd
   aim-z-is-focusing-z Q F focal = ap (λ v → v .snd .snd) (focusing Q F focal)
 ```
+
+## The tangent derivative, honestly
+
+The `Physics.Heliostat.Optics`{.Agda} partials `∂u`{.Agda}/`∂v`{.Agda}
+are computed by the dual-number recipe: thicken one mirror coordinate by
+an $\epsilon$ with $\epsilon^2 = 0$, evaluate, and read off the
+$\epsilon$-coefficient. That is a *by-hand* construction over the
+observable ring; it does not, by itself, exhibit the partial as the
+derivative-slot of a genuine synthetic tangent vector. Here we close
+that gap, using the [[Kock–Lawvere|formal-smooth-set]] theorem
+`Kock-Lawvere`{.Agda} already proved for this topos.
+
+`Kock-Lawvere`{.Agda} lives inside the anonymous
+`module _ (n k : Nat)`, so specialising it to the mirror probe is a
+positional application `Kock-Lawvere 2 0`; because `mirror`{.Agda} is
+definitionally `𝔸 2 0`, no coercion is needed. Its statement is that
+a map of the infinitesimal disk into the line over the mirror probe is
+*exactly* a pair of plots — a **value** and a **derivative** — and
+nothing more:
+
+```agda
+  KL-mirror
+    : ∣ T 𝔸¹ .F₀ mirror ∣
+    ≃ (∣ 𝔸¹ .F₀ mirror ∣ × ∣ 𝔸¹ .F₀ mirror ∣)
+  KL-mirror = Kock-Lawvere 2 0
+```
+
+The two factors are each `∣ 𝔸¹ .F₀ mirror ∣ = ThHom mirror (𝔸 1 0)`, and
+`plots-𝔸¹ mirror`{.Agda} identifies those with ring elements of
+`O mirror`{.Agda} — the very observables `σz Q`{.Agda} and its by-hand
+partial `∂u (σz Q)`{.Agda} live in. So we feed the *value* polynomial
+`σz Q`{.Agda} and its *hand-computed* partial `∂u (σz Q)`{.Agda}, each
+turned into a plot by `Equiv.from (plots-𝔸¹ mirror)`{.Agda}, into the
+inverse of Kock–Lawvere: the result is a genuine element of `T 𝔸¹`{.Agda}
+over the mirror — a synthetic tangent vector whose value is the section
+and whose derivative-slot is the by-hand partial.
+
+```agda
+  ∂uσz-tangent : ⌞ R ⌟ → ∣ T 𝔸¹ .F₀ mirror ∣
+  ∂uσz-tangent Q = Equiv.from KL-mirror
+    ( Equiv.from (plots-𝔸¹ mirror) (σz Q)
+    , Equiv.from (plots-𝔸¹ mirror) (∂u (σz Q)) )
+```
+
+Kock–Lawvere then certifies that reading the derivative-slot back off
+this tangent recovers the partial we started with — transporting along
+the counit `Equiv.ε`{.Agda} of the composite equivalence, the trailing
+`plots-𝔸¹`{.Agda} round-trip fusing definitionally.
+
+```agda
+  ∂u-is-KL-derivative
+    : ∀ Q
+    → Equiv.to (plots-𝔸¹ mirror)
+        (Equiv.to KL-mirror (∂uσz-tangent Q) .snd)
+      ≡ ∂u (σz Q)
+  ∂u-is-KL-derivative Q =
+    ap (λ pr → Equiv.to (plots-𝔸¹ mirror) (pr .snd))
+       (Equiv.ε KL-mirror _)
+```
+
+This upgrades the dual-number computation from a *recipe* to a *theorem*:
+the partial `∂u (σz Q)`{.Agda} is not merely an $\epsilon$-coefficient
+but the genuine tangent-derivative that `Kock-Lawvere`{.Agda} guarantees
+is all the data of a disk-map, over the mirror probe. We prove this for
+the $z$-component `σz`{.Agda} only; a chain rule, a Leibniz law at the
+level of `T 𝔸¹`{.Agda}, and higher jets are not developed here.
+
+## The aiming field, concretely — and where concreteness fails
+
+Schreiber's (11)/(12) sit the **concrete** objects — the diffeological
+spaces, determined by their honest *points* — strictly inside the smooth
+sets. `is-concrete`{.Agda} (`Cat.Instances.Presheaf.Concrete`{.Agda}) is
+the property that a plot is pinned down by its evaluation on the points
+of the probe. It is tempting to declare the aiming line concrete; over
+the *formal, thickened* site `ThCartSp`{.Agda} this is **false**, and
+honesty requires we say so rather than assert it. The obstruction is the
+infinitesimal probe `𝔻`{.Agda}: it has a single point yet carries
+strictly more plots than points can see — a plot of the line by
+`𝔻`{.Agda} is a *value and a derivative*, by the very `Kock-Lawvere`{.Agda}
+theorem used just above, whereas its single point sees only the value.
+This is exactly how the de Rham classifier of $1$-forms fails to be
+concrete; the 1Lab ships that negative result as
+`Ω¹-dR-not-concrete`{.Agda}, and we re-export it as the honest contrast:
+the classifier of the aiming field's *differentials* is not
+point-determined.
+
+```agda
+  aiming-nonconcrete-contrast
+    : ¬ (CRing-on.1r (R .snd) ≡ CRing-on.0r (R .snd))
+    → ¬ is-concrete Ω¹-dR
+  aiming-nonconcrete-contrast = Ω¹-dR-not-concrete
+```
+
+What *is* honestly true of the aiming values is weaker and cheaper: they
+are **representable, hence determined by the single polynomial that names
+them**. `aiming-plot Q`{.Agda} is an element of the representable
+`𝔸¹ = よ₀ ThCartSp (𝔸 1 0)`{.Agda}, and `plots-𝔸¹ mirror`{.Agda} shows a
+plot of the line is *exactly* one ring element of `O mirror`{.Agda} — the
+aiming polynomial itself, recovered definitionally.
+
+```agda
+  aiming-is-representable
+    : ∀ Q → Equiv.to (plots-𝔸¹ mirror) (aiming-plot Q) ≡ aim-z Q
+  aiming-is-representable = aiming-plot-recovers
+```
+
+We prove the **negative**, Schreiber-(12) statement — over the thickened
+site the de Rham classifier `Ω¹-dR`{.Agda} is *not* concrete — and we
+deliberately do **not** claim the aiming line `𝔸¹`{.Agda} is concrete: it
+is not, over this formal site, for the same `𝔻`{.Agda}-plot reason, and
+no representable-is-concrete lemma is shipped to lean on. What we assert
+positively is only that the aiming values are representable and
+point-determined by their naming polynomial — the genuine, weaker fact
+the API supports.
 
 ## What is and is not proven
 
