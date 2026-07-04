@@ -372,3 +372,150 @@ definitionally.
         (λ {U} c ξ ih ζ w → LPc.sep c λ h hh →
           ih h hh (LPc.map h ζ) (ap (Q .F₁ h) w))
 ```
+
+## Surjectivity
+
+Because `θ`{.Agda} is injective into a set, its fibres are
+propositions — this is the load-bearing observation, since it means
+fibres can be *glued* along a cover without any choice: the local
+witnesses agree wherever they overlap, again by injectivity, so they
+form a patch in the sheafification, and the section they glue to is
+a preimage by separatedness of $Q$.
+
+```agda
+  abstract
+    θ-fibre-prop : ∀ {U} (t : Q ʻ U) → is-prop (fibre (θ .η U) t)
+    θ-fibre-prop t (ξ , α) (ζ , β) =
+      Σ-prop-path (λ _ → Q .F₀ _ .is-tr _ _) (θ-inj (α ∙ sym β))
+
+    glue-fibre
+      : ∀ {U} (c : J ʻ U) (t : Q ʻ U)
+      → (ps : ∀ {V} (h : Hom V U) (hh : h ∈ c) → fibre (θ .η V) (Q ⟪ h ⟫ t))
+      → fibre (θ .η U) t
+    glue-fibre {U} c t ps =
+        LPc.glue c parts patchy
+      , Q-is-sheaf .separate c λ h hh →
+          ap (θ .η _) (LPc.glues c parts patchy h hh) ∙ ps h hh .snd
+      where
+      parts : pre.Parts C LPc.map (J .cover c)
+      parts h hh = ps h hh .fst
+
+      patchy : pre.is-patch C LPc.map (J .cover c) parts
+      patchy h hh h' hh' = θ-inj
+        (  ap (Q .F₁ h') (ps h hh .snd)
+        ∙∙ sym (happly (Q .F-∘ h' h) t)
+        ∙∙ sym (ps (h ∘ h') hh' .snd))
+```
+
+Now every point of $Q$ has a fibre, by a triple induction: on the
+$X^+$-component, on the $Y^+$-component, and finally — when both are
+generators, so that the agreement is a path
+$\operatorname{inc}(f\,x) = \operatorname{inc}(g\,y)$ in $Z^+$ — by
+structural induction on the *local equality* that the kernel theorem
+extracts from that path. In the base case the pair glues on the
+nose; in the `locally`{.Agda} case the problem restricts to a cover,
+where `glue-fibre`{.Agda} reassembles the recursively-obtained
+preimages. Since the fibres are propositions, all the motives are
+propositional and the coverage's mere existentials do no harm.
+
+To keep the recursion structural, the generator case is generalised
+over the endpoints of the local equality: the derivation lives at
+arbitrary $u, v : Z(U)$ which are merely *connected* to $f\,x$ and
+$g\,y$ by paths, and restriction acts on $u$ and $v$ directly, so
+the induction hypothesis applies to the sub-derivation on the nose.
+
+```agda
+  abstract
+    θ-surj-inc
+      : ∀ {U} (x : X ʻ U) (y : Y ʻ U) (u v : Z ʻ U)
+      → PZ.Loc-eq u v
+      → (pu : f .η U x ≡ u) (pv : g .η U y ≡ v)
+      → (w : Lf .η U (LX.inc x) ≡ Lg .η U (LY.inc y))
+      → fibre (θ .η U) ((LX.inc x , LY.inc y) , w)
+    θ-surj-inc x y u v (PZ.here p) pu pv w =
+        LPc.inc ((x , y) , pu ∙∙ p ∙∙ sym pv)
+      , Σ-prop-path (λ _ → LZ.squash _ _) refl
+    θ-surj-inc {U} x y u v (PZ.locally c k) pu pv w =
+      glue-fibre c _ λ {V} h hh →
+        subst (fibre (θ .η V))
+          (Σ-prop-path (λ _ → LZ.squash _ _)
+            (ap₂ _,_ (LX.inc-natural x) (LY.inc-natural y)))
+          (θ-surj-inc (X ⟪ h ⟫ x) (Y ⟪ h ⟫ y) (Z ⟪ h ⟫ u) (Z ⟪ h ⟫ v)
+            (k h hh)
+            (happly (f .is-natural _ _ h) x ∙ ap (Z .F₁ h) pu)
+            (happly (g .is-natural _ _ h) y ∙ ap (Z .F₁ h) pv)
+            (  ap LZ.inc (happly (f .is-natural _ _ h) x ∙ ap (Z .F₁ h) pu)
+            ∙∙ PZ.loc-eq→inc-path (k h hh)
+            ∙∙ sym (ap LZ.inc (happly (g .is-natural _ _ h) y ∙ ap (Z .F₁ h) pv))))
+    θ-surj-inc x y u v (PZ.squash a b i) pu pv w =
+      θ-fibre-prop _
+        (θ-surj-inc x y u v a pu pv w)
+        (θ-surj-inc x y u v b pu pv w) i
+
+    θ-surj-Y
+      : ∀ {U} (b : LY.Sheafify₀ U) (x : X ʻ U)
+      → (w : Lf .η U (LX.inc x) ≡ Lg .η U b)
+      → fibre (θ .η U) ((LX.inc x , b) , w)
+    θ-surj-Y = LY.Sheafify-elim-prop
+      (λ {U} b → (x : X ʻ U) (w : Lf .η U (LX.inc x) ≡ Lg .η U b)
+               → fibre (θ .η U) ((LX.inc x , b) , w))
+      (λ b → Π-is-hlevel 1 λ x → Π-is-hlevel 1 λ w → θ-fibre-prop _)
+      (λ {U} y x w → θ-surj-inc x y (f .η U x) (g .η U y)
+        (KZ.encode {x = f .η U x} {y = g .η U y} w) refl refl w)
+      (λ {U} c b ih x w → glue-fibre c _ λ {V} h hh →
+        subst (fibre (θ .η V))
+          (Σ-prop-path (λ _ → LZ.squash _ _)
+            (ap₂ _,_ (LX.inc-natural x) refl))
+          (ih h hh (X ⟪ h ⟫ x)
+            (ap (Lf .η V) (LX.inc-natural x)
+              ∙ (Q ⟪ h ⟫ ((LX.inc x , b) , w)) .snd)))
+
+    θ-surj-X
+      : ∀ {U} (a : LX.Sheafify₀ U) (b : LY.Sheafify₀ U)
+      → (w : Lf .η U a ≡ Lg .η U b)
+      → fibre (θ .η U) ((a , b) , w)
+    θ-surj-X = LX.Sheafify-elim-prop
+      (λ {U} a → (b : LY.Sheafify₀ U) (w : Lf .η U a ≡ Lg .η U b)
+               → fibre (θ .η U) ((a , b) , w))
+      (λ a → Π-is-hlevel 1 λ b → Π-is-hlevel 1 λ w → θ-fibre-prop _)
+      (λ {U} x b w → θ-surj-Y b x w)
+      (λ {U} c a ih b w → glue-fibre c _ λ {V} h hh →
+        ih h hh (LY.map h b) ((Q ⟪ h ⟫ ((a , b) , w)) .snd))
+
+    θ-surj : ∀ {U} (t : Q ʻ U) → fibre (θ .η U) t
+    θ-surj ((a , b) , w) = θ-surj-X a b w
+```
+
+## Invertibility
+
+An untruncated preimage together with propositional fibres is
+exactly contractibility of the fibres — so each component of
+`θ`{.Agda} is an equivalence outright, with no lemma about
+injective-surjective maps needed.
+
+```agda
+  θ-is-equiv : ∀ {U} → is-equiv (θ .η U)
+  θ-is-equiv .is-eqv t = contr (θ-surj t) (θ-fibre-prop t (θ-surj t))
+```
+
+Componentwise invertibility makes `θ`{.Agda} invertible as a natural
+transformation; and since morphisms, composition and identity in the
+category of sheaves are literally those of presheaves, the same data
+exhibits `θ`{.Agda} as invertible in $\Sh(\cC, J)$.
+
+```agda
+  θ-psh-invertible : PShR.is-invertible θ
+  θ-psh-invertible = invertible→invertibleⁿ θ λ U → SetsR.make-invertible
+    (equiv→inverse θ-is-equiv)
+    (funext (equiv→counit θ-is-equiv))
+    (funext (equiv→unit θ-is-equiv))
+
+  θ-sh-invertible : Sh.is-invertible
+    {a = LPc.Sheafify , LPc.Sheafify-is-sheaf}
+    {b = Q , Q-is-sheaf}
+    θ
+  θ-sh-invertible = Sh.make-invertible
+    (PShR.is-invertible.inv θ-psh-invertible)
+    (PShR.is-invertible.invl θ-psh-invertible)
+    (PShR.is-invertible.invr θ-psh-invertible)
+```
