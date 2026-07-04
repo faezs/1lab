@@ -111,3 +111,134 @@ separated-at {B = B} bsep (squash a b i) l =
   B .F₀ _ .is-tr _ _
     (separated-at {B = B} bsep a l) (separated-at {B = B} bsep b l) i
 ```
+
+## The plus-construction on a separated presheaf
+
+For separated $B$, the presheaf $B^+$ has, as sections over $U$,
+*patches over saturated covers, modulo agreement*: two patches are
+identified when their parts agree on every arrow belonging to both
+covers. Separatedness makes this agreement relation transitive —
+comparison through a third cover proceeds by restriction — so the
+quotient is by a congruence, and is effective.
+
+```agda
+module _ {ℓs} (B : Functor (C ^op) (Sets ℓs)) (bsep : is-separated J B) where
+  Patch⁺ : ⌞ C ⌟ → Type (o ⊔ ℓ ⊔ ℓc ⊔ ℓs)
+  Patch⁺ U = Σ (Sieve C U) λ S → is-covering S × Patch B S
+
+  agree : ∀ {U} → Patch⁺ U → Patch⁺ U → Type (o ⊔ ℓ ⊔ ℓs)
+  agree {U} (S , _ , p) (S' , _ , p') =
+    ∀ {V} (f : Hom V U) (hf : f ∈ S) (hf' : f ∈ S')
+    → p .part f hf ≡ p' .part f hf'
+```
+
+<!--
+```agda
+  private abstract
+    agree-is-prop : ∀ {U} (α β : Patch⁺ U) → is-prop (agree α β)
+    agree-is-prop (S , _ , p) (S' , _ , p') =
+      Π-is-hlevel' 1 λ V → Π-is-hlevel 1 λ f →
+      Π-is-hlevel 1 λ hf → Π-is-hlevel 1 λ hf' →
+        B .F₀ V .is-tr _ _
+
+    agree-refl : ∀ {U} (α : Patch⁺ U) → agree α α
+    agree-refl (S , _ , p) f hf hf' = Patch.app p refl
+
+    agree-sym : ∀ {U} {α β : Patch⁺ U} → agree α β → agree β α
+    agree-sym r f hf hf' = sym (r f hf' hf)
+
+    agree-trans
+      : ∀ {U} {α β γ : Patch⁺ U}
+      → agree α β → agree β γ → agree α γ
+    agree-trans {α = S , _ , p} {S' , cov' , p'} {S'' , _ , p''} r₁ r₂ f hf hf'' =
+      separated-at {B = B} bsep (covering-stable f cov') λ g hg →
+          p .patch f hf g (S .closed hf g)
+        ∙ r₁ (f ∘ g) (S .closed hf g) hg
+        ∙ r₂ (f ∘ g) hg (S'' .closed hf'' g)
+        ∙ sym (p'' .patch f hf'' g (S'' .closed hf'' g))
+
+  private
+    Cong⁺ : ∀ U → Congruence (Patch⁺ U) _
+    Cong⁺ U .Congruence._∼_ = agree
+    Cong⁺ U .Congruence.has-is-prop = agree-is-prop
+    Cong⁺ U .Congruence.reflᶜ {α} = agree-refl α
+    Cong⁺ U .Congruence._∙ᶜ_ {x} {y} {z} r s =
+      agree-trans {α = x} {β = y} {γ = z} r s
+    Cong⁺ U .Congruence.symᶜ {x} {y} r =
+      agree-sym {α = x} {β = y} r
+
+    module Cong⁺ (U : ⌞ C ⌟) = Congruence (Cong⁺ U)
+```
+-->
+
+Restriction is pullback of covers and patches — no choices are made,
+because the covers are arbitrary saturated sieves.
+
+```agda
+  B⁺ : Functor (C ^op) (Sets (o ⊔ ℓ ⊔ ℓc ⊔ ℓs))
+  B⁺ .F₀ U = el (Patch⁺ U / agree) squash
+  B⁺ .F₁ g = Coeq-rec
+    (λ (S , cov , p) →
+      inc (pullback g S , covering-stable g cov , pullback-patch g p))
+    (λ ((S , _ , p) , (S' , _ , p') , r) →
+      quot λ f hf hf' → r (g ∘ f) hf hf')
+  B⁺ .F-id = funext $ Coeq-elim-prop (λ _ → squash _ _)
+    λ (S , cov , p) → quot λ f hf hf' → Patch.app p (idl f)
+  B⁺ .F-∘ f g = funext $ Coeq-elim-prop (λ _ → squash _ _)
+    λ (S , cov , p) → quot λ h hh hh' → Patch.app p (sym (assoc g f h))
+```
+
+The unit sends a section to the total patch over the maximal sieve;
+by effectivity and agreement at the identity, it is *injective* —
+this is where separatedness of $B^+$'s input matters not at all, and
+the maximality does all the work.
+
+```agda
+  private
+    full-patch : ∀ {U} → B ʻ U → Patch B maximal'
+    full-patch x .part f _ = B ⟪ f ⟫ x
+    full-patch x .patch f hf g hgf = sym (happly (B .F-∘ g f) x)
+
+  unit⁺ : ∀ {U} → B ʻ U → B⁺ ʻ U
+  unit⁺ x = inc (maximal' , has-id tt , full-patch x)
+
+  unit⁺-natural
+    : ∀ {U V} (g : Hom V U) (x : B ʻ U)
+    → unit⁺ (B ⟪ g ⟫ x) ≡ B⁺ ⟪ g ⟫ (unit⁺ x)
+  unit⁺-natural g x = quot λ f hf hf' → sym (happly (B .F-∘ f g) x)
+
+  unit⁺-injective
+    : ∀ {U} {x y : B ʻ U}
+    → unit⁺ x ≡ unit⁺ y → x ≡ y
+  unit⁺-injective {U} {x} {y} p =
+      sym (happly (B .F-id) x)
+    ∙ Cong⁺.effective U p id tt tt
+    ∙ happly (B .F-id) y
+```
+
+And $B^+$ is separated: two classes agreeing on a cover have
+representatives whose parts agree on every common arrow, by
+restricting to the cover, applying effectivity there, and using
+separatedness of $B$ at the pulled-back cover.
+
+```agda
+  B⁺-is-separated : is-separated J B⁺
+  B⁺-is-separated {U} d {x} {y} = go x y where
+    go
+      : (x y : Patch⁺ U / agree)
+      → (∀ {V} (f : Hom V U) (hf : f ∈ d)
+         → B⁺ ⟪ f ⟫ x ≡ B⁺ ⟪ f ⟫ y)
+      → x ≡ y
+    go = Coeq-elim-prop (λ _ → Π-is-hlevel 1 λ _ → Π-is-hlevel 1 λ _ → squash _ _)
+      λ (S , cov , p) → Coeq-elim-prop (λ _ → Π-is-hlevel 1 λ _ → squash _ _)
+        λ (S' , cov' , p') l → quot λ f hf hf' →
+          separated-at {B = B} bsep
+            (covering-stable f (by-J {S = J .cover d} d (λ g hg → hg))) λ g hg →
+              p .patch f hf g (S .closed hf g)
+            ∙ Patch.app p (sym (idr (f ∘ g)))
+            ∙ Cong⁺.effective _ (l (f ∘ g) hg) id
+                (subst (_∈ S) (sym (idr (f ∘ g))) (S .closed hf g))
+                (subst (_∈ S') (sym (idr (f ∘ g))) (S' .closed hf' g))
+            ∙ Patch.app p' (idr (f ∘ g))
+            ∙ sym (p' .patch f hf' g (S' .closed hf' g))
+```
