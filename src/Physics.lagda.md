@@ -58,6 +58,10 @@ import Physics.Newton
 import Physics.Heliostat.Optics
 import Physics.Heliostat.Eikonal
 import Physics.Heliostat.Sheaf
+import Physics.Heliostat.Forms
+import Physics.Heliostat.Curvature
+import Physics.Heliostat.Tracking
+import Physics.Heliostat.Symmetry
 import Algebra.Ring.Kahler.Exterior
 import Algebra.Ring.Weil
 import Homotopy.Modality
@@ -590,6 +594,36 @@ _ = Physics.Heliostat.Eikonal.wavefront.mirror-on-sphere
 _ = Physics.Heliostat.Sheaf.sheaf.aiming-plot
 _ = Physics.Heliostat.Sheaf.sheaf.germs-are-plots
 _ = Physics.Heliostat.Sheaf.sheaf.aim-descends
+```
+
+Following the oscillator, the heliostat now exercises *every* column of
+the probe table over the same infrastructure. Its sag potential's
+[[Kähler differential|kahler-differentials]] is the optical field
+strength, an exact — hence conservative — $1$-form, with the same
+`gauge`{.Agda} invariance as `Physics.Maxwell`{.Agda}. The paraboloid's
+curvature is a [[Weil|formal-smooth-set]] $2$-jet whose $\delta^2$
+coefficient *is* the reciprocal focal length, exactly as
+`Physics.Newton`{.Agda} reads $F = ma$ off a jet. The sun-*tracking* law
+is a [[compiled|compiling-to-categories]] $\lambda$-program that runs in
+every cartesian closed category and closes its diurnal cycle by
+`refl`{.Agda}. Its $\ZZ/4$ axial-rotation symmetry is **gauged**, the
+mirror vertex an orbi-singularity $\rm{pt}/\!\!/(\ZZ/4)$ that the naive
+quotient forgets — the `gauge-loops-differ`{.Agda} of the oscillator, one
+turn finer. And the by-hand tangent partial is *proved* to be the genuine
+[[Kock–Lawvere|formal-smooth-set]] derivative of a synthetic tangent
+vector, with the aiming field's differentials honestly *non*-concrete.
+
+```agda
+_ = Physics.Heliostat.Forms.sag-forms.slope-form
+_ = Physics.Heliostat.Forms.sag-forms.same-optics
+_ = Physics.Heliostat.Curvature.curvature.curvature-is-focal
+_ = Physics.Heliostat.Curvature.curvature.focusing-residual-second-order
+_ = Physics.Heliostat.Tracking.step
+_ = Physics.Heliostat.Tracking.on-target
+_ = Physics.Heliostat.Symmetry.optics-symmetry.normal-rot-equivariant′
+_ = Physics.Heliostat.Symmetry.gauge-loops-differ
+_ = Physics.Heliostat.Sheaf.sheaf.∂u-is-KL-derivative
+_ = Physics.Heliostat.Sheaf.sheaf.aiming-nonconcrete-contrast
 ```
 
 ## Gauge transformations and simplicial shapes
