@@ -57,6 +57,7 @@ import Physics.Maxwell
 import Physics.Newton
 import Physics.Heliostat.Optics
 import Physics.Heliostat.Eikonal
+import Physics.Heliostat.Sheaf
 import Algebra.Ring.Kahler.Exterior
 import Algebra.Ring.Weil
 import Homotopy.Modality
@@ -570,12 +571,25 @@ order is the reflection law. As with the oscillator, the Euler–Lagrange
 and the eikonal equation $|\nabla S|^2 = n^2$ as a field equation, wait
 on integration.
 
+The ray bundle itself — the *"section built from germs"* of the
+concentrator's control code — is realised as the [[germs|germ-of-a-plot]]
+of this aiming field over the reflector's *own* probe site: the aiming
+polynomial is literally a plot of the line by the mirror probe $\bA^2$,
+whose function ring *is* the optics observable ring, and its stalk is the
+germ of that plot. Over this formal site the germ coincides with the
+plot — the section is its own germ — the genuinely *shrinking*
+infinitesimal germs of the smooth site being the same analytic gap listed
+below.
+
 ```agda
 _ = Physics.Heliostat.Optics.optics.normal-value
 _ = Physics.Heliostat.Optics.optics.focusing
 _ = Physics.Heliostat.Optics.optics.focusing-parallel
 _ = Physics.Heliostat.Eikonal.wavefront.equal-path
 _ = Physics.Heliostat.Eikonal.wavefront.mirror-on-sphere
+_ = Physics.Heliostat.Sheaf.sheaf.aiming-plot
+_ = Physics.Heliostat.Sheaf.sheaf.germs-are-plots
+_ = Physics.Heliostat.Sheaf.sheaf.aim-descends
 ```
 
 ## Gauge transformations and simplicial shapes
