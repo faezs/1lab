@@ -118,3 +118,130 @@ the agreement is a proposition.
     Σ-prop-path (λ _ → Z .F₀ _ .is-tr _ _)
       (ap₂ _,_ (q₁ ηₚ U $ₚ a) (q₂ ηₚ U $ₚ a))
 ```
+
+## The pointwise pullback of sheaves
+
+Now apply the same construction one level up: sheafify the cospan,
+and form the pointwise pullback $Q$ of the resulting cospan
+$X^+ \to Z^+ \ot Y^+$ of sheaves. Because the sheafification functor
+is built from the universal property, its action on morphisms
+computes definitionally on the `inc`{.Agda} constructor, which the
+rest of this module uses without further comment.
+
+<!--
+```agda
+  private
+    module LX = Sheafification J X
+    module LY = Sheafification J Y
+    module LZ = Sheafification J Z
+```
+-->
+
+```agda
+  Lf : LX.Sheafify => LZ.Sheafify
+  Lf = Sheafification {C = C} {J = J} .F₁ f
+
+  Lg : LY.Sheafify => LZ.Sheafify
+  Lg = Sheafification {C = C} {J = J} .F₁ g
+
+  Q : Functor (C ^op) (Sets ℓ)
+  Q .F₀ U = el
+    (Σ[ ab ∈ LX.Sheafify ʻ U × LY.Sheafify ʻ U ]
+      (Lf .η U (ab .fst) ≡ Lg .η U (ab .snd)))
+    (Σ-is-hlevel 2
+      (×-is-hlevel 2 LX.squash LY.squash)
+      (λ _ → is-prop→is-set (LZ.squash _ _)))
+  Q .F₁ h ((a , b) , w) = (LX.map h a , LY.map h b) ,
+       happly (Lf .is-natural _ _ h) a
+    ∙∙ ap (LZ.map h) w
+    ∙∙ sym (happly (Lg .is-natural _ _ h) b)
+  Q .F-id = funext λ ((a , b) , w) →
+    Σ-prop-path (λ _ → LZ.squash _ _)
+      (ap₂ _,_ (LX.map-id a) (LY.map-id b))
+  Q .F-∘ h₂ h₁ = funext λ ((a , b) , w) →
+    Σ-prop-path (λ _ → LZ.squash _ _)
+      (ap₂ _,_ (LX.map-∘ a) (LY.map-∘ b))
+
+  q1 : Q => LX.Sheafify
+  q1 .η U ((a , b) , w) = a
+  q1 .is-natural U V h = refl
+
+  q2 : Q => LY.Sheafify
+  q2 .η U ((a , b) , w) = b
+  q2 .is-natural U V h = refl
+```
+
+The point of the construction: $Q$ is itself a sheaf. Separatedness
+is componentwise, since both components live in sheaves. For gluing,
+a patch of $Q$ has two component patches; gluing each in its own
+sheafification gives the two components of the candidate section,
+and the *agreement* of these components is a $J$-local question —
+so it follows from separatedness of $Z^+$, since it holds on the
+cover by the very compatibility the patch carries.
+
+<!--
+```agda
+  private
+    patch-X : ∀ {U} {c : J ʻ U} → Patch Q (J .cover c) → Patch LX.Sheafify (J .cover c)
+    patch-X p .part h hh = p .part h hh .fst .fst
+    patch-X p .patch h hh h' hh' = ap (λ t → t .fst .fst) (p .patch h hh h' hh')
+
+    patch-Y : ∀ {U} {c : J ʻ U} → Patch Q (J .cover c) → Patch LY.Sheafify (J .cover c)
+    patch-Y p .part h hh = p .part h hh .fst .snd
+    patch-Y p .patch h hh h' hh' = ap (λ t → t .fst .snd) (p .patch h hh h' hh')
+```
+-->
+
+```agda
+  Q-is-sheaf : is-sheaf J Q
+  Q-is-sheaf = from-is-separated Q-sep Q-split where
+    Q-sep : is-separated J Q
+    Q-sep c loc = Σ-prop-path (λ _ → LZ.squash _ _)
+      (ap₂ _,_
+        (LX.Sheafify-is-sep c λ h hh → ap (λ t → t .fst .fst) (loc h hh))
+        (LY.Sheafify-is-sep c λ h hh → ap (λ t → t .fst .snd) (loc h hh)))
+
+    Q-split : ∀ {U} (c : J .covers U) (p : Patch Q (J .cover c)) → Section Q p
+    Q-split c p = record { whole = (wx , wy) , cond ; glues = λ h hh →
+      Σ-prop-path (λ _ → LZ.squash _ _)
+        (ap₂ _,_
+          (LX.Sheafify-is-sheaf .glues c (patch-X p) h hh)
+          (LY.Sheafify-is-sheaf .glues c (patch-Y p) h hh)) }
+      where
+      wx = LX.Sheafify-is-sheaf .whole c (patch-X p)
+      wy = LY.Sheafify-is-sheaf .whole c (patch-Y p)
+
+      cond : Lf .η _ wx ≡ Lg .η _ wy
+      cond = LZ.Sheafify-is-sep c λ h hh →
+           ap (Lf .η _) (LX.Sheafify-is-sheaf .glues c (patch-X p) h hh)
+        ∙∙ p .part h hh .snd
+        ∙∙ sym (ap (Lg .η _) (LY.Sheafify-is-sheaf .glues c (patch-Y p) h hh))
+```
+
+Finally, $Q$ is a pullback of the sheafified cospan *in the category
+of sheaves*. Since morphisms of sheaves are just morphisms of the
+underlying presheaves, the proof is word for word the one for
+`Pc`{.Agda} — note that it nowhere uses that the competitor is a
+sheaf.
+
+```agda
+  Q-is-pullback : is-pullback (Sheaves J ℓ)
+    {X = LX.Sheafify , LX.Sheafify-is-sheaf}
+    {Z = LZ.Sheafify , LZ.Sheafify-is-sheaf}
+    {Y = LY.Sheafify , LY.Sheafify-is-sheaf}
+    {P = Q , Q-is-sheaf}
+    q1 Lf q2 Lg
+  Q-is-pullback .square = Nat-path λ U → funext λ ((a , b) , w) → w
+  Q-is-pullback .universal {p₁' = p₁'} {p₂'} sq .η U t =
+    (p₁' .η U t , p₂' .η U t) , (sq ηₚ U $ₚ t)
+  Q-is-pullback .universal {p₁' = p₁'} {p₂'} sq .is-natural U V h =
+    funext λ t → Σ-prop-path (λ _ → LZ.squash _ _)
+      (ap₂ _,_
+        (happly (p₁' .is-natural U V h) t)
+        (happly (p₂' .is-natural U V h) t))
+  Q-is-pullback .p₁∘universal = Nat-path λ U → refl
+  Q-is-pullback .p₂∘universal = Nat-path λ U → refl
+  Q-is-pullback .unique {lim' = lim'} q₁ q₂ = Nat-path λ U → funext λ t →
+    Σ-prop-path (λ _ → LZ.squash _ _)
+      (ap₂ _,_ (q₁ ηₚ U $ₚ t) (q₂ ηₚ U $ₚ t))
+```
