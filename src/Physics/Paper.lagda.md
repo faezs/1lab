@@ -17,6 +17,8 @@ import Cat.Instances.FormalSmoothSets
 import Cat.Instances.SuperSmoothSets
 import Cat.Instances.Presheaf.Cohesive
 import Cat.Instances.Localisation.Invertible
+import Cat.Site.Sheafification.Kernel
+import Cat.Site.Sheafification.Topos
 import Cat.CartesianClosed.Free.Model
 
 import Algebra.ChainComplex.Moore
@@ -240,6 +242,20 @@ isomorphisms is a theorem rather than a programme.
 ```agda
 _ = Cat.Instances.Presheaf.Cohesive.Π₀⊣Disc
 _ = Cat.Instances.Localisation.Invertible.Localise-is-precat-iso
+```
+
+Since first writing this paper, the development has closed its own
+largest gap: the higher-inductive sheafification is proven **left
+exact** over an arbitrary coverage — through a path-space
+characterisation of its unit as saturated local equality, itself
+obtained by formalising the two-step plus-construction with
+proposition-valued higher inductive types — so the sheaf categories
+of this development are Grothendieck topoi in the 1Lab's official,
+lex-reflective sense.
+
+```agda
+_ = Cat.Site.Sheafification.Kernel.unit-kernel
+_ = Cat.Site.Sheafification.Topos.Sheaves-topos
 ```
 
 ## 5. The reals, and where analysis actually begins
