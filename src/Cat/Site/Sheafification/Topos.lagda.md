@@ -519,3 +519,114 @@ exhibits `θ`{.Agda} as invertible in $\Sh(\cC, J)$.
     (PShR.is-invertible.invl θ-psh-invertible)
     (PShR.is-invertible.invr θ-psh-invertible)
 ```
+
+Finally, `θ`{.Agda} commutes with the projections: both
+$q_1 \circ \theta$ and the sheafification of `pc1`{.Agda} are maps
+out of a sheafification into a sheaf which agree on generators, so
+they are equal by the uniqueness half of the universal property —
+definitionally on both sides.
+
+```agda
+  θ-pc1 : Sheafification {C = C} {J = J} .F₁ pc1 ≡ q1 PShR.∘ θ
+  θ-pc1 = S.unique LX.Sheafify LX.Sheafify-is-sheaf
+    (S.unit PShR.∘ pc1) (q1 PShR.∘ θ) λ U x → refl
+
+  θ-pc2 : Sheafification {C = C} {J = J} .F₁ pc2 ≡ q2 PShR.∘ θ
+  θ-pc2 = S.unique LY.Sheafify LY.Sheafify-is-sheaf
+    (S.unit PShR.∘ pc2) (q2 PShR.∘ θ) λ U x → refl
+```
+
+## Pullback preservation
+
+An abstract pullback square in $\psh(\cC)$ compares to the canonical
+one by an invertible map, since both are pullbacks of the same
+cospan; the sheafification functor preserves that invertibility, and
+composing with `θ`{.Agda} lands in $Q$. The composite is the
+canonical comparison of the sheafified square with the sheaf
+pullback $Q$, so `invertible≃pullback`{.Agda} concludes.
+
+```agda
+module _ {P X Y Z : Functor (C ^op) (Sets ℓ)}
+         {p1 : P => X} {f : X => Z} {p2 : P => Y} {g : Y => Z}
+         (pb : is-pullback (PSh ℓ C) p1 f p2 g)
+  where
+  private
+    L : Functor (PSh ℓ C) (Sheaves J ℓ)
+    L = Sheafification {C = C} {J = J}
+
+    module L = Functor L
+
+    k : P => Pc f g
+    k = Pc-is-pullback f g .universal (pb .square)
+
+    k-invertible : PShR.is-invertible k
+    k-invertible = pullback-unique (Pc-is-pullback f g) pb
+
+    Lsq : L.₁ f PShR.∘ L.₁ p1 ≡ L.₁ g PShR.∘ L.₁ p2
+    Lsq = sym (L.F-∘ f p1) ∙∙ ap L.₁ (pb .square) ∙∙ L.F-∘ g p2
+
+    cmp : Sh.Hom (L.₀ P) (Q f g , Q-is-sheaf f g)
+    cmp = θ f g PShR.∘ L.₁ k
+
+    cmp-invertible
+      : Sh.is-invertible {a = L.₀ P} {b = Q f g , Q-is-sheaf f g} cmp
+    cmp-invertible = Sh.invertible-∘
+      (θ-sh-invertible f g)
+      (F-map-invertible L k-invertible)
+
+    c1 : q1 f g PShR.∘ cmp ≡ L.₁ p1
+    c1 = PShR.pulll (sym (θ-pc1 f g))
+      ∙∙ sym (L.F-∘ (pc1 f g) k)
+      ∙∙ ap L.₁ (Pc-is-pullback f g .p₁∘universal {p = pb .square})
+
+    c2 : q2 f g PShR.∘ cmp ≡ L.₁ p2
+    c2 = PShR.pulll (sym (θ-pc2 f g))
+      ∙∙ sym (L.F-∘ (pc2 f g) k)
+      ∙∙ ap L.₁ (Pc-is-pullback f g .p₂∘universal {p = pb .square})
+
+  Sheafification-pres-pullback
+    : is-pullback (Sheaves J ℓ)
+        {X = L.₀ X} {Z = L.₀ Z} {Y = L.₀ Y} {P = L.₀ P}
+        (L.₁ p1) (L.₁ f) (L.₁ p2) (L.₁ g)
+  Sheafification-pres-pullback = Equiv.to
+    (invertible≃pullback {p' = L.₀ P} (Q-is-pullback f g) Lsq)
+    (subst (Sh.is-invertible {a = L.₀ P} {b = Q f g , Q-is-sheaf f g})
+      (Q-is-pullback f g .unique {P' = L.₀ P} {p = Lsq} c1 c2)
+      cmp-invertible)
+```
+
+## Left exactness, and the topos of sheaves
+
+Terminal objects were [[already
+preserved|lex-sheafification]]; together with pullback preservation,
+the sheafification functor is left exact.
+
+```agda
+Sheafification-is-lex : is-lex (Sheafification {C = C} {J = J})
+Sheafification-is-lex .is-lex.pres-⊤ {T} term =
+  Cat.Site.Sheafification.Lex.Sheafification-pres-⊤ J T term
+Sheafification-is-lex .is-lex.pres-pullback pb =
+  Sheafification-pres-pullback pb
+```
+
+All the fields of the `Topos`{.Agda} record are now in hand: sheaves
+on a site are a reflective subcategory of presheaves, the inclusion
+is fully faithful with definitionally-identity action on morphisms,
+and the reflector is lex.
+
+```agda
+Sheaves-topos : Topos ℓ Sh[ C , J ]
+Sheaves-topos .Topos.site = C
+Sheaves-topos .Topos.ι = forget-sheaf J ℓ
+Sheaves-topos .Topos.has-ff = id-equiv
+Sheaves-topos .Topos.L = Sheafification {C = C} {J = J}
+Sheaves-topos .Topos.L-lex = Sheafification-is-lex
+Sheaves-topos .Topos.L⊣ι = Sheafification⊣ι {C = C} {J = J}
+```
+
+In particular, the gros topoi of this development — categories of
+sheaves `Sh[ C , J ]`{.Agda} over the sites of smooth, formally
+extended, and super Cartesian spaces — are Grothendieck topoi in the
+official, structural sense of the word: the diagram of adjunctions
+they participate in bottoms out in an honest lex reflection of
+presheaves.
