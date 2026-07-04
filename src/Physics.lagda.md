@@ -50,6 +50,7 @@ import Cat.Site.Sheafification.Lex
 import Cat.Site.Sheafification.Locality
 import Cat.Site.Sheafification.Plus
 import Cat.Site.Sheafification.Glue
+import Cat.Site.Sheafification.Kernel
 import Physics.Oscillator
 import Physics.Maxwell
 import Physics.Newton
@@ -665,6 +666,7 @@ _ = Cat.Site.Sheafification.Plus.A₁-is-separated
 _ = Cat.Site.Sheafification.Glue.covering-stable
 _ = Cat.Site.Sheafification.Glue.B⁺-is-sheaf
 _ = Cat.Site.Sheafification.Glue.unit⁺-injective
+_ = Cat.Site.Sheafification.Kernel.unit-kernel
 ```
 
 On the homotopy-theoretic side of the dictionary, the delooping of a
@@ -745,12 +747,15 @@ The gluing half is now also done:
 `Cat.Site.Sheafification.Glue`{.Agda} saturates the coverage (again
 a proposition-valued HIT), builds the plus-construction $B^+$ of a
 separated presheaf over saturated covers — where restriction is
-choice-free — and proves it a sheaf with injective unit. Every
-ingredient of the two-step construction exists; what remains is the
-assembly: compose quotient and plus, extract the kernel
-characterisation through the sheafification's universal property,
-and derive pullback preservation — mechanical in outline, the last
-steps between `Sh[_,_]`{.Agda} and `Topos`{.Agda}); Weil algebras beyond
+choice-free — and proves it a sheaf with injective unit. The
+assembly is done as well: `Cat.Site.Sheafification.Kernel`{.Agda}
+composes quotient and plus and proves, over an arbitrary coverage,
+that **the unit of sheafification identifies two sections exactly
+when they are locally equal** — the complete path-space
+characterisation of the higher-inductive sheafification. What
+remains is deducing pullback preservation from it and packaging
+left exactness — the last steps between `Sh[_,_]`{.Agda} and
+`Topos`{.Agda}); Weil algebras beyond
 second order (the second-order algebra, its jet derivative, and
 Newton's law as a theorem now exist — see
 `Physics.Newton`{.Agda}) and coverages on the thickened site; the odd-plot
