@@ -55,6 +55,7 @@ import Cat.Site.Sheafification.Topos
 import Physics.Oscillator
 import Physics.Maxwell
 import Physics.Newton
+import Physics.Heliostat.Optics
 import Algebra.Ring.Kahler.Exterior
 import Algebra.Ring.Weil
 import Homotopy.Modality
@@ -546,6 +547,26 @@ _ = Physics.Oscillator.fermionic.modes-nilpotent
 _ = Physics.Oscillator.gauge-loops-differ
 _ = Physics.Newton.second-order-flow.newton
 _ = Physics.Maxwell.electromagnetism.same-field
+```
+
+That toy heliostat aims in one dimension — its law *aim = addition* is
+the bisector of the sun and target directions. The **real** device is a
+paraboloid concentrator, and it lives in the infinitesimal column.
+Reading geometric optics as a variational field theory after
+Giotopoulos and Sati [@GiotopoulosSati:FieldTheory], the mirror is a
+plot of a [[formal smooth set|formal-smooth-set]], its surface normal
+is a genuine cross product of [[Kock–Lawvere|kock-lawvere]] tangent
+derivatives — *derived*, not posited — Fermat's principle is the
+Euler–Lagrange condition $\delta(\mathrm{path}) = 0$, and the
+parabola's perfect focusing is an exact ring identity: the axial ray
+reflects, at *every* surface point, onto the line through the focus. As
+with the oscillator, the Euler–Lagrange *equation* is reached
+synthetically while the optical *action integral* waits on integration.
+
+```agda
+_ = Physics.Heliostat.Optics.optics.normal-value
+_ = Physics.Heliostat.Optics.optics.focusing
+_ = Physics.Heliostat.Optics.optics.focusing-parallel
 ```
 
 ## Gauge transformations and simplicial shapes
