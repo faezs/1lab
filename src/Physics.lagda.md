@@ -62,6 +62,9 @@ import Physics.Heliostat.Forms
 import Physics.Heliostat.Curvature
 import Physics.Heliostat.Tracking
 import Physics.Heliostat.Symmetry
+import Physics.Heliostat.Bundle
+import Physics.Heliostat.Thermal
+import Physics.Heliostat.Solar
 import Algebra.Ring.Kahler.Exterior
 import Algebra.Ring.Weil
 import Homotopy.Modality
@@ -624,6 +627,31 @@ _ = Physics.Heliostat.Symmetry.optics-symmetry.normal-rot-equivariant′
 _ = Physics.Heliostat.Symmetry.gauge-loops-differ
 _ = Physics.Heliostat.Sheaf.sheaf.∂u-is-KL-derivative
 _ = Physics.Heliostat.Sheaf.sheaf.aiming-nonconcrete-contrast
+```
+
+Beyond the optics, the concentrator's remaining subsystems are its
+reward, its receiver, and its clock. The focusing **reward** is a
+variance: the ray-bundle score is the Koenig–Huygens / parallel-axis
+decomposition of the endpoints, whose spread term is a manifest sum of
+squares and which is **permutation-invariant** — the bundle is a *set*
+of ray germs, order-free, factoring through the same set-quotient as the
+`Sheaf`{.Agda} germs. The **receiver**'s thermal relaxation has a
+synthetic stability rate — the dual-number derivative of its
+radiative-plus-convective flux, $-(h + 4\sigma\epsilon A\,T^3)$ — and the
+exact $(\mathrm{d}t)^2$ Euler defect of the oscillator. And the **solar
+clock** closes on genuine cyclic periods $\ZZ/24$, $\ZZ/365$, while the
+mirror's **focus is the conserved Noether charge** of the diurnal
+time-translation: as the sun moves and the primary re-points, the focus
+is fixed on the nose.
+
+```agda
+_ = Physics.Heliostat.Bundle.bundle-variance.parallel-axis-2
+_ = Physics.Heliostat.Bundle.bundle-variance.reward-swap-2
+_ = Physics.Heliostat.Thermal.thermal.stability-rate
+_ = Physics.Heliostat.Thermal.thermal.euler-relaxation-defect
+_ = Physics.Heliostat.Solar.sky-holds-day
+_ = Physics.Heliostat.Solar.diurnal-closes
+_ = Physics.Heliostat.Solar.noether.focus-invariant
 ```
 
 ## Gauge transformations and simplicial shapes
