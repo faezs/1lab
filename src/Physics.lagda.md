@@ -65,6 +65,7 @@ import Physics.Heliostat.Symmetry
 import Physics.Heliostat.Bundle
 import Physics.Heliostat.Thermal
 import Physics.Heliostat.Solar
+import Physics.SmoothWorld
 import Algebra.Ring.Kahler.Exterior
 import Algebra.Ring.Weil
 import Homotopy.Modality
@@ -327,6 +328,32 @@ _ = Cat.Instances.FormalSmoothSets.𝔸¹
 _ = Cat.Instances.FormalSmoothSets.𝔻-product
 _ = Cat.Instances.FormalSmoothSets.Kock-Lawvere
 _ = Cat.Instances.FormalSmoothSets.Maps-point
+```
+
+`Kock-Lawvere`{.Agda} is precisely the theorem that the founding axiom
+of J. L. Bell's [[smooth infinitesimal analysis|synthetic-derivative]]
+[@Bell:Primer] — his **Principle of Microaffineness**, that every map
+of the infinitesimal $\Delta = \{d : d^2 = 0\}$ into the line is
+*uniquely* affine — holds in the gros topos. Taking that axiom as a
+*hypothesis* (never a postulate), Bell's textbook development of the
+calculus is a machine-checked constructive theory: the derivative is
+the affine coefficient, its uniqueness *is* **microcancellation**, the
+**fundamental equation** $f(x+\varepsilon) = f(x) + \varepsilon f'(x)$
+has an identically-zero remainder, and the **Leibniz** and **chain**
+rules and **Fermat's** stationary-point rule are two-line consequences
+of $\varepsilon^2 = 0$. The **failure of excluded middle** on $\Delta$
+is here a constructive *theorem*, and with a Constancy axiom the smooth
+line is **indecomposable**. This is the abstract axiomatics underneath
+the concrete dual-number `δ` every heliostat module computes with.
+
+```agda
+_ = Physics.SmoothWorld.Bell.microcancel
+_ = Physics.SmoothWorld.Bell.fundamental
+_ = Physics.SmoothWorld.Bell.deriv-*
+_ = Physics.SmoothWorld.Bell.deriv-∘
+_ = Physics.SmoothWorld.Bell.fermat-→
+_ = Physics.SmoothWorld.Bell.Δ-no-lem
+_ = Physics.SmoothWorld.Bell.indecomposable
 ```
 
 In this topos the paper's flagship *non-concrete* smooth set also
