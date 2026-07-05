@@ -66,6 +66,7 @@ import Physics.Heliostat.Bundle
 import Physics.Heliostat.Thermal
 import Physics.Heliostat.Solar
 import Physics.SmoothWorld
+import Physics.SmoothWorld.Internal
 import Algebra.Ring.Kahler.Exterior
 import Algebra.Ring.Weil
 import Homotopy.Modality
@@ -354,6 +355,28 @@ _ = Physics.SmoothWorld.Bell.deriv-∘
 _ = Physics.SmoothWorld.Bell.fermat-→
 _ = Physics.SmoothWorld.Bell.Δ-no-lem
 _ = Physics.SmoothWorld.Bell.indecomposable
+```
+
+That axiomatic development is honest but *ungrounded* — Microaffineness
+holds in no set-level ring. The grounding is supplied model-side: over
+`FrmlSmthSet`{.Agda}, the representable line $\bA^1$ **is** Bell's smooth
+line, and `Kock-Lawvere`{.Agda} **is** his Microaffineness axiom, a
+*theorem*. Read that way, `Physics.SmoothWorld.Internal`{.Agda} extracts
+Bell's Chapter 1 directly: the **fundamental equation**
+$f(x+\varepsilon)=f(x)+\varepsilon f'(x)$ is the unit of the
+Kock–Lawvere equivalence, and **microcancellation** is its injectivity —
+the model-side vindication the abstract module could only assume. The
+one subtlety is sharp: the set-level axiomatization quantifies over
+*arbitrary* set-functions on a ring's nilsquares, a strictly stronger,
+false-in-general statement — Bell's consistency rests on the *smooth*
+(internal-hom) arrow $T\bA^1$, which is exactly what `Kock-Lawvere`{.Agda}
+governs.
+
+```agda
+_ = Physics.SmoothWorld.Internal.KL
+_ = Physics.SmoothWorld.Internal.fundamental
+_ = Physics.SmoothWorld.Internal.microcancel
+_ = Physics.SmoothWorld.Internal.unique-slope
 ```
 
 In this topos the paper's flagship *non-concrete* smooth set also
@@ -918,3 +941,19 @@ with terminal probe; the instantiation awaits level-polymorphic
 cohesion); and the stable localisation of presheaves on $\rm{Lin}$
 presenting the tangent topos (41). Each is a well-posed project over
 the infrastructure assembled above.
+
+Finally, the *internalization* of [[smooth infinitesimal
+analysis|synthetic-derivative]] is only begun. `Kock-Lawvere`{.Agda}
+grounds Bell's Microaffineness and the differential calculus for the
+representable line and its smooth (internal-hom) function space
+`T`$\bA^1$ (see `Physics.SmoothWorld.Internal`{.Agda}); but the internal
+calculus for arbitrary self-maps $\bA^1 \to \bA^1$ — Leibniz and the
+chain rule at the internal-hom level, and any genuine $\forall(f : \bA^1
+\to \bA^1)$ — needs three pieces that do not yet exist: an internal
+**ring-object** structure on $\bA^1$; the **tensor product of
+$R$-algebras** $R[X \uplus Y] \simeq R[X] \otimes_R R[Y]$ that would make
+general products $\bA^n_k \times \bA^m_j$ representable (only the
+bespoke $\times\bD$ product is shipped); and — for the logic rather than
+the algebra — an **internal-language / Kripke–Joyal** layer, the sole
+syntactic doctrine present being *regular* logic, without $\forall$ or
+$\Rightarrow$.
