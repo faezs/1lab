@@ -149,24 +149,72 @@ the identity lift.
   □-out! (adj (f Cr.∘ k) fk∈R) Cr.id k (sym (Cr.idr (f Cr.∘ k)))
 ```
 
-## Both hereditary bricks, in hand
+## Closing the triple: existential quantification
 
-With `_⇒ᵢ_`{.Agda} adjoint to `_∧ᵢ_`{.Agda} and `∀[_]`{.Agda} adjoint to
-`pullback`{.Agda} (substitution), the two right-adjoint connectives the
-regular fragment lacked — implication and universal quantification — are
-now built over sieves, **each with its universal property machine-
-checked**. Together with `⊤ᵢ`/`∧ᵢ`/`⋀ᵢ` and the `∃`/`=` already in the
-regular doctrine, this is the full first-order signature of the internal
-logic of any presheaf topos, at the semantic level of the subobject
-classifier — including over the smooth site $\rm{ThCartSp}$.
+The quantifiers come in an adjoint string $\exists_f \dashv f^* \dashv
+\forall_f$. Having substitution $f^*$ (`pullback`{.Agda}) and its right
+adjoint $\forall_f$, we add the **left** adjoint $\exists_f$ — the
+*image* along $f$: an arrow forces $\exists_f T$ exactly when it factors
+as $f$ after some member of $T$. This one the regular fragment already
+has abstractly; we give it concretely, to close the triple. Since the
+witness is a `Σ`, not a proposition, elimination is `□-rec`{.Agda} into a
+prop rather than the direct `□-out!`{.Agda}.
 
-What remains is packaging, not new ideas: assembling `∀[_]`{.Agda} and
-the Heyting fibres into a **first-order hyperdoctrine** extending
-`Regular-hyperdoctrine`{.Agda} (whose `∃`, `∧`, `=` are done), and
-extending `Cat.Displayed.Doctrine`'s `Formula`{.Agda} grammar and its
-soundness proof with the two new connectives. With `∀` and `⇒` present,
-Bell's Microaffineness $\forall(g : \Delta \to R)\,\exists!\,b\,
-\forall\varepsilon\,\dots$ becomes a formula the doctrine can interpret
-and *force* over the smooth site — completing the internalization that
-the abstract `Physics.SmoothWorld`{.Agda} and the grounded
-`Physics.SmoothWorld.Internal`{.Agda} pointed toward.
+```agda
+∃[_] : ∀ {u v} → Cr.Hom v u → Sieve C v → Sieve C u
+(∃[ f ] T) .arrows {y} h = elΩ (Σ[ k ∈ Cr.Hom y _ ] ((h ≡ f Cr.∘ k) × (k ∈ T)))
+(∃[ f ] T) .closed {f = p} hp q = □-rec (hlevel 1)
+  (λ (k , peq , kT) →
+    inc (k Cr.∘ q , (ap (Cr._∘ q) peq ∙ sym (Cr.assoc f k q)) , T .closed kT q))
+  hp
+```
+
+and the adjunction $\exists_f T \subseteq R \Leftrightarrow T \subseteq
+f^* R$, both directions — forward by exhibiting the trivial
+factorisation, backward by eliminating the image witness:
+
+```agda
+∃[]-adj-→ : ∀ {u v} (f : Cr.Hom v u) (T : Sieve C v) (R : Sieve C u)
+  → ∃[ f ] T ⊆ R → T ⊆ pullback f R
+∃[]-adj-→ f T R adj k kT = adj (f Cr.∘ k) (inc (k , refl , kT))
+
+∃[]-adj-← : ∀ {u v} (f : Cr.Hom v u) (T : Sieve C v) (R : Sieve C u)
+  → T ⊆ pullback f R → ∃[ f ] T ⊆ R
+∃[]-adj-← f T R adj h hh = □-rec (hlevel 1)
+  (λ (k , heq , kT) → subst (_∈ R) (sym heq) (adj k kT)) hh
+```
+
+## The full first-order signature
+
+The internal logic of a presheaf topos is now **complete over sieves**,
+at the semantic level of the subobject classifier — every connective of
+first-order logic, each with its universal property machine-checked:
+
+- **finite and arbitrary meets** — `⊤ᵢ`, `_∧ᵢ_`, `⋀ᵢ`;
+- **Heyting implication** — `_⇒ᵢ_`, right adjoint to `_∧ᵢ_`
+  (`⇒ᵢ-curry`/`⇒ᵢ-uncurry`);
+- the full **quantifier string** $\exists_f \dashv f^* \dashv \forall_f$
+  — `∃[_]`, `pullback`{.Agda}, `∀[_]`, with both outer adjunctions
+  (`∃[]-adj-→/←`, `∀[]-adj-→/←`).
+
+The two connectives the regular fragment structurally lacked —
+implication and universal quantification, the *right* adjoints — are the
+substance here, and both are done. This holds over any presheaf topos,
+in particular over the smooth site $\rm{ThCartSp}$.
+
+What remains is **packaging and one orthogonal gap**, not new logical
+ideas. Packaging: wrapping these operations into a **first-order
+hyperdoctrine** record extending `Regular-hyperdoctrine`{.Agda} (whose
+`∃`, `∧`, `=` are already abstracted) with the `∀` right adjoint and
+Heyting fibres, and extending `Cat.Displayed.Doctrine`'s `Formula`{.Agda}
+grammar and soundness with `` `∀ ``/`_`⇒_` — a substantial but
+idea-free build, in the exact style of the existing regular layer. The
+orthogonal gap: *forcing Bell's specific formula* needs, beyond the logic
+above, the **internal ring** structure on $\bA^1$ and the algebra tensor
+$R[X \uplus Y] \simeq R[X] \otimes_R R[Y]$ — the separate missing piece
+that also blocks the $\forall(f : \bA^1 \to \bA^1)$ calculus. With the
+logic complete and that algebra supplied, Bell's Microaffineness
+$\forall(g : \Delta \to R)\,\exists!\,b\,\forall\varepsilon\,\dots$
+becomes a formula this apparatus can *write and force* over the smooth
+site — the endpoint the abstract `Physics.SmoothWorld`{.Agda} and the
+grounded `Physics.SmoothWorld.Internal`{.Agda} were reaching for.
