@@ -886,11 +886,13 @@ as a small type of located two-sided cuts, with their order theory,
 density of the rationals, negation, the archimedean property,
 Bishop approximation within any positive slack, an additive abelian
 group structure ([[Minkowski addition|real-addition]] of cuts, with
-the rational embedding an additive homomorphism), and the
-[[lattice|real-lattice]] of join, meet and absolute value.
-Multiplication of cuts and a constructive theory of $C^\infty$ maps
-remain before the classical smooth site is in reach. Concretely
-missing, then:
+the rational embedding an additive homomorphism), the
+[[lattice|real-lattice]] of join, meet and absolute value, and
+[[multiplication|real-multiplication]] of cuts by the interval
+product — sign-analysis-free, and commutative. Reciprocals of reals
+apart from zero, the ring laws beyond commutativity, and a
+constructive theory of $C^\infty$ maps remain before the classical
+smooth site is in reach. Concretely missing, then:
 the smooth-site instance of (7) (localisation over the
 good-open-cover coverage, with shrinking-neighbourhood germs); the
 pullback half of left exactness for the higher-inductive
