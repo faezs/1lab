@@ -109,23 +109,64 @@ the identity.
     (□-out! (adj h hR) Cr.id (subst (_∈ S) (sym (Cr.idr h)) hS))
 ```
 
-## What this unlocks, and what is still missing
+## The second brick: universal quantification
 
-With `_⇒ᵢ_`{.Agda} adjoint to `_∧ᵢ_`{.Agda}, the reachable operations —
-`⊤ᵢ`, `∧ᵢ`, `⋀ᵢ`, `⇒ᵢ` — now form a genuine **Heyting algebra** of
-truth values, over the smooth site or any presheaf topos. This is the
-first brick of the first-order layer: from a right adjoint to
-precomposition, the **universal quantifier** `∀` — the right adjoint to
-substitution along a projection — is built by the *same* hereditary
-pattern (`elΩ`{.Agda} of a `∀`-over-future-stages, closed by
-reassociation), and negation and `⇒`-driven disjunction follow.
+The other hereditary connective — and the one Bell's axiom leads with —
+is the **universal quantifier**, Lawvere's *right adjoint to
+substitution*. Substitution is pullback of sieves, `pullback`{.Agda}
+($f^*$); the quantifier $\forall_f$ sends a predicate $T$ over the domain
+to the largest predicate over the codomain whose pullback lands in $T$.
+Its sieve is the "for all pullback data" formula: an arrow $h$ forces
+$\forall_f T$ when, for every future stage $g$ and every lift $k$ across
+$f$ — every $k$ with $fk = hg$ — the lift lies in $T$. The same
+hereditary shape as implication: a universally-quantified membership,
+closed by reassociation. The body quantifies over hom-sets, so — as with
+`⇒ᵢ`{.Agda} — `elΩ`{.Agda} resizes it to a truth value.
 
-What remains between here and Bell internalized is now short and
-structural: the sieve-level `∀` (the next brick, structurally identical
-to `_⇒ᵢ_`{.Agda}); packaging `∀` and the Heyting fibres into a
-**first-order hyperdoctrine** extending `Regular-hyperdoctrine`{.Agda};
-and extending `Cat.Displayed.Doctrine`'s `Formula` and its soundness to
-the two new connectives. With `∀` and `⇒` present, Bell's Microaffineness
-$\forall(g : \Delta \to R)\,\exists!\,b\,\forall\varepsilon\,\dots$
-becomes a formula one can *write and force* — the payoff this brick is
-laid toward.
+```agda
+∀[_] : ∀ {u v} → Cr.Hom v u → Sieve C v → Sieve C u
+(∀[ f ] T) .arrows {y} h =
+  elΩ (∀ {z} (g : Cr.Hom z y) (k : Cr.Hom z _) → f Cr.∘ k ≡ h Cr.∘ g → k ∈ T)
+(∀[ f ] T) .closed {f = p} hp q = inc λ g k eq →
+  □-out! hp (q Cr.∘ g) k (eq ∙ sym (Cr.assoc p q g))
+```
+
+And it is genuinely the quantifier: the **adjunction** $f^* R \subseteq
+T \Leftrightarrow R \subseteq \forall_f T$, both directions. Forward,
+each lift's membership is obtained by precomposing the hypothesis with
+the stage and transporting along the lift equation; backward, evaluate at
+the identity lift.
+
+```agda
+∀[]-adj-→ : ∀ {u v} (f : Cr.Hom v u) (R : Sieve C u) (T : Sieve C v)
+  → pullback f R ⊆ T → R ⊆ ∀[ f ] T
+∀[]-adj-→ f R T adj h h∈R = inc λ g k eq →
+  adj k (subst (_∈ R) (sym eq) (R .closed h∈R g))
+
+∀[]-adj-← : ∀ {u v} (f : Cr.Hom v u) (R : Sieve C u) (T : Sieve C v)
+  → R ⊆ ∀[ f ] T → pullback f R ⊆ T
+∀[]-adj-← f R T adj k fk∈R =
+  □-out! (adj (f Cr.∘ k) fk∈R) Cr.id k (sym (Cr.idr (f Cr.∘ k)))
+```
+
+## Both hereditary bricks, in hand
+
+With `_⇒ᵢ_`{.Agda} adjoint to `_∧ᵢ_`{.Agda} and `∀[_]`{.Agda} adjoint to
+`pullback`{.Agda} (substitution), the two right-adjoint connectives the
+regular fragment lacked — implication and universal quantification — are
+now built over sieves, **each with its universal property machine-
+checked**. Together with `⊤ᵢ`/`∧ᵢ`/`⋀ᵢ` and the `∃`/`=` already in the
+regular doctrine, this is the full first-order signature of the internal
+logic of any presheaf topos, at the semantic level of the subobject
+classifier — including over the smooth site $\rm{ThCartSp}$.
+
+What remains is packaging, not new ideas: assembling `∀[_]`{.Agda} and
+the Heyting fibres into a **first-order hyperdoctrine** extending
+`Regular-hyperdoctrine`{.Agda} (whose `∃`, `∧`, `=` are done), and
+extending `Cat.Displayed.Doctrine`'s `Formula`{.Agda} grammar and its
+soundness proof with the two new connectives. With `∀` and `⇒` present,
+Bell's Microaffineness $\forall(g : \Delta \to R)\,\exists!\,b\,
+\forall\varepsilon\,\dots$ becomes a formula the doctrine can interpret
+and *force* over the smooth site — completing the internalization that
+the abstract `Physics.SmoothWorld`{.Agda} and the grounded
+`Physics.SmoothWorld.Internal`{.Agda} pointed toward.
