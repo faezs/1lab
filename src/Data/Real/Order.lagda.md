@@ -8,6 +8,7 @@ open import Data.Rational.Properties
 open import Data.Rational.Order
 open import Data.Rational.Base
 open import Data.Real.Base
+open import Data.Real.Rational
 open import Data.Sum
 open import Data.Dec
 ```
@@ -34,64 +35,12 @@ private module cut (x : ℝ) = is-cut (x .has-is-cut)
 ```
 -->
 
-## Maximum and minimum of rationals
+## Maximum and minimum
 
-The rational order is decidable, so we may define the binary maximum
-and minimum by case analysis, entirely by hand — the 1Lab's rational
-interface does not (yet) provide these.
-
-```agda
-private
-  maxℚ minℚ : Ratio → Ratio → Ratio
-  maxℚ x y with holds? (x ≤ y)
-  ... | yes _ = y
-  ... | no _  = x
-
-  minℚ x y with holds? (x ≤ y)
-  ... | yes _ = x
-  ... | no _  = y
-```
-
-<!--
-```agda
-private abstract
-  maxℚ-≤l : ∀ {x y} → x ≤ maxℚ x y
-  maxℚ-≤l {x} {y} with holds? (x ≤ y)
-  ... | yes p = p
-  ... | no _  = ≤-refl
-
-  maxℚ-≤r : ∀ {x y} → y ≤ maxℚ x y
-  maxℚ-≤r {x} {y} with holds? (x ≤ y)
-  ... | yes _ = ≤-refl
-  ... | no ¬p = ≤-is-weakly-total x y ¬p
-
-  maxℚ-lub : ∀ {x y z} → x < z → y < z → maxℚ x y < z
-  maxℚ-lub {x} {y} {z} p q with holds? (x ≤ y)
-  ... | yes _ = q
-  ... | no _  = p
-
-  minℚ-≤l : ∀ {x y} → minℚ x y ≤ x
-  minℚ-≤l {x} {y} with holds? (x ≤ y)
-  ... | yes _ = ≤-refl
-  ... | no ¬p = ≤-is-weakly-total x y ¬p
-
-  minℚ-≤r : ∀ {x y} → minℚ x y ≤ y
-  minℚ-≤r {x} {y} with holds? (x ≤ y)
-  ... | yes p = p
-  ... | no _  = ≤-refl
-
-  minℚ-glb : ∀ {x y z} → z < x → z < y → z < minℚ x y
-  minℚ-glb {x} {y} {z} p q with holds? (x ≤ y)
-  ... | yes _ = p
-  ... | no _  = q
-```
--->
-
-A rational $q$ that lies below one of $x, y$, or lies weakly below
-the maximum of two witnesses of the upper cuts, still lies in the
-corresponding cut at the rounded target — a fact needed repeatedly
-below, since `maxℚ`{.Agda}'s two defining inequalities are only
-*weak*.
+The decidable binary maxima and minima of rationals, with their
+lattice laws, come from the shared [[rational toolkit|rational-toolkit]];
+what is specific to the reals is that restriction respects the order,
+which we record next.
 
 <!--
 ```agda

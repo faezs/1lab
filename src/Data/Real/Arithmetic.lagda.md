@@ -7,6 +7,7 @@ open import Data.Rational.Properties
 open import Data.Rational.Order
 open import Data.Rational.Base
 open import Data.Real.Base
+open import Data.Real.Rational
 open import Data.Sum
 open import Data.Dec
 open import Data.Nat.Base using (Nat ; zero ; suc)
@@ -33,161 +34,11 @@ property** — every rational is bounded by a natural number — which
 powers the one genuinely analytic step in the whole development: the
 locatedness of the sum of two cuts.
 
-## Private rational toolkit
+## The rational toolkit
 
-The 1Lab's interface to `Ratio`{.Agda} does not (yet) expose
-strict-order arithmetic, halving, or the archimedean property. We
-rebuild the private toolkit of the [[Dedekind reals|dedekind-real]]
-module here, since it is not exported from there.
-
-<!--
-```agda
-private instance
-  2-nonzero : Nonzero 2
-  2-nonzero = inc (λ p → <-irrefl (sym p) 0<2) where
-    0<2 : 0 < 2
-    0<2 = decide!
-
-private
-  half : Ratio → Ratio
-  half x = x *ℚ invℚ 2
-
-  midpoint : Ratio → Ratio → Ratio
-  midpoint x y = half (x +ℚ y)
-
-private abstract
-  ¬<→≥ : ∀ {x y} → ¬ x < y → y ≤ x
-  ¬<→≥ {x} {y} ¬p with holds? (y ≤ x)
-  ... | yes p = p
-  ... | no ¬q with ≤-strengthen (≤-is-weakly-total y x ¬q)
-  ... | inl e = subst (_≤ x) e ≤-refl
-  ... | inr q = absurd (¬p q)
-
-  <-cotrans : ∀ {x z} (y : Ratio) → x < z → (x < y) ⊎ (y < z)
-  <-cotrans {x} {z} y p with holds? (x < y)
-  ... | yes q = inl q
-  ... | no ¬q = inr (≤-<-trans (¬<→≥ ¬q) p)
-
-  +ℚ-cancelr : ∀ {x y} a → x +ℚ a ≡ y +ℚ a → x ≡ y
-  +ℚ-cancelr {x} {y} a p =
-    x                   ≡˘⟨ +ℚ-idr x ⟩
-    x +ℚ 0              ≡˘⟨ ap (x +ℚ_) (+ℚ-invr a) ⟩
-    x +ℚ (a +ℚ (-ℚ a))  ≡⟨ +ℚ-associative x a (-ℚ a) ⟩
-    (x +ℚ a) +ℚ (-ℚ a)  ≡⟨ ap (_+ℚ (-ℚ a)) p ⟩
-    (y +ℚ a) +ℚ (-ℚ a)  ≡˘⟨ +ℚ-associative y a (-ℚ a) ⟩
-    y +ℚ (a +ℚ (-ℚ a))  ≡⟨ ap (y +ℚ_) (+ℚ-invr a) ⟩
-    y +ℚ 0              ≡⟨ +ℚ-idr y ⟩
-    y                   ∎
-
-  +ℚ-preserves-<r : ∀ {x y} a → x < y → x +ℚ a < y +ℚ a
-  +ℚ-preserves-<r a p = <-from-≤
-    (+ℚ-preserves-≤ (<-weaken p) ≤-refl)
-    (λ e → <-irrefl (+ℚ-cancelr a e) p)
-
-  +ℚ-preserves-<l : ∀ {x y} a → x < y → a +ℚ x < a +ℚ y
-  +ℚ-preserves-<l {x} {y} a p =
-    transport (λ i → +ℚ-commutative x a i < +ℚ-commutative y a i)
-      (+ℚ-preserves-<r a p)
-
-  negℚ-invol : ∀ q → -ℚ (-ℚ q) ≡ q
-  negℚ-invol q = +ℚ-cancelr (-ℚ q) $
-    (-ℚ (-ℚ q)) +ℚ (-ℚ q)  ≡⟨ +ℚ-commutative _ _ ⟩
-    (-ℚ q) +ℚ (-ℚ (-ℚ q))  ≡⟨ +ℚ-invr (-ℚ q) ⟩
-    0                      ≡˘⟨ +ℚ-invr q ⟩
-    q +ℚ (-ℚ q)            ∎
-
-  x+x≡x*2 : ∀ x → x +ℚ x ≡ x *ℚ 2
-  x+x≡x*2 x = sym $
-    x *ℚ 2               ≡⟨ ap (x *ℚ_) two ⟩
-    x *ℚ (1 +ℚ 1)        ≡⟨ *ℚ-distribl x 1 1 ⟩
-    (x *ℚ 1) +ℚ (x *ℚ 1) ≡⟨ ap₂ _+ℚ_ (*ℚ-idr x) (*ℚ-idr x) ⟩
-    x +ℚ x               ∎
-    where
-    two : Path Ratio 2 (1 +ℚ 1)
-    two = decide!
-
-  half-double : ∀ x → half (x +ℚ x) ≡ x
-  half-double x =
-      ap (_*ℚ invℚ 2) (x+x≡x*2 x)
-    ∙ sym (*ℚ-associative x 2 (invℚ 2))
-    ∙ ap (x *ℚ_) (*ℚ-invr {2} {2-nonzero})
-    ∙ *ℚ-idr x
-
-  half-sum : ∀ x → half x +ℚ half x ≡ x
-  half-sum x =
-      x+x≡x*2 (half x)
-    ∙ sym (*ℚ-associative x (invℚ 2) 2)
-    ∙ ap (x *ℚ_) (*ℚ-commutative (invℚ 2) 2 ∙ *ℚ-invr {2} {2-nonzero})
-    ∙ *ℚ-idr x
-
-  half-< : ∀ {x y} → x < y → half x < half y
-  half-< {x} {y} p with holds? (half x < half y)
-  ... | yes q = q
-  ... | no ¬q = absurd (<-irrefl refl (≤-<-trans y≤x p)) where
-    y≤x : y ≤ x
-    y≤x = transport (λ i → half-sum y i ≤ half-sum x i)
-      (+ℚ-preserves-≤ (¬<→≥ ¬q) (¬<→≥ ¬q))
-
-  mid-<l : ∀ {x y} → x < y → x < midpoint x y
-  mid-<l {x} {y} p = transport
-    (λ i → half-double x i < midpoint x y)
-    (half-< (+ℚ-preserves-<l x p))
-
-  mid-<r : ∀ {x y} → x < y → midpoint x y < y
-  mid-<r {x} {y} p = transport
-    (λ i → midpoint x y < half-double y i)
-    (half-< (+ℚ-preserves-<r y p))
-
-  <→positive-diff : ∀ {x y} → x < y → 0 < y +ℚ (-ℚ x)
-  <→positive-diff {x} {y} p = transport
-    (λ i → +ℚ-invr x i < y +ℚ (-ℚ x))
-    (+ℚ-preserves-<r (-ℚ x) p)
-
-  positive-diff→< : ∀ {x y} → 0 < y +ℚ (-ℚ x) → x < y
-  positive-diff→< {x} {y} p = transport (λ i → lhs i < rhs i) step
-    where
-    step : x +ℚ 0 < x +ℚ (y +ℚ (-ℚ x))
-    step = +ℚ-preserves-<l x p
-
-    lhs : x +ℚ 0 ≡ x
-    lhs = +ℚ-idr x
-
-    rhs : x +ℚ (y +ℚ (-ℚ x)) ≡ y
-    rhs =
-      x +ℚ (y +ℚ (-ℚ x))   ≡⟨ ap (x +ℚ_) (+ℚ-commutative y (-ℚ x)) ⟩
-      x +ℚ ((-ℚ x) +ℚ y)   ≡⟨ +ℚ-associative x (-ℚ x) y ⟩
-      (x +ℚ (-ℚ x)) +ℚ y   ≡⟨ ap (_+ℚ y) (+ℚ-invr x) ⟩
-      0 +ℚ y               ≡⟨ +ℚ-idl y ⟩
-      y                    ∎
-
-  negatel : ∀ a b → (-ℚ a) *ℚ b ≡ -ℚ (a *ℚ b)
-  negatel a b = +ℚ-cancelr (a *ℚ b)
-    ( (-ℚ a) *ℚ b +ℚ a *ℚ b   ≡˘⟨ *ℚ-distribr b (-ℚ a) a ⟩
-      ((-ℚ a) +ℚ a) *ℚ b      ≡⟨ ap (_*ℚ b) (+ℚ-invl a) ⟩
-      0 *ℚ b                  ≡⟨ *ℚ-zerol b ⟩
-      0                       ≡˘⟨ +ℚ-invl (a *ℚ b) ⟩
-      (-ℚ (a *ℚ b)) +ℚ a *ℚ b ∎)
-
-  half-pos : ∀ {ε} → 0 < ε → 0 < half ε
-  half-pos {ε} p = transport (λ i → half-zero i < half ε) (half-< p)
-    where
-    half-zero : half 0 ≡ 0
-    half-zero = ap (_*ℚ invℚ 2) (sym (*ℚ-zerol 1)) ∙ sym (*ℚ-associative 0 1 (invℚ 2)) ∙ *ℚ-zerol (1 *ℚ invℚ 2)
-
-  half-lt : ∀ {ε} → 0 < ε → half ε < ε
-  half-lt {ε} p = transport (λ i → +ℚ-idl (half ε) i < half-sum ε i)
-    (+ℚ-preserves-<r (half ε) (half-pos p))
-
-  *ℚ-preserves-<r : ∀ {u v w} → u < v → 0 < w → (u *ℚ w) < (v *ℚ w)
-  *ℚ-preserves-<r {u} {v} {w} p q = positive-diff→< (transport (λ i → 0 < expand i) diff-pos)
-    where
-    diff-pos : 0 < (v +ℚ (-ℚ u)) *ℚ w
-    diff-pos = from-positive (*ℚ-positive (to-positive (<→positive-diff p)) (to-positive q))
-
-    expand : (v +ℚ (-ℚ u)) *ℚ w ≡ (v *ℚ w) +ℚ (-ℚ (u *ℚ w))
-    expand = *ℚ-distribr w v (-ℚ u) ∙ ap (v *ℚ w +ℚ_) (negatel u w)
-```
--->
+The strict-order arithmetic, halving and multiplication-monotonicity
+lemmas this module needs are imported from the shared [[rational
+toolkit|rational-toolkit]].
 
 ## The archimedean property
 
@@ -273,10 +124,6 @@ archimedean
 
 <!--
 ```agda
-private abstract
-  /ℚ-cancel : ∀ x y ⦃ p : Nonzero y ⦄ → (x /ℚ y) *ℚ y ≡ x
-  /ℚ-cancel x y = ap (_*ℚ y) /ℚ-def ∙ sym (*ℚ-associative x (invℚ y) y) ∙ ap (x *ℚ_) *ℚ-invl ∙ *ℚ-idr x
-
 archimedean a b ε 0<ε = ∥-∥-map bound (bound-above ((b +ℚ (-ℚ a)) /ℚ ε))
   where
   instance
@@ -626,9 +473,6 @@ exactly $x$'s lower cut.
 <!--
 ```agda
 private abstract
-  half-zero : half 0 ≡ 0
-  half-zero = ap (_*ℚ invℚ 2) (sym (*ℚ-zerol 1)) ∙ sym (*ℚ-associative 0 1 (invℚ 2)) ∙ *ℚ-zerol (1 *ℚ invℚ 2)
-
   r+s<r : ∀ r s → s < 0 → r +ℚ s < r
   r+s<r r s s<0 = subst (r +ℚ s <_) (+ℚ-idr r) (+ℚ-preserves-<l r s<0)
 
@@ -806,9 +650,6 @@ ratℝ-+ : ∀ p q → ratℝ (p +ℚ q) ≡ ratℝ p +ᴿ ratℝ q
 <!--
 ```agda
 private abstract
-  neg-zero : -ℚ 0 ≡ 0
-  neg-zero = +ℚ-cancelr 0 (+ℚ-invl 0 ∙ sym (+ℚ-idr 0))
-
   sub-neg-pos : ∀ x h → 0 < h → (x +ℚ (-ℚ h)) < x
   sub-neg-pos x h h-pos = transport (λ i → x+neg i < +ℚ-idr x i)
     (+ℚ-preserves-<l x (transport (λ i → -ℚ h < neg-zero i) (negℚ-anti-< h-pos)))
