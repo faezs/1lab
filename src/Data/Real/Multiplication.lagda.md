@@ -673,3 +673,49 @@ x *ᴿ y = prod x y
 
 infixl 8 _*ᴿ_
 ```
+
+## Commutativity
+
+Because the four corner products of a bracket are symmetric under
+swapping the two factors — $\{ac, ad, bc, bd\}$ is $\{ca, cb, da,
+db\}$ — the product is commutative. The four-fold minimum is a
+greatest lower bound, so it is unchanged by the reindexing, and the
+lower cut of $x \cdot y$ is contained in that of $y \cdot x$; the
+[[antisymmetry|dedekind-real]] of the real order finishes the job
+without ever mentioning the upper cuts.
+
+<!--
+```agda
+private abstract
+  min₄-comm-le
+    : ∀ a b c d
+    → min₄ (a *ℚ c) (a *ℚ d) (b *ℚ c) (b *ℚ d)
+      ≤ min₄ (c *ℚ a) (c *ℚ b) (d *ℚ a) (d *ℚ b)
+  min₄-comm-le a b c d = min₄-univ
+    (≤-resp refl (*ℚ-commutative a c) (min₄-≤₁ {a *ℚ c} {a *ℚ d} {b *ℚ c} {b *ℚ d}))
+    (≤-resp refl (*ℚ-commutative b c) (min₄-≤₃ {a *ℚ c} {a *ℚ d} {b *ℚ c} {b *ℚ d}))
+    (≤-resp refl (*ℚ-commutative a d) (min₄-≤₂ {a *ℚ c} {a *ℚ d} {b *ℚ c} {b *ℚ d}))
+    (≤-resp refl (*ℚ-commutative b d) (min₄-≤₄ {a *ℚ c} {a *ℚ d} {b *ℚ c} {b *ℚ d}))
+```
+-->
+
+```agda
+*ᴿ-comm : ∀ x y → x *ᴿ y ≡ y *ᴿ x
+*ᴿ-comm x y = ≤ᴿ-antisym (to x y) (to y x)
+  where
+  to : ∀ x y → (x *ᴿ y) ≤ᴿ (y *ᴿ x)
+  to x y q = □-map λ (a , b , c , d , la , ub , lc , ud , q<m) →
+    (c , d , a , b , lc , ud , la , ub , <-≤-trans q<m (min₄-comm-le a b c d))
+```
+
+The remaining ring structure — that $1$ is a unit, and that
+multiplication is associative and distributes over addition — is
+proved by the same interval-arithmetic technique (bracketing a
+factor tightly enough that its contribution to the four corner
+products is controlled), together with the reciprocals of
+reals apart from zero. With commutativity and a working product in
+hand, these are routine but lengthy, and remain future work; the
+[[reals|dedekind-real]] now form a commutative multiplicative
+structure compatible with their [[additive group|real-addition]] and
+[[lattice|real-lattice]].
+
