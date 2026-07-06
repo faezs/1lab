@@ -3,12 +3,21 @@
 open import Cat.Prelude
 
 open import Cat.Diagram.Sieve
+
+import Cat.Reasoning
 ```
 -->
 
 ```agda
 module Physics.SmoothWorld.Forcing {ℓ} (C : Precategory ℓ ℓ) where
 ```
+
+<!--
+```agda
+private module Cr = Cat.Reasoning C
+```
+-->
+
 
 # Computing with the internal logic that exists {defines="internal-logic-fragment"}
 
@@ -58,27 +67,65 @@ truth-value object $\Omega$, transported across `Sieve-path`{.Agda}
 ∧ᵢ-unit S = ext λ f → Ω-ua fst (λ x → x , tt)
 ```
 
-## The wall, concretely
+## Building the missing brick: implication
 
-That is the whole of what computes. There is no operation on sieves —
-in `Cat.Diagram.Sieve`{.Agda} or anywhere — for internal
-**implication** $\Rightarrow$, **universal quantification** $\forall$,
-or **disjunction** $\vee$. Semantically these exist (sieves on an object
-form a frame, a complete Heyting algebra), but they are *unbuilt*: the
-implication $(S \Rightarrow T)(c)$ would send $c$ to the sieve
-$\{\,f : d \to c \mid \forall (g : e \to d),\; fg \in S \Rightarrow fg
-\in T\,\}$ — the very "for all future stages $g$" that makes
-$\Rightarrow$ and $\forall$ the *hereditary*, right-adjoint connectives,
-and that the regular fragment (needing only the left adjoint $\exists$
-and finite meets) deliberately avoids.
+That is the whole of what `Cat.Diagram.Sieve`{.Agda} ships. The first
+connective *past* the regular fragment — and the one everything else is
+downstream of — is **implication**, which is not there. So we build it.
+Its sieve is the standard one: an arrow $f$ forces $S \Rightarrow T$
+when, at *every* later stage $g$, membership $fg \in S$ entails $fg \in
+T$. That "for all future stages $g$" is precisely the hereditary,
+right-adjoint content shared by $\Rightarrow$ and $\forall$, and is why
+the regular fragment — with only the left adjoint $\exists$ and finite
+meets — omits it. The propositional truncation `elΩ`{.Agda} packages the
+$\Pi$ of implications as a truth value, and closure under precomposition
+is a reassociation.
 
-So the internal logic one can *run* today is exactly $\{\top, \wedge,
-\bigwedge, \exists, =\}$ — enough to state that a plot lies in a
-subobject, or that two plots agree, or an existential; not enough to
-state Bell's Microaffineness $\forall(g : \Delta \to R)\, \exists!\,b\,
-\forall\varepsilon\,\dots$, whose $\forall$ and $\exists!$ (an
-$\exists$ with a $\forall\dots\Rightarrow$ uniqueness clause) fall
-outside it. The missing sieve-level $\Rightarrow$/$\forall$ — equivalently
-the Heyting completion of the sieve frame and the right adjoint to
-substitution — is the first concrete thing the first-order layer must
-supply, and it is exactly what one would build next.
+```agda
+_⇒ᵢ_ : ∀ {c} → Sieve C c → Sieve C c → Sieve C c
+(S ⇒ᵢ T) .arrows {y} f =
+  elΩ (∀ {z} (g : Cr.Hom z y) → (f Cr.∘ g) ∈ S → (f Cr.∘ g) ∈ T)
+(S ⇒ᵢ T) .closed {f = f} hf q = inc λ g mem →
+  subst (_∈ T) (Cr.assoc f q g)
+    (□-out! hf (q Cr.∘ g) (subst (_∈ S) (sym (Cr.assoc f q g)) mem))
+```
+
+The load-bearing fact is that this really is the **Heyting
+implication** — the right adjoint to conjunction — i.e. the two-way rule
+$$ (R \wedge S) \subseteq T \quad\Longleftrightarrow\quad R \subseteq (S
+\Rightarrow T). $$
+We prove both directions. **Currying** transports a joint entailment
+into the implication, precomposing the hypothesis with each future
+stage; **uncurrying** reads it back out by evaluating the implication at
+the identity.
+
+```agda
+⇒ᵢ-curry : ∀ {c} (R S T : Sieve C c) → (R ∧ᵢ S) ⊆ T → R ⊆ (S ⇒ᵢ T)
+⇒ᵢ-curry R S T adj h hR = inc λ g sg → adj (h Cr.∘ g) (R .closed hR g , sg)
+
+⇒ᵢ-uncurry : ∀ {c} (R S T : Sieve C c) → R ⊆ (S ⇒ᵢ T) → (R ∧ᵢ S) ⊆ T
+⇒ᵢ-uncurry R S T adj h (hR , hS) =
+  subst (_∈ T) (Cr.idr h)
+    (□-out! (adj h hR) Cr.id (subst (_∈ S) (sym (Cr.idr h)) hS))
+```
+
+## What this unlocks, and what is still missing
+
+With `_⇒ᵢ_`{.Agda} adjoint to `_∧ᵢ_`{.Agda}, the reachable operations —
+`⊤ᵢ`, `∧ᵢ`, `⋀ᵢ`, `⇒ᵢ` — now form a genuine **Heyting algebra** of
+truth values, over the smooth site or any presheaf topos. This is the
+first brick of the first-order layer: from a right adjoint to
+precomposition, the **universal quantifier** `∀` — the right adjoint to
+substitution along a projection — is built by the *same* hereditary
+pattern (`elΩ`{.Agda} of a `∀`-over-future-stages, closed by
+reassociation), and negation and `⇒`-driven disjunction follow.
+
+What remains between here and Bell internalized is now short and
+structural: the sieve-level `∀` (the next brick, structurally identical
+to `_⇒ᵢ_`{.Agda}); packaging `∀` and the Heyting fibres into a
+**first-order hyperdoctrine** extending `Regular-hyperdoctrine`{.Agda};
+and extending `Cat.Displayed.Doctrine`'s `Formula` and its soundness to
+the two new connectives. With `∀` and `⇒` present, Bell's Microaffineness
+$\forall(g : \Delta \to R)\,\exists!\,b\,\forall\varepsilon\,\dots$
+becomes a formula one can *write and force* — the payoff this brick is
+laid toward.
