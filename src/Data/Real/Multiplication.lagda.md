@@ -521,4 +521,155 @@ private abstract
 -->
 
 With the rational groundwork laid, the construction of the product
-cut itself follows.
+cut itself follows. A rational $q$ is *below* $x \cdot y$ when it is
+below all four products of some bracket around the factors, and
+*above* when it is above all four; both are propositions once
+resized into $\Omega$.
+
+```agda
+module _ (x y : ℝ) where
+  private
+    Lo Up : Ratio → Type
+    Lo q = Σ[ a ∈ Ratio ] Σ[ b ∈ Ratio ] Σ[ c ∈ Ratio ] Σ[ d ∈ Ratio ]
+      ∣ x .lower a ∣ × ∣ x .upper b ∣ × ∣ y .lower c ∣ × ∣ y .upper d ∣ ×
+      (q < min₄ (a *ℚ c) (a *ℚ d) (b *ℚ c) (b *ℚ d))
+    Up q = Σ[ a ∈ Ratio ] Σ[ b ∈ Ratio ] Σ[ c ∈ Ratio ] Σ[ d ∈ Ratio ]
+      ∣ x .lower a ∣ × ∣ x .upper b ∣ × ∣ y .lower c ∣ × ∣ y .upper d ∣ ×
+      (max₄ (a *ℚ c) (a *ℚ d) (b *ℚ c) (b *ℚ d) < q)
+```
+
+The two easy halves — inhabitation, roundedness and closure — follow
+the same pattern as [[addition|real-addition]]: shift the four-fold
+extremum by a unit for a witness, take midpoints for roundedness, and
+transport across `<-trans`{.Agda} for closure.
+
+<!--
+```agda
+    lo-inhab : ∥ Σ Ratio (λ q → □ (Lo q)) ∥
+    lo-inhab = do
+      (a , la) ← cut.lower-inhab x
+      (b , ub) ← cut.upper-inhab x
+      (c , lc) ← cut.lower-inhab y
+      (d , ud) ← cut.upper-inhab y
+      pure ( min₄ (a *ℚ c) (a *ℚ d) (b *ℚ c) (b *ℚ d) +ℚ (-ℚ 1)
+           , inc (a , b , c , d , la , ub , lc , ud , sub-pos-< _ 1 0<1'))
+
+    up-inhab : ∥ Σ Ratio (λ q → □ (Up q)) ∥
+    up-inhab = do
+      (a , la) ← cut.lower-inhab x
+      (b , ub) ← cut.upper-inhab x
+      (c , lc) ← cut.lower-inhab y
+      (d , ud) ← cut.upper-inhab y
+      pure ( max₄ (a *ℚ c) (a *ℚ d) (b *ℚ c) (b *ℚ d) +ℚ 1
+           , inc (a , b , c , d , la , ub , lc , ud , add-pos-< _ 1 0<1'))
+
+    lo-round : ∀ q → □ (Lo q) → ∥ Σ Ratio (λ r → (q < r) × □ (Lo r)) ∥
+    lo-round q = □-rec squash λ (a , b , c , d , la , ub , lc , ud , q<m) →
+      inc ( midpoint q _ , mid-<l q<m
+          , inc (a , b , c , d , la , ub , lc , ud , mid-<r q<m))
+
+    up-round : ∀ r → □ (Up r) → ∥ Σ Ratio (λ q → (q < r) × □ (Up q)) ∥
+    up-round r = □-rec squash λ (a , b , c , d , la , ub , lc , ud , M<r) →
+      inc ( midpoint _ r , mid-<r M<r
+          , inc (a , b , c , d , la , ub , lc , ud , mid-<l M<r))
+
+    lo-close : ∀ {q r} → q < r → □ (Lo r) → □ (Lo q)
+    lo-close q<r = □-map λ (a , b , c , d , la , ub , lc , ud , r<m) →
+      (a , b , c , d , la , ub , lc , ud , <-trans q<r r<m)
+
+    up-close : ∀ {q r} → q < r → □ (Up q) → □ (Up r)
+    up-close q<r = □-map λ (a , b , c , d , la , ub , lc , ud , M<q) →
+      (a , b , c , d , la , ub , lc , ud , <-trans M<q q<r)
+```
+-->
+
+Disjointness is a single call to the bracketing lemma evaluated at
+the common rational point $(\max(a, a'), \max(c, c'))$: the strict
+order between the factors' lower and upper witnesses, supplied by
+`lower<upper`{.Agda}, feeds `disjoint-key`{.Agda}.
+
+<!--
+```agda
+    disj : ∀ q → □ (Lo q) → □ (Up q) → ⊥
+    disj q = □-rec (hlevel 1) λ (a , b , c , d , la , ub , lc , ud , q<m) →
+             □-rec (hlevel 1) λ (a' , b' , c' , d' , la' , ub' , lc' , ud' , M'<q) →
+      disjoint-key q a b c d a' b' c' d'
+        (lower<upper x la ub) (lower<upper x la ub') (lower<upper x la' ub) (lower<upper x la' ub')
+        (lower<upper y lc ud) (lower<upper y lc ud') (lower<upper y lc' ud) (lower<upper y lc' ud')
+        q<m M'<q
+```
+-->
+
+Locatedness is the analytic heart. We bracket each factor first to
+within a unit — fixing bounds $B_1, B_2$ on the magnitudes of the
+endpoints — and then to within $\delta = \frac{(r-q)/2}{B_1 + B_2}$,
+intersecting the two brackets so the tighter one inherits the bounds.
+The spread of the four products is then below half the gap $r - q$,
+so `located-decide`{.Agda} must commit to one side.
+
+<!--
+```agda
+    located : ∀ {q r} → q < r → ∥ □ (Lo q) ⊎ □ (Up r) ∥
+    located {q} {r} q<r = do
+      (a₀ , b₀ , la₀ , ub₀ , _) ← approx x 1 0<1'
+      (c₀ , d₀ , lc₀ , ud₀ , _) ← approx y 1 0<1'
+      let B₂ = maxℚ 1 (maxℚ b₀ (-ℚ a₀))
+          B₁ = maxℚ 1 (maxℚ d₀ (-ℚ c₀))
+          gap = r +ℚ (-ℚ q)
+          0≤B₂ = bound-nn a₀ b₀
+          0≤B₁ = bound-nn c₀ d₀
+          B₁≤B₁+B₂ : B₁ ≤ (B₁ +ℚ B₂)
+          B₁≤B₁+B₂ = ≤-resp (+ℚ-idr B₁) refl (+ℚ-preserves-≤ (≤-refl {B₁}) 0≤B₂)
+          BBpos : 0 < (B₁ +ℚ B₂)
+          BBpos = <-≤-trans (bound-pos c₀ d₀) B₁≤B₁+B₂
+          BBp : Positive (B₁ +ℚ B₂)
+          BBp = to-positive BBpos
+      let δ = (half gap /ℚ (B₁ +ℚ B₂)) ⦃ inc (positive→nonzero BBp) ⦄
+          δ-pos = div-pos (half gap) (B₁ +ℚ B₂) ⦃ inc (positive→nonzero BBp) ⦄
+                    (half-pos (<→positive-diff q<r)) BBpos
+      (a₁ , b₁ , la₁ , ub₁ , wx₁) ← approx x δ δ-pos
+      (c₁ , d₁ , lc₁ , ud₁ , wy₁) ← approx y δ δ-pos
+      let a = maxℚ a₀ a₁ ; b = minℚ b₀ b₁ ; c = maxℚ c₀ c₁ ; d = minℚ d₀ d₁
+          la = maxℚ-lower-mem x la₀ la₁
+          ub = minℚ-upper-mem x ub₀ ub₁
+          lc = maxℚ-lower-mem y lc₀ lc₁
+          ud = minℚ-upper-mem y ud₀ ud₁
+          a≤b = <-weaken (lower<upper x la ub)
+          c≤d = <-weaken (lower<upper y lc ud)
+          -B₂≤a = ≤-trans (bound-lo a₀ b₀) (maxℚ-≤l {a₀} {a₁})
+          b≤B₂  = ≤-trans (minℚ-≤l {b₀} {b₁}) (bound-hi a₀ b₀)
+          -B₁≤c = ≤-trans (bound-lo c₀ d₀) (maxℚ-≤l {c₀} {c₁})
+          d≤B₁  = ≤-trans (minℚ-≤l {d₀} {d₁}) (bound-hi c₀ d₀)
+          wx≤δ : (b +ℚ (-ℚ a)) ≤ δ
+          wx≤δ = ≤-trans (+ℚ-preserves-≤ (minℚ-≤r {b₀} {b₁}) (negℚ-anti-≤ (maxℚ-≤r {a₀} {a₁}))) (<-weaken wx₁)
+          wy≤δ : (d +ℚ (-ℚ c)) ≤ δ
+          wy≤δ = ≤-trans (+ℚ-preserves-≤ (minℚ-≤r {d₀} {d₁}) (negℚ-anti-≤ (maxℚ-≤r {c₀} {c₁}))) (<-weaken wy₁)
+          S≤half = width-budget gap B₁ B₂ (b +ℚ (-ℚ a)) (d +ℚ (-ℚ c)) BBp 0≤B₁ 0≤B₂ wx≤δ wy≤δ
+      pure ([ (λ q<m → inl (inc (a , b , c , d , la , ub , lc , ud , q<m)))
+            , (λ M<r → inr (inc (a , b , c , d , la , ub , lc , ud , M<r))) ]
+            (located-decide q r a b c d B₁ B₂ q<r a≤b c≤d -B₂≤a b≤B₂ 0≤B₂ -B₁≤c d≤B₁ 0≤B₁ S≤half))
+```
+-->
+
+Assembling the eight fields gives the product.
+
+```agda
+  prod : ℝ
+  prod .lower q = elΩ (Lo q)
+  prod .upper q = elΩ (Up q)
+  prod .has-is-cut = record
+    { lower-inhab  = lo-inhab
+    ; upper-inhab  = up-inhab
+    ; lower-round  = lo-round
+    ; lower-close  = lo-close
+    ; upper-round  = up-round
+    ; upper-close  = up-close
+    ; cut-disjoint = disj
+    ; cut-located  = located
+    }
+
+_*ᴿ_ : ℝ → ℝ → ℝ
+x *ᴿ y = prod x y
+
+infixl 8 _*ᴿ_
+```

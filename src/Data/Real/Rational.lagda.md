@@ -222,6 +222,15 @@ abstract
 
   /ℚ-cancel : ∀ x y ⦃ p : Nonzero y ⦄ → (x /ℚ y) *ℚ y ≡ x
   /ℚ-cancel x y = ap (_*ℚ y) /ℚ-def ∙ sym (*ℚ-associative x (invℚ y) y) ∙ ap (x *ℚ_) *ℚ-invl ∙ *ℚ-idr x
+
+  div-pos : ∀ n d ⦃ nz : Nonzero d ⦄ → 0 < n → 0 < d → 0 < (n /ℚ d) ⦃ nz ⦄
+  div-pos n d ⦃ nz ⦄ np dp with holds? (0 < (n /ℚ d) ⦃ nz ⦄)
+  ... | yes p = p
+  ... | no ¬p = absurd (<-irrefl refl (≤-<-trans n≤0 np))
+    where
+    n≤0 : n ≤ 0
+    n≤0 = ≤-resp (/ℚ-cancel n d ⦃ nz ⦄) (*ℚ-zerol d)
+      (*ℚ-preserves-≤r d (¬<→≥ ¬p) (<-weaken dp))
 ```
 -->
 
