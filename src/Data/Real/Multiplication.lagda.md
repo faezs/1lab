@@ -955,11 +955,162 @@ private
 *ᴿ-zeroˡ x = *ᴿ-comm 0ᴿ x ∙ *ᴿ-zeroʳ x
 ```
 
-With commutativity, a two-sided unit, and zero absorption, the reals
-form a commutative multiplicative monoid compatible with their
-[[additive group|real-addition]] and [[lattice|real-lattice]].
-Associativity and distributivity over addition — proved by the same
-interval-bracketing technique applied to nested and to Minkowski-sum
-brackets — and the reciprocals of reals apart from zero, complete
-the ordered field; they remain future work.
+## Distributivity over addition
+
+Multiplication distributes over addition: $x \cdot (y + z) = x \cdot
+y + x \cdot z$. The interval product is only *sub*distributive over
+the Minkowski sum of brackets — for a fixed $x$-bracket $[A, B]$,
+
+$$
+[A,B]\cdot([c,d]+[c',d']) \;\supseteq\; [A,B]\cdot[c,d] + [A,B]\cdot[c',d'],
+$$
+
+because the four-fold minimum is only *super*additive,
+$\min_4(\cdots) + \min_4(\cdots) \le \min_4(\cdots + \cdots)$ (the
+two summands may attain their minima at different corners). This
+inclusion is exactly the "$\supseteq$" containment of intervals,
+which on lower cuts reads as the inequality
+$(x \cdot y) + (x \cdot z) \le x \cdot (y + z)$ — one of the two
+directions of the distributive law, and the one that goes through
+without any $\varepsilon$-budget. The two rational facts it rests on
+are the superadditivity of the four-fold minimum and the fact that a
+tighter bracket has a larger four-fold minimum; both are immediate
+from the greatest-lower-bound property.
+
+<!--
+```agda
+private abstract
+  min₄-superadd
+    : ∀ A B c d c' d'
+    → ((min₄ (A *ℚ c) (A *ℚ d) (B *ℚ c) (B *ℚ d)) +ℚ
+       (min₄ (A *ℚ c') (A *ℚ d') (B *ℚ c') (B *ℚ d')))
+      ≤ min₄ (A *ℚ (c +ℚ c')) (A *ℚ (d +ℚ d')) (B *ℚ (c +ℚ c')) (B *ℚ (d +ℚ d'))
+  min₄-superadd A B c d c' d' = min₄-univ
+    (≤-resp refl (sym (*ℚ-distribl A c c'))
+      (+ℚ-preserves-≤ (min₄-≤₁ {A *ℚ c} {A *ℚ d} {B *ℚ c} {B *ℚ d})
+                      (min₄-≤₁ {A *ℚ c'} {A *ℚ d'} {B *ℚ c'} {B *ℚ d'})))
+    (≤-resp refl (sym (*ℚ-distribl A d d'))
+      (+ℚ-preserves-≤ (min₄-≤₂ {A *ℚ c} {A *ℚ d} {B *ℚ c} {B *ℚ d})
+                      (min₄-≤₂ {A *ℚ c'} {A *ℚ d'} {B *ℚ c'} {B *ℚ d'})))
+    (≤-resp refl (sym (*ℚ-distribl B c c'))
+      (+ℚ-preserves-≤ (min₄-≤₃ {A *ℚ c} {A *ℚ d} {B *ℚ c} {B *ℚ d})
+                      (min₄-≤₃ {A *ℚ c'} {A *ℚ d'} {B *ℚ c'} {B *ℚ d'})))
+    (≤-resp refl (sym (*ℚ-distribl B d d'))
+      (+ℚ-preserves-≤ (min₄-≤₄ {A *ℚ c} {A *ℚ d} {B *ℚ c} {B *ℚ d})
+                      (min₄-≤₄ {A *ℚ c'} {A *ℚ d'} {B *ℚ c'} {B *ℚ d'})))
+
+  min₄-tighten
+    : ∀ A B a b c d → a ≤ A → A ≤ B → B ≤ b → c ≤ d
+    → min₄ (a *ℚ c) (a *ℚ d) (b *ℚ c) (b *ℚ d)
+      ≤ min₄ (A *ℚ c) (A *ℚ d) (B *ℚ c) (B *ℚ d)
+  min₄-tighten A B a b c d a≤A A≤B B≤b c≤d = min₄-univ
+    (bracket-lower A c a b c d a≤A A≤b ≤-refl c≤d)
+    (bracket-lower A d a b c d a≤A A≤b c≤d ≤-refl)
+    (bracket-lower B c a b c d a≤B B≤b ≤-refl c≤d)
+    (bracket-lower B d a b c d a≤B B≤b c≤d ≤-refl)
+    where
+    A≤b : A ≤ b
+    A≤b = ≤-trans A≤B B≤b
+    a≤B : a ≤ B
+    a≤B = ≤-trans a≤A A≤B
+```
+-->
+
+The lower-cut containment now follows by unpacking the two product
+witnesses, intersecting their $x$-brackets into a common
+$[A, B] = [\max(a, a'), \min(b, b')]$ (a lower and an upper witness
+for $x$ by the same max-of-lowers, min-of-uppers argument as
+locatedness), summing the two $(y + z)$-brackets, and chaining the
+two rational lemmas above with the strict slacks of the summands.
+
+```agda
+private abstract
+  <-sum : ∀ {p q r s} → p < q → r < s → (p +ℚ r) < (q +ℚ s)
+  <-sum {p} {q} {r} {s} p<q r<s =
+    <-trans (+ℚ-preserves-<r r p<q) (+ℚ-preserves-<l q r<s)
+
+*ᴿ-distribˡ-≤
+  : ∀ x y z → ((x *ᴿ y) +ᴿ (x *ᴿ z)) ≤ᴿ (x *ᴿ (y +ᴿ z))
+*ᴿ-distribˡ-≤ x y z q = □-rec ((x *ᴿ (y +ᴿ z)) .lower q .is-tr)
+  λ (P , S , lxyP , lxzS , q<PS) →
+    □-rec ((x *ᴿ (y +ᴿ z)) .lower q .is-tr)
+      (λ (a , b , c , d , la , ub , lc , ud , P<m) →
+        □-rec ((x *ᴿ (y +ᴿ z)) .lower q .is-tr)
+          (λ (a' , b' , c' , d' , la' , ub' , lc' , ud' , S<m') →
+            assemble a b c d la ub lc ud P<m a' b' c' d' la' ub' lc' ud' S<m' q<PS)
+          lxzS)
+      lxyP
+  where
+  assemble
+    : ∀ a b c d
+    → ∣ x .lower a ∣ → ∣ x .upper b ∣ → ∣ y .lower c ∣ → ∣ y .upper d ∣
+    → ∀ {P} → P < min₄ (a *ℚ c) (a *ℚ d) (b *ℚ c) (b *ℚ d)
+    → ∀ a' b' c' d'
+    → ∣ x .lower a' ∣ → ∣ x .upper b' ∣ → ∣ z .lower c' ∣ → ∣ z .upper d' ∣
+    → ∀ {S} → S < min₄ (a' *ℚ c') (a' *ℚ d') (b' *ℚ c') (b' *ℚ d')
+    → {q : Ratio} → q < P +ℚ S
+    → ∣ (x *ᴿ (y +ᴿ z)) .lower q ∣
+  assemble a b c d la ub lc ud {P} P<m a' b' c' d' la' ub' lc' ud' {S} S<m' {q} q<PS =
+    inc (A , B , (c +ℚ c') , (d +ℚ d') , lA , uB , lyz , uyz , q<final)
+    where
+    A B : Ratio
+    A = maxℚ a a'
+    B = minℚ b b'
+    lA : ∣ x .lower A ∣
+    lA = maxℚ-lower-mem x la la'
+    uB : ∣ x .upper B ∣
+    uB = minℚ-upper-mem x ub ub'
+    lyz : ∣ (y +ᴿ z) .lower (c +ℚ c') ∣
+    lyz = □-rec ((y +ᴿ z) .lower (c +ℚ c') .is-tr)
+      (λ (γ , c<γ , lγ) → □-rec ((y +ᴿ z) .lower (c +ℚ c') .is-tr)
+        (λ (γ' , c'<γ' , lγ') →
+          inc (γ , γ' , lγ , lγ' , <-sum c<γ c'<γ'))
+        (tr-□ (cut.lower-round z c' lc')))
+      (tr-□ (cut.lower-round y c lc))
+    uyz : ∣ (y +ᴿ z) .upper (d +ℚ d') ∣
+    uyz = □-rec ((y +ᴿ z) .upper (d +ℚ d') .is-tr)
+      (λ (δ , δ<d , uδ) → □-rec ((y +ᴿ z) .upper (d +ℚ d') .is-tr)
+        (λ (δ' , δ'<d' , uδ') →
+          inc (δ , δ' , uδ , uδ' , <-sum δ<d δ'<d'))
+        (tr-□ (cut.upper-round z d' ud')))
+      (tr-□ (cut.upper-round y d ud))
+    a≤A : a ≤ A
+    a≤A = maxℚ-≤l {a} {a'}
+    a'≤A : a' ≤ A
+    a'≤A = maxℚ-≤r {a} {a'}
+    B≤b : B ≤ b
+    B≤b = minℚ-≤l {b} {b'}
+    B≤b' : B ≤ b'
+    B≤b' = minℚ-≤r {b} {b'}
+    A≤B : A ≤ B
+    A≤B = <-weaken (lower<upper x lA uB)
+    c≤d : c ≤ d
+    c≤d = <-weaken (lower<upper y lc ud)
+    c'≤d' : c' ≤ d'
+    c'≤d' = <-weaken (lower<upper z lc' ud')
+    -- tighten each product bracket to the common [A,B]
+    tight-y : min₄ (a *ℚ c) (a *ℚ d) (b *ℚ c) (b *ℚ d)
+              ≤ min₄ (A *ℚ c) (A *ℚ d) (B *ℚ c) (B *ℚ d)
+    tight-y = min₄-tighten A B a b c d a≤A A≤B B≤b c≤d
+    tight-z : min₄ (a' *ℚ c') (a' *ℚ d') (b' *ℚ c') (b' *ℚ d')
+              ≤ min₄ (A *ℚ c') (A *ℚ d') (B *ℚ c') (B *ℚ d')
+    tight-z = min₄-tighten A B a' b' c' d' a'≤A A≤B B≤b' c'≤d'
+    P<tight : P < min₄ (A *ℚ c) (A *ℚ d) (B *ℚ c) (B *ℚ d)
+    P<tight = <-≤-trans P<m tight-y
+    S<tight : S < min₄ (A *ℚ c') (A *ℚ d') (B *ℚ c') (B *ℚ d')
+    S<tight = <-≤-trans S<m' tight-z
+    q<sum : q < (min₄ (A *ℚ c) (A *ℚ d) (B *ℚ c) (B *ℚ d) +ℚ
+                 min₄ (A *ℚ c') (A *ℚ d') (B *ℚ c') (B *ℚ d'))
+    q<sum = <-trans q<PS (<-sum P<tight S<tight)
+    q<final : q < min₄ (A *ℚ (c +ℚ c')) (A *ℚ (d +ℚ d')) (B *ℚ (c +ℚ c')) (B *ℚ (d +ℚ d'))
+    q<final = <-≤-trans q<sum (min₄-superadd A B c d c' d')
+```
+
+The reverse containment $x \cdot (y + z) \le x \cdot y + x \cdot z$
+is genuinely harder: subdistributivity means a *fixed* bracket
+around $x$ loses information, so one must first tighten the
+$x$-bracket to width $\delta$ (the same locatedness budget as the
+cut construction) before the four-fold minimum of the sum can be
+split back into a sum of two products. That direction, and hence the
+full distributive law, remains future work.
 
