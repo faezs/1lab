@@ -840,8 +840,123 @@ private
 *ᴿ-idl x = *ᴿ-comm 1ᴿ x ∙ *ᴿ-idr x
 ```
 
-With commutativity and a two-sided unit, the reals form a
-commutative multiplicative monoid compatible with their
+## Zero absorption
+
+Multiplying by $0$ annihilates: $x \cdot 0 = 0$. One direction is
+immediate from the bracketing lemma — a bracket $c < 0 < d$ around
+the zero factor pins the four products between $a \cdot 0 = 0$ and
+$b \cdot 0 = 0$, so the four-fold minimum is at most $0$ and any $q$
+below it is below $0$. The other direction is the same budget
+argument as the unit law, with baseline $0$ instead of $1$: given
+$q < 0$, bracket $0$ so tightly (within
+$\delta = \tfrac{(-q)/2}{B}$, $B$ bounding the magnitudes of an
+$x$-bracket) that every corner product $p \cdot e$, with
+$|p| \le B$ and $|e| \le \delta$, satisfies
+$p \cdot e \ge -B\delta = -\tfrac{-q}{2} > q$.
+
+<!--
+```agda
+private abstract
+  zero-sub-diff : ∀ q → (0 +ℚ (-ℚ (0 +ℚ (-ℚ q)))) ≡ q
+  zero-sub-diff q = rational!
+
+private
+  zeroʳ-witness
+    : ∀ x q a b → q < 0 → ∣ x .lower a ∣ → ∣ x .upper b ∣
+    → ∣ (x *ᴿ 0ᴿ) .lower q ∣
+  zeroʳ-witness x q a b q<0 la ub =
+    inc (a , b , c , d , la , ub , c<0 , 0<d , q<min)
+    where
+    gap : Ratio
+    gap = 0 +ℚ (-ℚ q)
+    gap-pos : 0 < gap
+    gap-pos = <→positive-diff q<0
+    B : Ratio
+    B = maxℚ 1 (maxℚ b (-ℚ a))
+    0<B : 0 < B
+    0<B = bound-pos a b
+    B-nz : Nonzero B
+    B-nz = inc (positive→nonzero (to-positive 0<B))
+    δ : Ratio
+    δ = (half gap /ℚ B) ⦃ B-nz ⦄
+    δ-pos : 0 < δ
+    δ-pos = div-pos (half gap) B ⦃ B-nz ⦄ (half-pos gap-pos) 0<B
+    c d : Ratio
+    c = 0 +ℚ (-ℚ δ)
+    d = 0 +ℚ δ
+    c<0 : c < 0
+    c<0 = sub-pos-< 0 δ δ-pos
+    0<d : 0 < d
+    0<d = add-pos-< 0 δ δ-pos
+    Bδ≡ : B *ℚ δ ≡ half gap
+    Bδ≡ = *ℚ-commutative B δ ∙ /ℚ-cancel (half gap) B ⦃ B-nz ⦄
+    a≤b : a ≤ b
+    a≤b = <-weaken (lower<upper x la ub)
+    b≤B : b ≤ B
+    b≤B = bound-hi a b
+    -B≤a : (-ℚ B) ≤ a
+    -B≤a = bound-lo a b
+    -B≤b : (-ℚ B) ≤ b
+    -B≤b = ≤-trans (bound-lo a b) a≤b
+    a≤B : a ≤ B
+    a≤B = ≤-trans a≤b b≤B
+    q<-hg : q < (0 +ℚ (-ℚ half gap))
+    q<-hg = <-resp zeq refl (+ℚ-preserves-<l 0 (negℚ-anti-< (half-lt gap-pos)))
+      where
+      zeq : 0 +ℚ (-ℚ gap) ≡ q
+      zeq = zero-sub-diff q
+    -δ≤c : (-ℚ δ) ≤ c
+    -δ≤c = ≤-resp refl (sym (+ℚ-idl (-ℚ δ))) ≤-refl
+    c≤δ : c ≤ δ
+    c≤δ = ≤-resp (sym (+ℚ-idl (-ℚ δ))) refl (≤-trans (≤-resp refl neg-zero (negℚ-anti-≤ (<-weaken δ-pos))) (<-weaken δ-pos))
+    -δ≤d : (-ℚ δ) ≤ d
+    -δ≤d = ≤-resp refl (sym (+ℚ-idl δ)) (≤-trans (≤-resp refl neg-zero (negℚ-anti-≤ (<-weaken δ-pos))) (<-weaken δ-pos))
+    d≤δ : d ≤ δ
+    d≤δ = ≤-resp (sym (+ℚ-idl δ)) refl ≤-refl
+    corner
+      : ∀ p → (-ℚ B) ≤ p → p ≤ B
+      → ∀ e → (-ℚ δ) ≤ e → e ≤ δ
+      → q < (p *ℚ e)
+    corner p -B≤p p≤B e -δ≤e e≤δ = <-≤-trans q<-hg -hg≤pe
+      where
+      -Bδ≤pe : (-ℚ (B *ℚ δ)) ≤ (p *ℚ e)
+      -Bδ≤pe = abs-mul-lower p e B δ -B≤p p≤B -δ≤e e≤δ (<-weaken 0<B)
+      -hg≤pe : (0 +ℚ (-ℚ half gap)) ≤ (p *ℚ e)
+      -hg≤pe = ≤-resp (ap (-ℚ_) Bδ≡ ∙ sym (+ℚ-idl (-ℚ half gap))) refl -Bδ≤pe
+    q<min : q < min₄ (a *ℚ c) (a *ℚ d) (b *ℚ c) (b *ℚ d)
+    q<min = min₄-univ-<
+      (corner a -B≤a a≤B c -δ≤c c≤δ)
+      (corner a -B≤a a≤B d -δ≤d d≤δ)
+      (corner b -B≤b b≤B c -δ≤c c≤δ)
+      (corner b -B≤b b≤B d -δ≤d d≤δ)
+```
+-->
+
+```agda
+*ᴿ-zeroʳ : ∀ x → x *ᴿ 0ᴿ ≡ 0ᴿ
+*ᴿ-zeroʳ x = ≤ᴿ-antisym fwd bwd
+  where
+  fwd : (x *ᴿ 0ᴿ) ≤ᴿ 0ᴿ
+  fwd q = □-rec ((0ᴿ .lower q) .is-tr)
+    λ (a , b , c , d , la , ub , c<0 , 0<d , q<m) →
+      <-≤-trans q<m
+        (≤-resp refl (*ℚ-zeror a)
+          (≤-trans (minℚ-≤l {minℚ (a *ℚ c) (a *ℚ d)} {minℚ (b *ℚ c) (b *ℚ d)})
+                   (bracket₁-lower a 0 c d (<-weaken c<0) (<-weaken 0<d))))
+
+  bwd : 0ᴿ ≤ᴿ (x *ᴿ 0ᴿ)
+  bwd q q<0 = ∥-∥-rec ((x *ᴿ 0ᴿ) .lower q .is-tr)
+    (λ (a , la) → ∥-∥-rec ((x *ᴿ 0ᴿ) .lower q .is-tr)
+      (λ (b , ub) → zeroʳ-witness x q a b q<0 la ub)
+      (cut.upper-inhab x))
+    (cut.lower-inhab x)
+
+*ᴿ-zeroˡ : ∀ x → 0ᴿ *ᴿ x ≡ 0ᴿ
+*ᴿ-zeroˡ x = *ᴿ-comm 0ᴿ x ∙ *ᴿ-zeroʳ x
+```
+
+With commutativity, a two-sided unit, and zero absorption, the reals
+form a commutative multiplicative monoid compatible with their
 [[additive group|real-addition]] and [[lattice|real-lattice]].
 Associativity and distributivity over addition — proved by the same
 interval-bracketing technique applied to nested and to Minkowski-sum
