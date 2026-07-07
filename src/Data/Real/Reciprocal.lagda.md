@@ -8,11 +8,20 @@ open import Data.Rational.Properties
 open import Data.Rational.Solver
 open import Data.Rational.Order
 open import Data.Rational.Base
+open import Data.Real.Multiplication
 open import Data.Real.Arithmetic
 open import Data.Real.Base
 open import Data.Real.Rational
 open import Data.Sum
 open import Data.Dec
+```
+-->
+
+<!--
+```agda
+-- Four-fold minimum lower bounds, re-exposed by name for the
+-- inversion argument (the copies in `Rational` suffice; listed here
+-- for readability of the corner estimates below).
 ```
 -->
 
@@ -404,4 +413,65 @@ The reciprocal of a positive real, packaged with its bounds.
 ```agda
 recip : (x : ℝ) → positive-bounds x → ℝ
 recip x px = recip-cut x px
+```
+
+## Inversion: $x \cdot (1/x) \le 1$
+
+Half of the inverse law is clean. The product's lower cut at $q$ hands
+us a bracket $a \le x \le b$ of $x$ and $c \le 1/x \le d$ of its
+reciprocal, with $q$ below all four corner products. Unfolding the
+reciprocal's *lower* witness $c$ exposes a positive upper bound $\beta$
+of $x$ with $c \cdot \beta < 1$, and since $a < \beta$, a two-case
+split on the sign of $c$ pins one corner strictly below $1$: if
+$c \ge 0$ then $a \cdot c \le \beta \cdot c < 1$, and if $c < 0$ then
+$b \cdot c < 0 < 1$ (both $b, \beta > 0$). Either way the four-fold
+minimum — hence $q$ — is below $1$.
+
+<!--
+```agda
+private abstract
+  -- 0 < b for any upper bound b of a positive real.
+  upper-pos : ∀ (x : ℝ) (px : positive-bounds x) {b} → ∣ x .upper b ∣ → 0 < b
+  upper-pos x px {b} ub = <-trans (px .lo-pos) (lower<upper x (px .lo-mem) ub)
+
+  -- The corner estimate: the four-fold minimum of the product bracket
+  -- is below 1, using a positive upper bound β of x with c·β < 1.
+  corner-<1
+    : ∀ a b c d β → 0 < b → 0 < β → a < β → (c *ℚ β) < 1
+    → min₄ (a *ℚ c) (a *ℚ d) (b *ℚ c) (b *ℚ d) < 1
+  corner-<1 a b c d β 0<b 0<β a<β cβ<1 with holds? (0 ≤ c)
+  ... | yes 0≤c = ≤-<-trans
+    (min₄-≤₁ {a *ℚ c} {a *ℚ d} {b *ℚ c} {b *ℚ d}) ac<1
+    where
+    -- a·c ≤ β·c = c·β < 1
+    ac≤βc : (a *ℚ c) ≤ (β *ℚ c)
+    ac≤βc = *ℚ-preserves-≤r c (<-weaken a<β) 0≤c
+    ac<1 : (a *ℚ c) < 1
+    ac<1 = ≤-<-trans ac≤βc (<-resp (*ℚ-commutative c β) refl cβ<1)
+  ... | no ¬0≤c = ≤-<-trans
+    (min₄-≤₃ {a *ℚ c} {a *ℚ d} {b *ℚ c} {b *ℚ d}) bc<1
+    where
+    c≤0 : c ≤ 0
+    c≤0 = ≤-is-weakly-total 0 c ¬0≤c
+    bc≤0 : (b *ℚ c) ≤ 0
+    bc≤0 = ≤-resp refl (*ℚ-zeror b) (*ℚ-preserves-≤l b (<-weaken 0<b) c≤0)
+    bc<1 : (b *ℚ c) < 1
+    bc<1 = ≤-<-trans bc≤0 0<1'
+```
+-->
+
+The forward inclusion assembles the corner estimate: unfold the
+reciprocal's lower witness for $\beta$, then apply `corner-<1`{.Agda}.
+
+```agda
+recip-invr-≤ : ∀ x (px : positive-bounds x) → (x *ᴿ recip x px) ≤ᴿ 1ᴿ
+recip-invr-≤ x px q = □-rec ((1ᴿ .lower q) .is-tr)
+  λ (a , b , c , d , la , ub , lc , ud , q<m) →
+    □-rec ((1ᴿ .lower q) .is-tr)
+      (λ (β , uβ , 0<β , cβ<1) →
+        <-trans q<m
+          (corner-<1 a b c d β
+            (upper-pos x px ub) 0<β
+            (lower<upper x la uβ) cβ<1))
+      lc
 ```
