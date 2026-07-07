@@ -708,14 +708,143 @@ private abstract
     (c , d , a , b , lc , ud , la , ub , <-≤-trans q<m (min₄-comm-le a b c d))
 ```
 
-The remaining ring structure — that $1$ is a unit, and that
-multiplication is associative and distributes over addition — is
-proved by the same interval-arithmetic technique (bracketing a
-factor tightly enough that its contribution to the four corner
-products is controlled), together with the reciprocals of
-reals apart from zero. With commutativity and a working product in
-hand, these are routine but lengthy, and remain future work; the
-[[reals|dedekind-real]] now form a commutative multiplicative
-structure compatible with their [[additive group|real-addition]] and
-[[lattice|real-lattice]].
+## The multiplicative unit
+
+The real number $1$ is the rational $1$ as a cut. One direction of
+the unit law is immediate — a bracket $c < 1 < d$ pins the four
+products between $ac$ and $bd$, and the four-fold minimum is below
+$a \cdot 1 = a$. The other direction is a budget argument, of the
+same shape as locatedness: given a lower bound $a > q$ for $x$,
+bracket $1$ so tightly (within $\delta = \tfrac{(a-q)/2}{B}$, where
+$B$ bounds the magnitudes of the endpoints) that every corner
+product stays above $q$.
+
+```agda
+1ᴿ : ℝ
+1ᴿ = ratℝ 1
+```
+
+<!--
+```agda
+private abstract
+  one-minus-sub : ∀ δ → (1 +ℚ (-ℚ (1 +ℚ (-ℚ δ)))) ≡ δ
+  one-minus-sub δ = rational!
+  one-minus-add : ∀ δ → (1 +ℚ (-ℚ (1 +ℚ δ))) ≡ (-ℚ δ)
+  one-minus-add δ = rational!
+  sub-diff : ∀ a q → (a +ℚ (-ℚ (a +ℚ (-ℚ q)))) ≡ q
+  sub-diff a q = rational!
+
+private
+  idr-witness
+    : ∀ x q a b → q < a → ∣ x .lower a ∣ → ∣ x .upper b ∣
+    → ∣ (x *ᴿ 1ᴿ) .lower q ∣
+  idr-witness x q a b q<a la ub =
+    inc (a , b , c , d , la , ub , c<1 , 1<d , q<min)
+    where
+    gap : Ratio
+    gap = a +ℚ (-ℚ q)
+    gap-pos : 0 < gap
+    gap-pos = <→positive-diff q<a
+    B : Ratio
+    B = maxℚ 1 (maxℚ b (-ℚ a))
+    0<B : 0 < B
+    0<B = bound-pos a b
+    B-nz : Nonzero B
+    B-nz = inc (positive→nonzero (to-positive 0<B))
+    δ : Ratio
+    δ = (half gap /ℚ B) ⦃ B-nz ⦄
+    δ-pos : 0 < δ
+    δ-pos = div-pos (half gap) B ⦃ B-nz ⦄ (half-pos gap-pos) 0<B
+    c d : Ratio
+    c = 1 +ℚ (-ℚ δ)
+    d = 1 +ℚ δ
+    c<1 : c < 1
+    c<1 = sub-pos-< 1 δ δ-pos
+    1<d : 1 < d
+    1<d = add-pos-< 1 δ δ-pos
+    Bδ≡ : B *ℚ δ ≡ half gap
+    Bδ≡ = *ℚ-commutative B δ ∙ /ℚ-cancel (half gap) B ⦃ B-nz ⦄
+    a≤b : a ≤ b
+    a≤b = <-weaken (lower<upper x la ub)
+    a≤B : a ≤ B
+    a≤B = ≤-trans a≤b (bound-hi a b)
+    -B≤a : (-ℚ B) ≤ a
+    -B≤a = bound-lo a b
+    b≤B : b ≤ B
+    b≤B = bound-hi a b
+    -B≤b : (-ℚ B) ≤ b
+    -B≤b = ≤-trans (bound-lo a b) a≤b
+    q<a-hg : q < (a +ℚ (-ℚ half gap))
+    q<a-hg = <-resp aeq refl (+ℚ-preserves-<l a (negℚ-anti-< (half-lt gap-pos)))
+      where
+      aeq : a +ℚ (-ℚ gap) ≡ q
+      aeq = sub-diff a q
+    corner
+      : ∀ p → (-ℚ B) ≤ p → p ≤ B → a ≤ p
+      → ∀ e → (-ℚ δ) ≤ (1 +ℚ (-ℚ e)) → (1 +ℚ (-ℚ e)) ≤ δ
+      → q < (p *ℚ e)
+    corner p -B≤p p≤B a≤p e lo hi = <-≤-trans q<a-hg (≤-trans a-hg≤p-hg p-hg≤pe)
+      where
+      p1e≤hg : (p *ℚ (1 +ℚ (-ℚ e))) ≤ half gap
+      p1e≤hg = ≤-resp refl Bδ≡ (abs-mul-bound p (1 +ℚ (-ℚ e)) B δ -B≤p p≤B lo hi (<-weaken 0<B))
+      pe-eq : (p +ℚ (-ℚ (p *ℚ (1 +ℚ (-ℚ e))))) ≡ (p *ℚ e)
+      pe-eq = rational!
+      a-hg≤p-hg : (a +ℚ (-ℚ half gap)) ≤ (p +ℚ (-ℚ half gap))
+      a-hg≤p-hg = +ℚ-preserves-≤ a≤p ≤-refl
+      p-hg≤pe : (p +ℚ (-ℚ half gap)) ≤ (p *ℚ e)
+      p-hg≤pe = ≤-resp refl pe-eq (+ℚ-preserves-≤ (≤-refl {p}) (negℚ-anti-≤ p1e≤hg))
+    1mc : (1 +ℚ (-ℚ c)) ≡ δ
+    1mc = one-minus-sub δ
+    1md : (1 +ℚ (-ℚ d)) ≡ (-ℚ δ)
+    1md = one-minus-add δ
+    -δ≤δ : (-ℚ δ) ≤ δ
+    -δ≤δ = ≤-trans (≤-resp refl neg-zero (negℚ-anti-≤ (<-weaken δ-pos))) (<-weaken δ-pos)
+    lo-c : (-ℚ δ) ≤ (1 +ℚ (-ℚ c))
+    lo-c = ≤-resp refl (sym 1mc) -δ≤δ
+    hi-c : (1 +ℚ (-ℚ c)) ≤ δ
+    hi-c = ≤-resp (sym 1mc) refl ≤-refl
+    lo-d : (-ℚ δ) ≤ (1 +ℚ (-ℚ d))
+    lo-d = ≤-resp refl (sym 1md) ≤-refl
+    hi-d : (1 +ℚ (-ℚ d)) ≤ δ
+    hi-d = ≤-resp (sym 1md) refl -δ≤δ
+    q<min : q < min₄ (a *ℚ c) (a *ℚ d) (b *ℚ c) (b *ℚ d)
+    q<min = min₄-univ-<
+      (corner a -B≤a a≤B ≤-refl c lo-c hi-c)
+      (corner a -B≤a a≤B ≤-refl d lo-d hi-d)
+      (corner b -B≤b b≤B a≤b c lo-c hi-c)
+      (corner b -B≤b b≤B a≤b d lo-d hi-d)
+```
+-->
+
+```agda
+*ᴿ-idr : ∀ x → x *ᴿ 1ᴿ ≡ x
+*ᴿ-idr x = ≤ᴿ-antisym fwd bwd
+  where
+  fwd : (x *ᴿ 1ᴿ) ≤ᴿ x
+  fwd q = □-rec ((x .lower q) .is-tr)
+    λ (a , b , c , d , la , ub , c<1 , 1<d , q<m) →
+      cut.lower-close x
+        (<-≤-trans q<m (≤-resp refl (*ℚ-idr a)
+          (≤-trans (minℚ-≤l {minℚ (a *ℚ c) (a *ℚ d)} {minℚ (b *ℚ c) (b *ℚ d)})
+                   (bracket₁-lower a 1 c d (<-weaken c<1) (<-weaken 1<d)))))
+        la
+
+  bwd : x ≤ᴿ (x *ᴿ 1ᴿ)
+  bwd q lq = ∥-∥-rec ((x *ᴿ 1ᴿ) .lower q .is-tr)
+    (λ (a , q<a , la) → ∥-∥-rec ((x *ᴿ 1ᴿ) .lower q .is-tr)
+      (λ (b , ub) → idr-witness x q a b q<a la ub)
+      (cut.upper-inhab x))
+    (cut.lower-round x q lq)
+
+*ᴿ-idl : ∀ x → 1ᴿ *ᴿ x ≡ x
+*ᴿ-idl x = *ᴿ-comm 1ᴿ x ∙ *ᴿ-idr x
+```
+
+With commutativity and a two-sided unit, the reals form a
+commutative multiplicative monoid compatible with their
+[[additive group|real-addition]] and [[lattice|real-lattice]].
+Associativity and distributivity over addition — proved by the same
+interval-bracketing technique applied to nested and to Minkowski-sum
+brackets — and the reciprocals of reals apart from zero, complete
+the ordered field; they remain future work.
 
