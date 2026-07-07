@@ -889,10 +889,19 @@ group structure ([[Minkowski addition|real-addition]] of cuts, with
 the rational embedding an additive homomorphism), the
 [[lattice|real-lattice]] of join, meet and absolute value, and
 [[multiplication|real-multiplication]] of cuts by the interval
-product — sign-analysis-free, and commutative. Reciprocals of reals
-apart from zero, the ring laws beyond commutativity, and a
-constructive theory of $C^\infty$ maps remain before the classical
-smooth site is in reach. Concretely missing, then:
+product — sign-analysis-free, commutative, with a two-sided unit,
+zero absorption, and the subdistributive containment $x \cdot y + x
+\cdot z \le x \cdot (y + z)$. The reverse distributive containment
+(the interval product is only *sub*distributive over the Minkowski
+sum, so closing it needs a $\delta$-budget tightening of the
+$x$-bracket against a super-additive defect of the four-fold
+minimum), associativity (the same technique on triple products),
+and reciprocals of reals apart from zero (blocked on an
+inverse-monotonicity lemma absent from the rational interface) —
+the genuinely hard interval-arithmetic core — remain before the
+ordered field is complete, and with it a constructive theory of
+$C^\infty$ maps and the classical smooth site. Concretely missing,
+then:
 the smooth-site instance of (7) (localisation over the
 good-open-cover coverage, with shrinking-neighbourhood germs); the
 pullback half of left exactness for the higher-inductive
