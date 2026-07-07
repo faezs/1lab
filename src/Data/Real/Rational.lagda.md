@@ -231,6 +231,36 @@ abstract
     n≤0 : n ≤ 0
     n≤0 = ≤-resp (/ℚ-cancel n d ⦃ nz ⦄) (*ℚ-zerol d)
       (*ℚ-preserves-≤r d (¬<→≥ ¬p) (<-weaken dp))
+
+  invℚ-pos : ∀ {x} ⦃ nx : Nonzero x ⦄ → 0 < x → 0 < invℚ x ⦃ nx ⦄
+  invℚ-pos {x} ⦃ nx ⦄ 0<x with holds? (0 < invℚ x ⦃ nx ⦄)
+  ... | yes p = p
+  ... | no ¬p = absurd (<-irrefl refl (<-≤-trans 0<1' 1≤0))
+    where
+    1≤0 : 1 ≤ 0
+    1≤0 = ≤-resp (*ℚ-invr {x} {nx}) (*ℚ-zeror x)
+      (*ℚ-preserves-≤l x (<-weaken 0<x) (¬<→≥ ¬p))
+
+  invℚ-anti-< : ∀ {a b} ⦃ na : Nonzero a ⦄ ⦃ nb : Nonzero b ⦄
+    → 0 < a → a < b → invℚ b ⦃ nb ⦄ < invℚ a ⦃ na ⦄
+  invℚ-anti-< {a} {b} ⦃ na ⦄ ⦃ nb ⦄ 0<a a<b = <-resp (sym ib-eq) refl step
+    where
+    0<b : 0 < b
+    0<b = <-trans 0<a a<b
+    0<ia : 0 < invℚ a ⦃ na ⦄
+    0<ia = invℚ-pos 0<a
+    0<ib : 0 < invℚ b ⦃ nb ⦄
+    0<ib = invℚ-pos 0<b
+    iba<1 : (invℚ b ⦃ nb ⦄ *ℚ a) < 1
+    iba<1 = <-resp (*ℚ-commutative a (invℚ b ⦃ nb ⦄)) (*ℚ-invr {b} {nb})
+      (*ℚ-preserves-<r (invℚ b ⦃ nb ⦄) a<b 0<ib)
+    ib-eq : invℚ b ⦃ nb ⦄ ≡ ((invℚ b ⦃ nb ⦄ *ℚ a) *ℚ invℚ a ⦃ na ⦄)
+    ib-eq = sym (*ℚ-idr (invℚ b ⦃ nb ⦄))
+      ∙ ap (invℚ b ⦃ nb ⦄ *ℚ_) (sym (*ℚ-invr {a} {na}))
+      ∙ *ℚ-associative (invℚ b ⦃ nb ⦄) a (invℚ a ⦃ na ⦄)
+    step : ((invℚ b ⦃ nb ⦄ *ℚ a) *ℚ invℚ a ⦃ na ⦄) < invℚ a ⦃ na ⦄
+    step = <-resp refl (*ℚ-idl (invℚ a ⦃ na ⦄))
+      (*ℚ-preserves-<r (invℚ a ⦃ na ⦄) iba<1 0<ia)
 ```
 -->
 
