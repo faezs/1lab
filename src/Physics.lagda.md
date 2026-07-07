@@ -890,18 +890,17 @@ the rational embedding an additive homomorphism), the
 [[lattice|real-lattice]] of join, meet and absolute value, and
 [[multiplication|real-multiplication]] of cuts by the interval
 product — sign-analysis-free, commutative, with a two-sided unit,
-zero absorption, and the subdistributive containment $x \cdot y + x
-\cdot z \le x \cdot (y + z)$. Strictly positive reals even have
-**reciprocals** (`Data.Real.Reciprocal`{.Agda}): the reciprocal cut
-and the full inverse law $x \cdot x^{-1} = 1$, built on the newly
-proven monotonicity of the rational inverse. What remains before the
-ordered field is complete is the genuinely hard interval-arithmetic
-core: the reverse distributive containment (the interval product is
-only *sub*distributive over the Minkowski sum, so closing it needs a
-simultaneous $\delta$-budget tightening of *all three* factor
-brackets against a super-additive defect that splits into a
-width-of-$y,z$ term and a width-of-$x$ term), associativity (the
-same technique on triple products), and the reciprocals of reals
+zero absorption, and **full distributivity** over addition
+(`*ᴿ-distribˡ`{.Agda}): the reverse containment $x \cdot (y + z) \le
+x \cdot y + x \cdot z$ is proven by a simultaneous
+$\delta$-budget tightening of *all three* factor brackets against
+the super-additive defect of the four-fold minimum. Strictly
+positive reals even have **reciprocals**
+(`Data.Real.Reciprocal`{.Agda}): the reciprocal cut and the full
+inverse law $x \cdot x^{-1} = 1$. The reals are thus a commutative
+distributive structure with inverses; what remains before the
+ordered field is complete is associativity of multiplication (the
+same interval technique on triple products) and reciprocals of reals
 merely apart from zero (the sign-indeterminate case). With the field
 comes a constructive theory of $C^\infty$ maps and the classical
 smooth site. Concretely missing, then:
