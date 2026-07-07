@@ -1013,6 +1013,51 @@ private abstract
     A≤b = ≤-trans A≤B B≤b
     a≤B : a ≤ B
     a≤B = ≤-trans a≤A A≤B
+
+  min₄-tighten₂
+    : ∀ A B C D c d → C ≤ c → c ≤ d → d ≤ D
+    → min₄ (A *ℚ C) (A *ℚ D) (B *ℚ C) (B *ℚ D)
+      ≤ min₄ (A *ℚ c) (A *ℚ d) (B *ℚ c) (B *ℚ d)
+  min₄-tighten₂ A B C D c d C≤c c≤d d≤D = min₄-univ
+    (≤-trans mtl (bracket₁-lower A c C D C≤c c≤D))
+    (≤-trans mtl (bracket₁-lower A d C D C≤d d≤D))
+    (≤-trans mtr (bracket₁-lower B c C D C≤c c≤D))
+    (≤-trans mtr (bracket₁-lower B d C D C≤d d≤D))
+    where
+    C≤d : C ≤ d
+    C≤d = ≤-trans C≤c c≤d
+    c≤D : c ≤ D
+    c≤D = ≤-trans c≤d d≤D
+    mtl : min₄ (A *ℚ C) (A *ℚ D) (B *ℚ C) (B *ℚ D) ≤ minℚ (A *ℚ C) (A *ℚ D)
+    mtl = minℚ-≤l {minℚ (A *ℚ C) (A *ℚ D)} {minℚ (B *ℚ C) (B *ℚ D)}
+    mtr : min₄ (A *ℚ C) (A *ℚ D) (B *ℚ C) (B *ℚ D) ≤ minℚ (B *ℚ C) (B *ℚ D)
+    mtr = minℚ-≤r {minℚ (A *ℚ C) (A *ℚ D)} {minℚ (B *ℚ C) (B *ℚ D)}
+
+  sub-move : ∀ {a b} s → a ≤ (b +ℚ s) → (a +ℚ (-ℚ s)) ≤ b
+  sub-move {a} {b} s a≤bs = ≤-resp refl b+s-s≡b (+ℚ-preserves-≤ a≤bs (≤-refl { -ℚ s}))
+    where
+    b+s-s≡b : (b +ℚ s) +ℚ (-ℚ s) ≡ b
+    b+s-s≡b = rational!
+
+  lt-move : ∀ {a b} s → s < (b +ℚ (-ℚ a)) → a < (b +ℚ (-ℚ s))
+  lt-move {a} {b} s s<b-a = <-resp a+s-s≡a refl (+ℚ-preserves-<r (-ℚ s) a+s<b)
+    where
+    a+[b-a]≡b : a +ℚ (b +ℚ (-ℚ a)) ≡ b
+    a+[b-a]≡b = rational!
+    a+s<b : (a +ℚ s) < b
+    a+s<b = <-resp refl a+[b-a]≡b (+ℚ-preserves-<l a s<b-a)
+    a+s-s≡a : (a +ℚ s) +ℚ (-ℚ s) ≡ a
+    a+s-s≡a = rational!
+
+  ps-ring : ∀ a b h → ((a +ℚ (-ℚ h)) +ℚ (b +ℚ (-ℚ h))) ≡ ((a +ℚ b) +ℚ (-ℚ (h +ℚ h)))
+  ps-ring a b h = rational!
+
+  sum4-ring : ∀ a p b r → ((a +ℚ p) +ℚ (b +ℚ r)) ≡ ((a +ℚ b) +ℚ (p +ℚ r))
+  sum4-ring a p b r = rational!
+
+  sum-pos : ∀ {a b} → 0 < a → 0 ≤ b → 0 < (a +ℚ b)
+  sum-pos {a} {b} 0<a 0≤b = <-≤-trans 0<a
+    (≤-resp (+ℚ-idr a) refl (+ℚ-preserves-≤ (≤-refl {a}) 0≤b))
 ```
 -->
 
@@ -1121,14 +1166,293 @@ transports the containment along the two equalities.
     (*ᴿ-distribˡ-≤ x y z)
 ```
 
-The reverse containment $x \cdot (y + z) \le x \cdot y + x \cdot z$
-is genuinely harder: subdistributivity means a *fixed* bracket
-around $x$ loses information, so one must first tighten the
-$x$-bracket to width $\delta$ before the four-fold minimum of the
-sum can be split back into a sum of two products, and the
-super-additive defect of the four-fold minimum only vanishes in that
-limit. That direction — hence the full distributive law — together
-with associativity (the same interval technique on triple products)
-and reciprocals of reals apart from zero, complete the ordered
-field; they remain future work.
+<!--
+```agda
+private
+  distrib-witness
+    : ∀ x y z q A B C D c c' d d'
+    → ∣ x .lower A ∣ → ∣ x .upper B ∣
+    → ∣ y .lower c ∣ → ∣ z .lower c' ∣ → (C < c +ℚ c')
+    → ∣ y .upper d ∣ → ∣ z .upper d' ∣ → (d +ℚ d' < D)
+    → (q < min₄ (A *ℚ C) (A *ℚ D) (B *ℚ C) (B *ℚ D))
+    → ∀ ε B₂ B₁ B₁'
+    → ((-ℚ B₂) ≤ A) → (B ≤ B₂) → (0 ≤ B₂)
+    → ((-ℚ B₁) ≤ c) → (d ≤ B₁) → (0 ≤ B₁)
+    → ((-ℚ B₁') ≤ c') → (d' ≤ B₁') → (0 ≤ B₁')
+    → ((((B₂ +ℚ B₁) +ℚ (B₂ +ℚ B₁')) *ℚ ε)
+       ≤ half (min₄ (A *ℚ C) (A *ℚ D) (B *ℚ C) (B *ℚ D) +ℚ (-ℚ q)))
+    → ∀ ax bx → ∣ x .lower ax ∣ → ∣ x .upper bx ∣ → ((bx +ℚ (-ℚ ax)) < ε)
+    → ∀ ay by → ∣ y .lower ay ∣ → ∣ y .upper by ∣ → ((by +ℚ (-ℚ ay)) < ε)
+    → ∀ az bz → ∣ z .lower az ∣ → ∣ z .upper bz ∣ → ((bz +ℚ (-ℚ az)) < ε)
+    → ∣ ((x *ᴿ y) +ᴿ (x *ᴿ z)) .lower q ∣
+  distrib-witness x y z q A B C D c c' d d' lA uB lyc lzc' C<cc' uyd uzd' dd'<D q<M₀
+    ε B₂ B₁ B₁' -B₂≤A B≤B₂ 0≤B₂ -B₁≤c d≤B₁ 0≤B₁ -B₁'≤c' d'≤B₁' 0≤B₁' budget
+    ax bx lax ubx wx ay by lay uby wy az bz laz ubz wz =
+    inc (P , S , xy-wit , xz-wit , q<PS)
+    where
+    M₀ : Ratio
+    M₀ = min₄ (A *ℚ C) (A *ℚ D) (B *ℚ C) (B *ℚ D)
+    slack : Ratio
+    slack = M₀ +ℚ (-ℚ q)
+    0<slack : 0 < slack
+    0<slack = <→positive-diff q<M₀
+    A' B' c₂ d₂ c₂' d₂' : Ratio
+    A' = maxℚ A ax
+    B' = minℚ B bx
+    c₂ = maxℚ c ay
+    d₂ = minℚ d by
+    c₂' = maxℚ c' az
+    d₂' = minℚ d' bz
+    lA' : ∣ x .lower A' ∣
+    lA' = maxℚ-lower-mem x lA lax
+    uB' : ∣ x .upper B' ∣
+    uB' = minℚ-upper-mem x uB ubx
+    ly₂ : ∣ y .lower c₂ ∣
+    ly₂ = maxℚ-lower-mem y lyc lay
+    uy₂ : ∣ y .upper d₂ ∣
+    uy₂ = minℚ-upper-mem y uyd uby
+    lz₂ : ∣ z .lower c₂' ∣
+    lz₂ = maxℚ-lower-mem z lzc' laz
+    uz₂ : ∣ z .upper d₂' ∣
+    uz₂ = minℚ-upper-mem z uzd' ubz
+    A≤A' : A ≤ A'
+    A≤A' = maxℚ-≤l {A} {ax}
+    B'≤B : B' ≤ B
+    B'≤B = minℚ-≤l {B} {bx}
+    c≤c₂ : c ≤ c₂
+    c≤c₂ = maxℚ-≤l {c} {ay}
+    d₂≤d : d₂ ≤ d
+    d₂≤d = minℚ-≤l {d} {by}
+    c'≤c₂' : c' ≤ c₂'
+    c'≤c₂' = maxℚ-≤l {c'} {az}
+    d₂'≤d' : d₂' ≤ d'
+    d₂'≤d' = minℚ-≤l {d'} {bz}
+    A'≤B' : A' ≤ B'
+    A'≤B' = <-weaken (lower<upper x lA' uB')
+    c₂≤d₂ : c₂ ≤ d₂
+    c₂≤d₂ = <-weaken (lower<upper y ly₂ uy₂)
+    c₂'≤d₂' : c₂' ≤ d₂'
+    c₂'≤d₂' = <-weaken (lower<upper z lz₂ uz₂)
+    -B₂≤A' : (-ℚ B₂) ≤ A'
+    -B₂≤A' = ≤-trans -B₂≤A A≤A'
+    B'≤B₂ : B' ≤ B₂
+    B'≤B₂ = ≤-trans B'≤B B≤B₂
+    -B₁≤c₂ : (-ℚ B₁) ≤ c₂
+    -B₁≤c₂ = ≤-trans -B₁≤c c≤c₂
+    d₂≤B₁ : d₂ ≤ B₁
+    d₂≤B₁ = ≤-trans d₂≤d d≤B₁
+    -B₁'≤c₂' : (-ℚ B₁') ≤ c₂'
+    -B₁'≤c₂' = ≤-trans -B₁'≤c' c'≤c₂'
+    d₂'≤B₁' : d₂' ≤ B₁'
+    d₂'≤B₁' = ≤-trans d₂'≤d' d'≤B₁'
+    wx' : (B' +ℚ (-ℚ A')) ≤ ε
+    wx' = ≤-trans (+ℚ-preserves-≤ B'≤bx (negℚ-anti-≤ ax≤A')) (<-weaken wx)
+      where
+      B'≤bx : B' ≤ bx
+      B'≤bx = minℚ-≤r {B} {bx}
+      ax≤A' : ax ≤ A'
+      ax≤A' = maxℚ-≤r {A} {ax}
+    wy' : (d₂ +ℚ (-ℚ c₂)) ≤ ε
+    wy' = ≤-trans (+ℚ-preserves-≤ d₂≤by (negℚ-anti-≤ ay≤c₂)) (<-weaken wy)
+      where
+      d₂≤by : d₂ ≤ by
+      d₂≤by = minℚ-≤r {d} {by}
+      ay≤c₂ : ay ≤ c₂
+      ay≤c₂ = maxℚ-≤r {c} {ay}
+    wz' : (d₂' +ℚ (-ℚ c₂')) ≤ ε
+    wz' = ≤-trans (+ℚ-preserves-≤ d₂'≤bz (negℚ-anti-≤ az≤c₂')) (<-weaken wz)
+      where
+      d₂'≤bz : d₂' ≤ bz
+      d₂'≤bz = minℚ-≤r {d'} {bz}
+      az≤c₂' : az ≤ c₂'
+      az≤c₂' = maxℚ-≤r {c'} {az}
+    c<d : c < d
+    c<d = lower<upper y lyc uyd
+    c'<d' : c' < d'
+    c'<d' = lower<upper z lzc' uzd'
+    C≤cc₂ : C ≤ (c₂ +ℚ c₂')
+    C≤cc₂ = ≤-trans (<-weaken C<cc') (+ℚ-preserves-≤ c≤c₂ c'≤c₂')
+    dd₂≤D : (d₂ +ℚ d₂') ≤ D
+    dd₂≤D = ≤-trans (+ℚ-preserves-≤ d₂≤d d₂'≤d') (<-weaken dd'<D)
+    cc₂≤dd₂ : (c₂ +ℚ c₂') ≤ (d₂ +ℚ d₂')
+    cc₂≤dd₂ = +ℚ-preserves-≤ c₂≤d₂ c₂'≤d₂'
+    C≤D : C ≤ D
+    C≤D = ≤-trans (<-weaken C<cc') (≤-trans (+ℚ-preserves-≤ (<-weaken c<d) (<-weaken c'<d')) (<-weaken dd'<D))
+    M₁' M₂' Msum : Ratio
+    M₁' = min₄ (A' *ℚ c₂) (A' *ℚ d₂) (B' *ℚ c₂) (B' *ℚ d₂)
+    M₂' = min₄ (A' *ℚ c₂') (A' *ℚ d₂') (B' *ℚ c₂') (B' *ℚ d₂')
+    Msum = min₄ (A' *ℚ (c₂ +ℚ c₂')) (A' *ℚ (d₂ +ℚ d₂')) (B' *ℚ (c₂ +ℚ c₂')) (B' *ℚ (d₂ +ℚ d₂'))
+    q<Msum : q < Msum
+    q<Msum = <-≤-trans
+      (<-≤-trans q<M₀ (min₄-tighten A' B' A B C D A≤A' A'≤B' B'≤B C≤D))
+      (min₄-tighten₂ A' B' C D (c₂ +ℚ c₂') (d₂ +ℚ d₂') C≤cc₂ cc₂≤dd₂ dd₂≤D)
+    sp₁ sp₂ : Ratio
+    sp₁ = (B₂ *ℚ (d₂ +ℚ (-ℚ c₂))) +ℚ (B₁ *ℚ (B' +ℚ (-ℚ A')))
+    sp₂ = (B₂ *ℚ (d₂' +ℚ (-ℚ c₂'))) +ℚ (B₁' *ℚ (B' +ℚ (-ℚ A')))
+    Msum≤ : Msum ≤ ((M₁' +ℚ M₂') +ℚ (sp₁ +ℚ sp₂))
+    Msum≤ = ≤-resp refl rearr (≤-trans msum≤sum (+ℚ-preserves-≤ ac₂≤ ac₂'≤))
+      where
+      msum≤sum : Msum ≤ ((A' *ℚ c₂) +ℚ (A' *ℚ c₂'))
+      msum≤sum = ≤-resp refl (*ℚ-distribl A' c₂ c₂')
+        (min₄-≤₁ {A' *ℚ (c₂ +ℚ c₂')} {A' *ℚ (d₂ +ℚ d₂')} {B' *ℚ (c₂ +ℚ c₂')} {B' *ℚ (d₂ +ℚ d₂')})
+      ac₂≤ : (A' *ℚ c₂) ≤ (M₁' +ℚ sp₁)
+      ac₂≤ = ≤-trans (max₄-≥₁ {A' *ℚ c₂} {A' *ℚ d₂} {B' *ℚ c₂} {B' *ℚ d₂})
+        (spread-bound A' B' c₂ d₂ B₁ B₂ A'≤B' c₂≤d₂ -B₂≤A' B'≤B₂ 0≤B₂ -B₁≤c₂ d₂≤B₁ 0≤B₁)
+      ac₂'≤ : (A' *ℚ c₂') ≤ (M₂' +ℚ sp₂)
+      ac₂'≤ = ≤-trans (max₄-≥₁ {A' *ℚ c₂'} {A' *ℚ d₂'} {B' *ℚ c₂'} {B' *ℚ d₂'})
+        (spread-bound A' B' c₂' d₂' B₁' B₂ A'≤B' c₂'≤d₂' -B₂≤A' B'≤B₂ 0≤B₂ -B₁'≤c₂' d₂'≤B₁' 0≤B₁')
+      rearr : ((M₁' +ℚ sp₁) +ℚ (M₂' +ℚ sp₂)) ≡ ((M₁' +ℚ M₂') +ℚ (sp₁ +ℚ sp₂))
+      rearr = sum4-ring M₁' sp₁ M₂' sp₂
+    spread<slack : (sp₁ +ℚ sp₂) < slack
+    spread<slack = ≤-<-trans (≤-trans sp≤Denomε budget2) (half-lt 0<slack)
+      where
+      sp≤Denomε : (sp₁ +ℚ sp₂) ≤ (((B₂ +ℚ B₁) +ℚ (B₂ +ℚ B₁')) *ℚ ε)
+      sp≤Denomε = ≤-resp refl distrib-Denom
+        (+ℚ-preserves-≤
+          (+ℚ-preserves-≤ (*ℚ-preserves-≤l B₂ 0≤B₂ wy') (*ℚ-preserves-≤l B₁ 0≤B₁ wx'))
+          (+ℚ-preserves-≤ (*ℚ-preserves-≤l B₂ 0≤B₂ wz') (*ℚ-preserves-≤l B₁' 0≤B₁' wx')))
+        where
+        distrib-Denom
+          : (((B₂ *ℚ ε) +ℚ (B₁ *ℚ ε)) +ℚ ((B₂ *ℚ ε) +ℚ (B₁' *ℚ ε)))
+            ≡ (((B₂ +ℚ B₁) +ℚ (B₂ +ℚ B₁')) *ℚ ε)
+        distrib-Denom = rational!
+      budget2 : (((B₂ +ℚ B₁) +ℚ (B₂ +ℚ B₁')) *ℚ ε) ≤ half slack
+      budget2 = budget
+    μ : Ratio
+    μ = M₁' +ℚ M₂'
+    q<μ : q < μ
+    q<μ = <-≤-trans (lt-move (sp₁ +ℚ sp₂) sp<Msum-q) (sub-move (sp₁ +ℚ sp₂) Msum≤)
+      where
+      sp<Msum-q : (sp₁ +ℚ sp₂) < (Msum +ℚ (-ℚ q))
+      sp<Msum-q = <-≤-trans spread<slack (+ℚ-preserves-≤ M₀≤Msum (≤-refl { -ℚ q}))
+        where
+        M₀≤Msum : M₀ ≤ Msum
+        M₀≤Msum = ≤-trans (min₄-tighten A' B' A B C D A≤A' A'≤B' B'≤B C≤D)
+                          (min₄-tighten₂ A' B' C D (c₂ +ℚ c₂') (d₂ +ℚ d₂') C≤cc₂ cc₂≤dd₂ dd₂≤D)
+    gap' : Ratio
+    gap' = μ +ℚ (-ℚ q)
+    0<gap' : 0 < gap'
+    0<gap' = <→positive-diff q<μ
+    hh : Ratio
+    hh = half (half gap')
+    0<hh : 0 < hh
+    0<hh = half-pos (half-pos 0<gap')
+    P S : Ratio
+    P = M₁' +ℚ (-ℚ hh)
+    S = M₂' +ℚ (-ℚ hh)
+    P<M₁' : P < M₁'
+    P<M₁' = sub-pos-< M₁' hh 0<hh
+    S<M₂' : S < M₂'
+    S<M₂' = sub-pos-< M₂' hh 0<hh
+    PS≡ : (P +ℚ S) ≡ (μ +ℚ (-ℚ half gap'))
+    PS≡ = ring-ps ∙ ap (λ w → μ +ℚ (-ℚ w)) (half-sum (half gap'))
+      where
+      ring-ps : ((M₁' +ℚ (-ℚ hh)) +ℚ (M₂' +ℚ (-ℚ hh))) ≡ ((M₁' +ℚ M₂') +ℚ (-ℚ (hh +ℚ hh)))
+      ring-ps = ps-ring M₁' M₂' hh
+    q<PS : q < (P +ℚ S)
+    q<PS = subst (λ w → q < w) (sym PS≡) base
+      where
+      base : q < (μ +ℚ (-ℚ half gap'))
+      base = lt-move {q} {μ} (half gap') (half-lt 0<gap')
+    xy-wit : ∣ (x *ᴿ y) .lower P ∣
+    xy-wit = inc (A' , B' , c₂ , d₂ , lA' , uB' , ly₂ , uy₂ , P<M₁')
+    xz-wit : ∣ (x *ᴿ z) .lower S ∣
+    xz-wit = inc (A' , B' , c₂' , d₂' , lA' , uB' , lz₂ , uz₂ , S<M₂')
+```
+-->
+
+<!--
+```agda
+private
+  distrib-core
+    : ∀ x y z q A B C D c c' d d'
+    → ∣ x .lower A ∣ → ∣ x .upper B ∣
+    → ∣ y .lower c ∣ → ∣ z .lower c' ∣ → (C < c +ℚ c')
+    → ∣ y .upper d ∣ → ∣ z .upper d' ∣ → (d +ℚ d' < D)
+    → (q < min₄ (A *ℚ C) (A *ℚ D) (B *ℚ C) (B *ℚ D))
+    → ∣ ((x *ᴿ y) +ᴿ (x *ᴿ z)) .lower q ∣
+  distrib-core x y z q A B C D c c' d d' lA uB lyc lzc' C<cc' uyd uzd' dd'<D q<M₀ =
+    ∥-∥-rec prop
+      (λ (ax , bx , lax , ubx , wx) → ∥-∥-rec prop
+        (λ (ay , by , lay , uby , wy) → ∥-∥-rec prop
+          (λ (az , bz , laz , ubz , wz) →
+            distrib-witness x y z q A B C D c c' d d'
+              lA uB lyc lzc' C<cc' uyd uzd' dd'<D q<M₀
+              ε B₂ B₁ B₁'
+              (bound-lo A B) (bound-hi A B) (bound-nn A B)
+              (bound-lo c d) (bound-hi c d) (bound-nn c d)
+              (bound-lo c' d') (bound-hi c' d') (bound-nn c' d')
+              budget
+              ax bx lax ubx wx ay by lay uby wy az bz laz ubz wz)
+          (approx z ε 0<ε))
+        (approx y ε 0<ε))
+      (approx x ε 0<ε)
+    where
+    prop : is-prop ∣ ((x *ᴿ y) +ᴿ (x *ᴿ z)) .lower q ∣
+    prop = ((x *ᴿ y) +ᴿ (x *ᴿ z)) .lower q .is-tr
+    M₀ : Ratio
+    M₀ = min₄ (A *ℚ C) (A *ℚ D) (B *ℚ C) (B *ℚ D)
+    slack : Ratio
+    slack = M₀ +ℚ (-ℚ q)
+    0<slack : 0 < slack
+    0<slack = <→positive-diff q<M₀
+    B₂ B₁ B₁' Denom : Ratio
+    B₂ = maxℚ 1 (maxℚ B (-ℚ A))
+    B₁ = maxℚ 1 (maxℚ d (-ℚ c))
+    B₁' = maxℚ 1 (maxℚ d' (-ℚ c'))
+    Denom = (B₂ +ℚ B₁) +ℚ (B₂ +ℚ B₁')
+    0<Denom : 0 < Denom
+    0<Denom = sum-pos (sum-pos (bound-pos A B) (bound-nn c d))
+                      (<-weaken (sum-pos (bound-pos A B) (bound-nn c' d')))
+    Denom-nz : Nonzero Denom
+    Denom-nz = inc (positive→nonzero (to-positive 0<Denom))
+    ε : Ratio
+    ε = (half slack /ℚ Denom) ⦃ Denom-nz ⦄
+    0<ε : 0 < ε
+    0<ε = div-pos (half slack) Denom ⦃ Denom-nz ⦄ (half-pos 0<slack) 0<Denom
+    budget : (Denom *ℚ ε) ≤ half slack
+    budget = ≤-resp (sym Denomε≡) refl (≤-refl {half slack})
+      where
+      Denomε≡ : Denom *ℚ ε ≡ half slack
+      Denomε≡ = *ℚ-commutative Denom ε ∙ /ℚ-cancel (half slack) Denom ⦃ Denom-nz ⦄
+```
+-->
+
+Putting the pieces together, the reverse containment holds: given a
+witness that $q$ is below $x \cdot (y + z)$, we intersect its
+$x$-, $y$- and $z$-brackets with fresh approximations tight enough
+that the super-additive defect of the four-fold minimum falls below
+the fixed slack $M_0 - q$, and the summed witness for $x \cdot y + x
+\cdot z$ then clears $q$.
+
+```agda
+*ᴿ-distribˡ-≥ : ∀ x y z → (x *ᴿ (y +ᴿ z)) ≤ᴿ ((x *ᴿ y) +ᴿ (x *ᴿ z))
+*ᴿ-distribˡ-≥ x y z q = □-rec prop
+  (λ (A , B , C , D , lA , uB , lyzC , uyzD , q<M₀) →
+    □-rec prop (λ (c , c' , lyc , lzc' , C<cc') →
+      □-rec prop (λ (d , d' , uyd , uzd' , dd'<D) →
+        distrib-core x y z q A B C D c c' d d'
+          lA uB lyc lzc' C<cc' uyd uzd' dd'<D q<M₀)
+        uyzD)
+      lyzC)
+  where
+  prop : is-prop ∣ ((x *ᴿ y) +ᴿ (x *ᴿ z)) .lower q ∣
+  prop = ((x *ᴿ y) +ᴿ (x *ᴿ z)) .lower q .is-tr
+```
+
+Combining both containments gives the **distributive law**, and its
+right-handed form by commutativity — completing the ordered-ring
+structure of the reals.
+
+```agda
+*ᴿ-distribˡ : ∀ x y z → x *ᴿ (y +ᴿ z) ≡ (x *ᴿ y) +ᴿ (x *ᴿ z)
+*ᴿ-distribˡ x y z = ≤ᴿ-antisym (*ᴿ-distribˡ-≥ x y z) (*ᴿ-distribˡ-≤ x y z)
+
+*ᴿ-distribʳ : ∀ x y z → (y +ᴿ z) *ᴿ x ≡ (y *ᴿ x) +ᴿ (z *ᴿ x)
+*ᴿ-distribʳ x y z =
+  *ᴿ-comm (y +ᴿ z) x
+  ∙ *ᴿ-distribˡ x y z
+  ∙ ap₂ _+ᴿ_ (*ᴿ-comm x y) (*ᴿ-comm x z)
+```
+
 
