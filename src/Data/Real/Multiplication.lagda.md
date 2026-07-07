@@ -1106,11 +1106,29 @@ private abstract
     q<final = <-≤-trans q<sum (min₄-superadd A B c d c' d')
 ```
 
+The right-handed subdistributive law is the same statement read
+through [[commutativity|real-multiplication]]: rewriting each factor
+$y \cdot x = x \cdot y$ and $(y + z) \cdot x = x \cdot (y + z)$
+transports the containment along the two equalities.
+
+```agda
+*ᴿ-distribʳ-≤
+  : ∀ x y z → ((y *ᴿ x) +ᴿ (z *ᴿ x)) ≤ᴿ ((y +ᴿ z) *ᴿ x)
+*ᴿ-distribʳ-≤ x y z =
+  subst₂ _≤ᴿ_
+    (sym (ap₂ _+ᴿ_ (*ᴿ-comm y x) (*ᴿ-comm z x)))
+    (*ᴿ-comm x (y +ᴿ z))
+    (*ᴿ-distribˡ-≤ x y z)
+```
+
 The reverse containment $x \cdot (y + z) \le x \cdot y + x \cdot z$
 is genuinely harder: subdistributivity means a *fixed* bracket
 around $x$ loses information, so one must first tighten the
-$x$-bracket to width $\delta$ (the same locatedness budget as the
-cut construction) before the four-fold minimum of the sum can be
-split back into a sum of two products. That direction, and hence the
-full distributive law, remains future work.
+$x$-bracket to width $\delta$ before the four-fold minimum of the
+sum can be split back into a sum of two products, and the
+super-additive defect of the four-fold minimum only vanishes in that
+limit. That direction — hence the full distributive law — together
+with associativity (the same interval technique on triple products)
+and reciprocals of reals apart from zero, complete the ordered
+field; they remain future work.
 
