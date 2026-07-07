@@ -475,3 +475,277 @@ recip-invr-≤ x px q = □-rec ((1ᴿ .lower q) .is-tr)
             (lower<upper x la uβ) cβ<1))
       lc
 ```
+
+## Inversion: $1 \le x \cdot (1/x)$
+
+The reverse inclusion is the budget direction. Given $q < 1$, we
+bracket $x$ by a positive interval $a_0 \le a \le x \le b$ so tight
+that $q \cdot b < a$, then read off a reciprocal bracket for $1/x$:
+take $c$ a midpoint between $q/a$ and $1/b$ (so $q < a \cdot c$ and
+$c \cdot b < 1$, the latter certifying $c$ is *below* $1/x$ with
+witness $b$), and $d = 2/a$ (so $1 < d \cdot a$, certifying $d$ is
+*above* $1/x$ with witness $a$). With $c, d > 0$ and $a, b > 0$ every
+corner exceeds $q$: the binding one is $a \cdot c > a \cdot (q/a) = q$.
+
+The tightness $q \cdot b < a$ is where a single approximation of $x$ is
+spent: with width $b - a < \varepsilon$ and $a \ge a_0$, we have
+$q b < q a + q\varepsilon$, and choosing $\varepsilon$ below
+$a_0 (1 - q) / (1 + |q|)$ keeps this below $a$. For $q \le 0$ the
+condition is immediate ($qb \le 0 < a$).
+
+<!--
+```agda
+private abstract
+  -- a · (q · a⁻¹) = q.
+  a·q/a≡q : ∀ a q ⦃ nz : Nonzero a ⦄ → (a *ℚ (q *ℚ invℚ a ⦃ nz ⦄)) ≡ q
+  a·q/a≡q a q ⦃ nz ⦄ =
+      ap (a *ℚ_) (*ℚ-commutative q (invℚ a ⦃ nz ⦄))
+    ∙ *ℚ-associative a (invℚ a ⦃ nz ⦄) q
+    ∙ ap (_*ℚ q) (*ℚ-invr {a} {nz})
+    ∙ *ℚ-idl q
+
+  -- q/a < 1/b from the tightness q·b < a (a,b > 0).
+  tight→recip-< : ∀ a b q ⦃ na : Nonzero a ⦄ ⦃ nb : Nonzero b ⦄
+    → 0 < a → 0 < b → (q *ℚ b) < a
+    → (q *ℚ invℚ a ⦃ na ⦄) < invℚ b ⦃ nb ⦄
+  tight→recip-< a b q ⦃ na ⦄ ⦃ nb ⦄ 0<a 0<b qb<a =
+    *ℚ-reflects-<r b 0<b (<-resp (sym qa-eq) (sym ib-eq) qb·<)
+    where
+    0<ia : 0 < invℚ a ⦃ na ⦄
+    0<ia = invℚ-pos ⦃ na ⦄ 0<a
+    -- (q·a⁻¹)·b < 1 : since q·b < a, multiply by a⁻¹>0 and cancel.
+    qb·< : ((q *ℚ b) *ℚ invℚ a ⦃ na ⦄) < (a *ℚ invℚ a ⦃ na ⦄)
+    qb·< = *ℚ-preserves-<r (invℚ a ⦃ na ⦄) qb<a 0<ia
+    qa-eq : (q *ℚ invℚ a ⦃ na ⦄) *ℚ b ≡ (q *ℚ b) *ℚ invℚ a ⦃ na ⦄
+    qa-eq = rational!
+    ib-eq : invℚ b ⦃ nb ⦄ *ℚ b ≡ (a *ℚ invℚ a ⦃ na ⦄)
+    ib-eq = *ℚ-invl {b} ⦃ nb ⦄ ∙ sym (*ℚ-invr {a} {na})
+
+  -- With ε = a₀·(1-q) and a ≥ a₀ > 0, a bracket of width b - a < ε
+  -- around a positive real gives the tightness q·b < a (case q > 0).
+  tightness
+    : ∀ a₀ a b q → 0 < a₀ → a₀ ≤ a → 0 < q → q < 1
+    → (b +ℚ (-ℚ a)) < (a₀ *ℚ (1 +ℚ (-ℚ q)))
+    → (q *ℚ b) < a
+  tightness a₀ a b q 0<a₀ a₀≤a 0<q q<1 w<ε =
+    positive-diff→< (<-resp refl (sym gap-eq) 0<gap)
+    where
+    W E A : Ratio
+    W = b +ℚ (-ℚ a)
+    E = a₀ *ℚ (1 +ℚ (-ℚ q))
+    A = a *ℚ (1 +ℚ (-ℚ q))
+    0<1-q : 0 < (1 +ℚ (-ℚ q))
+    0<1-q = <→positive-diff q<1
+    0<E : 0 < E
+    0<E = from-positive (*ℚ-positive (to-positive 0<a₀) (to-positive 0<1-q))
+    -- q·W < q·E < E ≤ A
+    qW<qE : (q *ℚ W) < (q *ℚ E)
+    qW<qE = <-resp (*ℚ-commutative W q) (*ℚ-commutative E q)
+      (*ℚ-preserves-<r q w<ε 0<q)
+    qE<E : (q *ℚ E) < E
+    qE<E = <-resp refl (*ℚ-idl E)
+      (*ℚ-preserves-<r E q<1 0<E)
+    E≤A : E ≤ A
+    E≤A = *ℚ-preserves-≤r (1 +ℚ (-ℚ q)) a₀≤a (<-weaken 0<1-q)
+    qW<A : (q *ℚ W) < A
+    qW<A = <-≤-trans (<-trans qW<qE qE<E) E≤A
+    gap-eq : (a +ℚ (-ℚ (q *ℚ b))) ≡ (A +ℚ (-ℚ (q *ℚ W)))
+    gap-eq = rational!
+    0<gap : 0 < (A +ℚ (-ℚ (q *ℚ W)))
+    0<gap = <→positive-diff qW<A
+```
+-->
+
+Given a positive bracket $a \le x \le b$ satisfying the tightness
+$q \cdot b < a$, the core builds the product witness: $c$ is a midpoint
+between $\max(0, q/a)$ and $1/b$ (so $0 < c$, $c \cdot b < 1$, and
+$q < a \cdot c$), and $d = 2/a$ (so $1 < d \cdot a$). All four corners
+exceed $q$.
+
+<!--
+```agda
+private
+  invr-core
+    : ∀ (x : ℝ) (px : positive-bounds x) q a b
+    → ∣ x .lower a ∣ → ∣ x .upper b ∣ → 0 < a → a < b → q < 1
+    → (q *ℚ b) < a
+    → ∣ (x *ᴿ recip x px) .lower q ∣
+  invr-core x px q a b la ub 0<a a<b q<1 qb<a =
+    inc (a , b , c , d , la , ub , lc , ud , q<min)
+    where
+    0<b : 0 < b
+    0<b = <-trans 0<a a<b
+    a-nz : Nonzero a
+    a-nz = inc (positive→nonzero (to-positive 0<a))
+    b-nz : Nonzero b
+    b-nz = inc (positive→nonzero (to-positive 0<b))
+    ia ib : Ratio
+    ia = invℚ a ⦃ a-nz ⦄
+    ib = invℚ b ⦃ b-nz ⦄
+    0<ib : 0 < ib
+    0<ib = invℚ-pos ⦃ b-nz ⦄ 0<b
+    m : Ratio
+    m = maxℚ 0 (q *ℚ ia)
+    q/a<ib : (q *ℚ ia) < ib
+    q/a<ib = tight→recip-< a b q ⦃ a-nz ⦄ ⦃ b-nz ⦄ 0<a 0<b qb<a
+    m<ib : m < ib
+    m<ib = maxℚ-lub 0<ib q/a<ib
+    c d : Ratio
+    c = midpoint m ib
+    d = 2 *ℚ ia
+    0≤m : 0 ≤ m
+    0≤m = maxℚ-≤l {0} {q *ℚ ia}
+    m<c : m < c
+    m<c = mid-<l m<ib
+    0<c : 0 < c
+    0<c = ≤-<-trans 0≤m m<c
+    c<ib : c < ib
+    c<ib = mid-<r m<ib
+    -- membership of c in recip's lower cut (witness b)
+    cb<1 : (c *ℚ b) < 1
+    cb<1 = <inv→mul<1 c b ⦃ b-nz ⦄ 0<b c<ib
+    lc : ∣ recip x px .lower c ∣
+    lc = inc (b , ub , 0<b , cb<1)
+    -- membership of d in recip's upper cut (witness a): d·a = 2 > 1
+    d·a≡2 : (d *ℚ a) ≡ 2
+    d·a≡2 =
+        sym (*ℚ-associative 2 ia a)
+      ∙ ap (2 *ℚ_) (*ℚ-invl {a} ⦃ a-nz ⦄)
+      ∙ *ℚ-idr 2
+    two : Ratio
+    two = 2
+    1<2 : 1 < two
+    1<2 = decide!
+    1<d·a : 1 < (d *ℚ a)
+    1<d·a = <-resp refl (sym d·a≡2) 1<2
+    ud : ∣ recip x px .upper d ∣
+    ud = inc (a , la , 0<a , 1<d·a)
+    -- the four corner estimates, all above q
+    q/a<c : (q *ℚ ia) < c
+    q/a<c = ≤-<-trans (maxℚ-≤r {0} {q *ℚ ia}) m<c
+    q<ac : q < (a *ℚ c)
+    q<ac = <-resp
+      (*ℚ-commutative (q *ℚ ia) a ∙ a·q/a≡q a q ⦃ a-nz ⦄)
+      (*ℚ-commutative c a)
+      (*ℚ-preserves-<r a q/a<c 0<a)
+    q<bc : q < (b *ℚ c)
+    q<bc = <-trans q<ac (*ℚ-preserves-<r c a<b 0<c)
+    0<ia : 0 < ia
+    0<ia = invℚ-pos ⦃ a-nz ⦄ 0<a
+    0<d : 0 < d
+    0<d = from-positive (*ℚ-positive (to-positive 0<2) (to-positive 0<ia))
+      where
+      twoR : Ratio
+      twoR = 2
+      0<2 : 0 < twoR
+      0<2 = decide!
+    q<da : q < (d *ℚ a)
+    q<da = <-trans q<1 1<d·a
+    q<ad : q < (a *ℚ d)
+    q<ad = <-resp refl (*ℚ-commutative d a) q<da
+    q<bd : q < (b *ℚ d)
+    q<bd = <-trans q<ad (*ℚ-preserves-<r d a<b 0<d)
+    q<min : q < min₄ (a *ℚ c) (a *ℚ d) (b *ℚ c) (b *ℚ d)
+    q<min = min₄-univ-< q<ac q<ad q<bc q<bd
+```
+-->
+
+The wrapper supplies the bracket. For $q \le 0$ the recorded bounds
+$a_0 \le x \le b_0$ already satisfy $q \cdot b_0 \le 0 < a_0$; for
+$0 < q < 1$ we approximate $x$ to width $\varepsilon = a_0 (1 - q)$,
+intersect the lower endpoint with $a_0$, and read off tightness from
+`tightness`{.Agda}.
+
+```agda
+recip-invr-≥ : ∀ x (px : positive-bounds x) → 1ᴿ ≤ᴿ (x *ᴿ recip x px)
+recip-invr-≥ x px q q<1 with holds? (0 < q)
+... | no ¬0<q = invr-core x px q (px .lo) (px .hi)
+      (px .lo-mem) (px .hi-mem) (px .lo-pos)
+      (lower<upper x (px .lo-mem) (px .hi-mem)) q<1 qb₀<a₀
+  where
+  q≤0 : q ≤ 0
+  q≤0 = ¬<→≥ ¬0<q
+  0<b₀ : 0 < px .hi
+  0<b₀ = <-trans (px .lo-pos) (lower<upper x (px .lo-mem) (px .hi-mem))
+  qb₀≤0 : (q *ℚ px .hi) ≤ 0
+  qb₀≤0 = ≤-resp refl (*ℚ-zerol (px .hi))
+    (*ℚ-preserves-≤r (px .hi) q≤0 (<-weaken 0<b₀))
+  qb₀<a₀ : (q *ℚ px .hi) < px .lo
+  qb₀<a₀ = ≤-<-trans qb₀≤0 (px .lo-pos)
+... | yes 0<q = ∥-∥-rec ((x *ᴿ recip x px) .lower q .is-tr) mk (approx x ε 0<ε)
+  where
+  a₀ : Ratio
+  a₀ = px .lo
+  0<a₀ : 0 < a₀
+  0<a₀ = px .lo-pos
+  0<1-q : 0 < (1 +ℚ (-ℚ q))
+  0<1-q = <→positive-diff q<1
+  ε : Ratio
+  ε = a₀ *ℚ (1 +ℚ (-ℚ q))
+  0<ε : 0 < ε
+  0<ε = from-positive (*ℚ-positive (to-positive 0<a₀) (to-positive 0<1-q))
+  mk : Σ Ratio (λ u → Σ Ratio (λ v →
+         ∣ x .lower u ∣ × ∣ x .upper v ∣ × ((v +ℚ (-ℚ u)) < ε)))
+     → ∣ (x *ᴿ recip x px) .lower q ∣
+  mk (a₁ , b₁ , la₁ , ub₁ , w₁) =
+    invr-core x px q a b la ub 0<a a<b q<1 qb<a
+    where
+    a : Ratio
+    a = maxℚ a₀ a₁
+    b : Ratio
+    b = b₁
+    la : ∣ x .lower a ∣
+    la = maxℚ-lower-mem x (px .lo-mem) la₁
+    ub : ∣ x .upper b ∣
+    ub = ub₁
+    a₀≤a : a₀ ≤ a
+    a₀≤a = maxℚ-≤l {a₀} {a₁}
+    0<a : 0 < a
+    0<a = <-≤-trans 0<a₀ a₀≤a
+    a<b : a < b
+    a<b = lower<upper x la ub
+    w≤ : (b +ℚ (-ℚ a)) ≤ (b₁ +ℚ (-ℚ a₁))
+    w≤ = +ℚ-preserves-≤ ≤-refl (negℚ-anti-≤ (maxℚ-≤r {a₀} {a₁}))
+    w<ε : (b +ℚ (-ℚ a)) < ε
+    w<ε = ≤-<-trans w≤ w₁
+    qb<a : (q *ℚ b) < a
+    qb<a = tightness a₀ a b q 0<a₀ a₀≤a 0<q q<1 w<ε
+```
+
+## The inverse law
+
+Antisymmetry of the real order combines the two inequalities into the
+inverse law: a strictly positive real, multiplied by its reciprocal,
+is $1$.
+
+```agda
+recip-invr : ∀ x (px : positive-bounds x) → x *ᴿ recip x px ≡ 1ᴿ
+recip-invr x px = ≤ᴿ-antisym (recip-invr-≤ x px) (recip-invr-≥ x px)
+```
+
+## What is proven, and what is not
+
+The reciprocal `recip`{.Agda} of a strictly positive real (presented
+with explicit rational bounds `positive-bounds`{.Agda}) is a genuine
+[[Dedekind real|dedekind-real]] — all eight cut axioms, including the
+analytic `cut-located`{.Agda}, hold with **zero postulates** — and it
+satisfies the full inverse law `recip-invr`{.Agda}: $x \cdot (1/x) = 1$.
+
+Two directions of generality are deliberately *not* treated here, and
+are honest gaps rather than hidden assumptions:
+
+- **Apartness / the general sign case.** Only strictly positive reals
+  are inverted. A merely *nonzero* real — one apart from $0$, i.e.
+  $x <ᴿ 0ᴿ$ or $0ᴿ <ᴿ x$ constructively decided — would require a sign
+  case-split on the apartness witness and a mirrored construction for
+  the negative branch. This is left as future work.
+
+- **Bounds as data, not as a proposition.** `positive-bounds`{.Agda}
+  carries explicit rational witnesses $a_0, b_0$. A cleaner interface
+  would derive them from the mere positivity $0ᴿ <ᴿ x$ (which supplies
+  a positive lower bound) together with the real's own
+  `upper-inhab`{.Agda} (an upper bound), packaging positivity as a
+  proposition; the reciprocal is independent of the chosen bounds by
+  `≤ᴿ-antisym`{.Agda}, but that invariance is not formalized here.
+```
+
