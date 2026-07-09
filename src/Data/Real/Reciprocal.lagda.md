@@ -9,10 +9,12 @@ open import Data.Rational.Solver
 open import Data.Rational.Order
 open import Data.Rational.Base
 open import Data.Real.Multiplication
+open import Data.Real.Ring
 open import Data.Real.Arithmetic
 open import Data.Real.Base
 open import Data.Real.Rational
 open import Data.Sum
+import Algebra.Ring.Reasoning
 open import Data.Dec
 ```
 -->
@@ -731,14 +733,12 @@ with explicit rational bounds `positive-bounds`{.Agda}) is a genuine
 analytic `cut-located`{.Agda}, hold with **zero postulates** — and it
 satisfies the full inverse law `recip-invr`{.Agda}: $x \cdot (1/x) = 1$.
 
-Two directions of generality are deliberately *not* treated here, and
-are honest gaps rather than hidden assumptions:
-
-- **Apartness / the general sign case.** Only strictly positive reals
-  are inverted. A merely *nonzero* real — one apart from $0$, i.e.
-  $x <ᴿ 0ᴿ$ or $0ᴿ <ᴿ x$ constructively decided — would require a sign
-  case-split on the apartness witness and a mirrored construction for
-  the negative branch. This is left as future work.
+The general sign case is treated below: a strictly negative real
+(carrying `negative-bounds`{.Agda}) is inverted by reflecting through
+$-x$, and `recip±`{.Agda} packages both signs into a single two-sided
+reciprocal satisfying `recip±-invr`{.Agda}. One direction of
+generality remains deliberately *not* treated, an honest gap rather
+than a hidden assumption:
 
 - **Bounds as data, not as a proposition.** `positive-bounds`{.Agda}
   carries explicit rational witnesses $a_0, b_0$. A cleaner interface
@@ -747,5 +747,63 @@ are honest gaps rather than hidden assumptions:
   `upper-inhab`{.Agda} (an upper bound), packaging positivity as a
   proposition; the reciprocal is independent of the chosen bounds by
   `≤ᴿ-antisym`{.Agda}, but that invariance is not formalized here.
+
+
+## Reciprocals of the other sign
+
+A strictly *negative* real — one carrying `negative-bounds`{.Agda}, a
+rational interval $[lo, hi]$ around it with $hi < 0$ — is handled by
+reflection: $-x$ is strictly positive, so it has a reciprocal, and
+the reciprocal of $x$ is $-(-x)⁻¹$. The inverse law then follows from the
+positive case together with the sign rules $(-x)\cdot y = -(x\cdot y)$
+and $x\cdot(-y) = -(x\cdot y)$, which — now that $\bR$ is a
+[[commutative ring]] — are the generic `*-negatel`{.Agda} /
+`*-negater`{.Agda} of `Algebra.Ring.Reasoning`{.Agda}.
+
+```agda
+record negative-bounds (x : ℝ) : Type where
+  no-eta-equality
+  field
+    lo hi  : Ratio
+    lo-mem : ∣ x .lower lo ∣
+    hi-mem : ∣ x .upper hi ∣
+    hi-neg : hi < 0
+open negative-bounds
+
+module RR = Algebra.Ring.Reasoning ℝ-ring
+
+neg→pos : ∀ {x} → negative-bounds x → positive-bounds (-ᴿ x)
+neg→pos {x} nx = record
+  { lo     = -ℚ (nx .hi)
+  ; hi     = -ℚ (nx .lo)
+  ; lo-mem = subst (λ z → ∣ x .upper z ∣) (sym (negℚ-invol (nx .hi))) (nx .hi-mem)
+  ; hi-mem = subst (λ z → ∣ x .lower z ∣) (sym (negℚ-invol (nx .lo))) (nx .lo-mem)
+  ; lo-pos = subst (λ w → 0 < w) (+ℚ-idl (-ℚ (nx .hi))) (<→positive-diff (nx .hi-neg))
+  }
+
+recip-neg : (x : ℝ) → negative-bounds x → ℝ
+recip-neg x nx = -ᴿ recip (-ᴿ x) (neg→pos nx)
+
+recip-neg-invr : ∀ x (nx : negative-bounds x) → x *ᴿ recip-neg x nx ≡ 1ᴿ
+recip-neg-invr x nx =
+  x *ᴿ (-ᴿ r)                 ≡⟨ RR.*-negater ⟩
+  -ᴿ (x *ᴿ r)                 ≡⟨ ap (λ w → -ᴿ (w *ᴿ r)) (sym (-ᴿ-invol x)) ⟩
+  -ᴿ ((-ᴿ (-ᴿ x)) *ᴿ r)       ≡⟨ ap -ᴿ_ (RR.*-negatel { -ᴿ x} {r}) ⟩
+  -ᴿ (-ᴿ ((-ᴿ x) *ᴿ r))       ≡⟨ -ᴿ-invol _ ⟩
+  (-ᴿ x) *ᴿ r                 ≡⟨ recip-invr (-ᴿ x) (neg→pos nx) ⟩
+  1ᴿ                          ∎
+  where r = recip (-ᴿ x) (neg→pos nx)
 ```
 
+Packaging the two signs together, **every real presented apart from
+zero has a two-sided multiplicative inverse**:
+
+```agda
+recip± : (x : ℝ) → positive-bounds x ⊎ negative-bounds x → ℝ
+recip± x (inl px) = recip x px
+recip± x (inr nx) = recip-neg x nx
+
+recip±-invr : ∀ x (s : positive-bounds x ⊎ negative-bounds x) → x *ᴿ recip± x s ≡ 1ᴿ
+recip±-invr x (inl px) = recip-invr x px
+recip±-invr x (inr nx) = recip-neg-invr x nx
+```
