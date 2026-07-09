@@ -11,6 +11,8 @@ open import Algebra.Group.Cat.Base
 open import Algebra.Group.Ab
 open import Algebra.Group
 
+open import Algebra.ChainComplex.DoldKan
+
 open import Data.Fin
 open import Data.Sum
 
@@ -643,4 +645,18 @@ all the faces by trichotomy.
     ... | inl i<k       = filled .snd .fst i i≠k i<k
     ... | inr (inl k<i) = filled .snd .snd i i≠k k<i
     ... | inr (inr i≡k) = absurd (i≠k (fin-path i≡k))
+```
+
+## Eilenberg–MacLane objects are fibrant
+
+The [[Eilenberg–MacLane objects|eilenberg-maclane-object]] $K(A,n)$
+are (underlying simplicial sets of) simplicial abelian groups, so
+Moore's theorem specialises immediately: they are Kan complexes. This
+is the fibrancy that makes the mapping-space definition of
+[[cohomology|eilenberg-maclane-object]] homotopically meaningful —
+the missing ingredient of the paper's diagram (31).
+
+```agda
+K-is-kan : (A : Abelian-group lzero) (n : Nat) → is-kan (K-sset A n)
+K-is-kan A n = sab-is-kan (K A n)
 ```
