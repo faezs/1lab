@@ -812,7 +812,10 @@ objects $K(A,n)$ of (31) and ordinary **cohomology** as $\pi_0$ of
 mapping spaces — and these are now genuinely *fibrant*: by Moore's
 theorem, proven by the explicit two-pass filler algorithm, **every
 simplicial abelian group is a Kan complex**, so $K(A,n)$ satisfies
-the Kan condition and (31) closes. And toward the topos-theoretic
+the Kan condition and (31) closes. Moreover the mapping space
+$\mathrm{Maps}(X, K(A,n))$ *itself* is a simplicial abelian group
+with pointwise operations, hence also Kan — so the homotopies that
+cohomology quotients by live in a fibrant object. And toward the topos-theoretic
 completion of (8), sheafification over an *arbitrary* coverage is
 proven to preserve the terminal object.
 
@@ -824,6 +827,7 @@ _ = Algebra.ChainComplex.DoldKan.K
 _ = Algebra.ChainComplex.DoldKan.H[_,_]⟨_⟩
 _ = Cat.Instances.SimplicialSets.Kan.sab-is-kan
 _ = Cat.Instances.SimplicialSets.Kan.K-is-kan
+_ = Cat.Instances.SimplicialSets.Kan.Maps-K-is-kan
 _ = Cat.Site.Sheafification.Lex.Sheafification-pres-⊤
 _ = Cat.Site.Sheafification.Locality.locally-equal→inc-path
 _ = Cat.Site.Sheafification.Locality.sheaf-detects
@@ -953,8 +957,10 @@ degree two, the differential as a map of smooth sets, and
 Deligne/connection refinements ((39), (40)) remain); the unit and counit of the
 Dold–Kan correspondence (30) — both functors now exist, the Moore
 complex $N$ and its inverse $\Gamma$, with $K(A,n)$ and ordinary
-cohomology defined, and $K(A,n)$ now proven Kan; closure of Kan complexes under
-mapping spaces and the *external presentation* of the simplicial
+cohomology defined, and $K(A,n)$ now proven Kan, along with the
+mapping spaces into any simplicial abelian group — closure of Kan
+complexes under mapping spaces with *arbitrary* Kan targets needs
+the theory of anodyne extensions; and the *external presentation* of the simplicial
 localisations $L^{\rm{heq}}, L^{\rm{lheq}}$ ((32)–(36)) — their
 internal shadow now exists as [[modalities|modality]], but
 presenting a particular gros ∞-topos by simplicially localising
