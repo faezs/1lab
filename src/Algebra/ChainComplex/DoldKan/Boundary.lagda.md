@@ -668,3 +668,178 @@ boundary-formula₀ =
          (C._⁻¹ (gen {Δ[ 1 ] .F₀ 0} (δ (fin 1))))
   Σc = ap₂ C._*_ (pgen (fin 0)) (ap C._⁻¹ tail)
 ```
+
+In dimension two, the corrections of the adjacent pushforwards
+coincide and cancel exactly.
+
+```agda
+boundary-formula₁
+  : Simplicial-operators.d ℤ⟨ Δ[ 2 ] ⟩ (fin 0 ⦃ Nat.s≤s Nat.0≤x ⦄)
+      (fundamental 2 .fst)
+  ≡ Σalt 1 3 0 refl
+boundary-formula₁ =
+    boundary-step G₂ 1 0 refl (fin 0) (fin 1) refl refl x₂
+  ∙ ap₂ C₁._*_ d₀Q≡P₀ (ap C₁._⁻¹ d₁Q≡mid)
+  ∙ sym Σc₁
+  where
+  G₂ : Functor (Δ ^op) (Ab lzero)
+  G₂ = ℤ⟨ Δ[ 2 ] ⟩
+  G₁' : Functor (Δ ^op) (Ab lzero)
+  G₁' = ℤ⟨ Δ[ 1 ] ⟩
+  module S2 = Simplicial-operators G₂
+  module S1 = Simplicial-operators G₁'
+  module C₁ = Abelian-group-on (G₂ .F₀ 1 .snd)
+  module C₂ = Abelian-group-on (G₂ .F₀ 2 .snd)
+  module A₁ = abl (G₂ .F₀ 1 .snd)
+
+  x₂ : ⌞ G₂ .F₀ 2 ⌟
+  x₂ = gen {Δ[ 2 ] .F₀ 2} (Δ .Precategory.id)
+  x₁ : ⌞ G₁' .F₀ 1 ⌟
+  x₁ = gen {Δ[ 1 ] .F₀ 1} (Δ .Precategory.id)
+  e₁f : ⌞ G₁' .F₀ 1 ⌟
+  e₁f = fundamental 1 .fst
+
+  dgen₂ : (i : Fin 3) → S2.d i x₂ ≡ gen {Δ[ 2 ] .F₀ 1} (δ i)
+  dgen₂ i =
+      gen-nat {Δ[ 2 ] .F₀ 2} {Δ[ 2 ] .F₀ 1} (Δ[ 2 ] .F₁ (δ i)) (Δ .Precategory.id)
+    ∙ ap (gen {Δ[ 2 ] .F₀ 1}) (Δ .Precategory.idl (δ i))
+
+  Q : ⌞ G₂ .F₀ 2 ⌟
+  Q = normalize-desc G₂ 1 2 (sym (Nat.+-sucr 1 1) ∙ refl) (Nat.s≤s Nat.0≤x) x₂ .fst
+
+  corr : (i : Fin 3) → ⌞ G₂ .F₀ 1 ⌟
+  corr i = S2.s fzero (S2.d (fin 1 ⦃ Nat.s≤s (Nat.s≤s Nat.0≤x) ⦄)
+    (gen {Δ[ 2 ] .F₀ 1} (δ i)))
+
+  pE1 : (i : Fin 3)
+      → push-nt 1 i .η 1 .fst e₁f
+      ≡ C₁._*_ (gen {Δ[ 2 ] .F₀ 1} (δ i)) (C₁._⁻¹ (corr i))
+  pE1 i =
+      is-group-hom.pres-⋆ (push-nt 1 i .η 1 .snd) x₁
+        (Abelian-group-on._⁻¹ (G₁' .F₀ 1 .snd)
+          (S1.s fzero (S1.d (fsuc fzero) x₁)))
+    ∙ ap₂ C₁._*_
+        ( gen-nat {Δ[ 1 ] .F₀ 1} {Δ[ 2 ] .F₀ 1} (Δmap-nt (δ i) .η 1) (Δ .Precategory.id)
+        ∙ ap (gen {Δ[ 2 ] .F₀ 1}) (Δ .Precategory.idr (δ i)))
+        ( is-group-hom.pres-inv (push-nt 1 i .η 1 .snd)
+            {x = S1.s fzero (S1.d (fsuc fzero) x₁)}
+        ∙ ap C₁._⁻¹
+            ( happly (ap ∫Hom.fst (push-nt 1 i .is-natural 0 1 (σ fzero)))
+                (S1.d (fsuc fzero) x₁)
+            ∙ ap (S2.s fzero)
+                ( happly (ap ∫Hom.fst (push-nt 1 i .is-natural 1 0 (δ (fsuc fzero)))) x₁
+                ∙ ap (S2.d (fsuc fzero))
+                    ( gen-nat {Δ[ 1 ] .F₀ 1} {Δ[ 2 ] .F₀ 1}
+                        (Δmap-nt (δ i) .η 1) (Δ .Precategory.id)
+                    ∙ ap (gen {Δ[ 2 ] .F₀ 1}) (Δ .Precategory.idr (δ i))))))
+
+  dQ-split : (i : Fin 3)
+    → S2.d i Q
+    ≡ C₁._*_ (S2.d i x₂)
+        (C₁._⁻¹ (S2.d i (S2.s (fin 1) (S2.d (fin 2) x₂))))
+  dQ-split i =
+      S2.d-⋆ i x₂ (C₂._⁻¹ (S2.s (fin 1) (S2.d (fin 2) x₂)))
+    ∙ ap (C₁._*_ (S2.d i x₂))
+        (S2.d-inv i (S2.s (fin 1) (S2.d (fin 2) x₂)))
+
+  d₀Q≡P₀ : S2.d (fin 0) Q ≡ push-nt 1 (fin 0) .η 1 .fst e₁f
+  d₀Q≡P₀ =
+      dQ-split (fin 0)
+    ∙ ap₂ C₁._*_
+        (dgen₂ (fin 0))
+        (ap C₁._⁻¹
+          ( S2.d-s-comm-below (fin 0) (fin 1) (fin 0) (fin 0) refl refl
+              (Nat.s≤s Nat.0≤x) (S2.d (fin 2) x₂)
+          ∙ ap (S2.s fzero)
+              ( sym (S2.d-d-comm (fin 0) (fin 1) (fin 2) (fin 0) refl refl
+                  Nat.0≤x x₂)
+              ∙ ap (S2.d (fin 1)) (dgen₂ (fin 0)))))
+    ∙ sym (pE1 (fin 0))
+
+  d₁Q≡ : S2.d (fin 1) Q
+       ≡ C₁._*_ (gen {Δ[ 2 ] .F₀ 1} (δ (fin 1)))
+           (C₁._⁻¹ (gen {Δ[ 2 ] .F₀ 1} (δ (fin 2))))
+  d₁Q≡ =
+      dQ-split (fin 1)
+    ∙ ap₂ C₁._*_
+        (dgen₂ (fin 1))
+        (ap C₁._⁻¹
+          ( S2.d-s-id (fin 1) (fin 1) (inl refl) (S2.d (fin 2) x₂)
+          ∙ dgen₂ (fin 2)))
+
+  lower0 : (x : Fin 1) → x .lower ≡ 0
+  lower0 x = le0 (Nat.≤-peel (x .Fin.bounded))
+
+  v-eq : corr (fin 1) ≡ corr (fin 2)
+  v-eq = ap (S2.s fzero)
+    ( gen-nat {Δ[ 2 ] .F₀ 1} {Δ[ 2 ] .F₀ 0}
+        (Δ[ 2 ] .F₁ (δ (fin 1))) (δ (fin 1))
+    ∙ ap (gen {Δ[ 2 ] .F₀ 0}) composite-eq
+    ∙ sym (gen-nat {Δ[ 2 ] .F₀ 1} {Δ[ 2 ] .F₀ 0}
+        (Δ[ 2 ] .F₁ (δ (fin 1))) (δ (fin 2))))
+    where
+    composite-eq
+      : Path (Δ-map 0 2)
+          (δ (fin 1) ∘Δ δ (fin 1))
+          (δ (fin 2) ∘Δ δ (fin 1))
+    composite-eq = Δ-map-path λ x →
+        ap (λ z → skip (fin 1) (skip (fin 1) z)) (fin-path {x = x} {y = fzero} (lower0 x))
+      ∙ sym (ap (λ z → skip (fin 2) (skip (fin 1) z)) (fin-path {x = x} {y = fzero} (lower0 x)))
+
+  mid-collapse
+    : C₁._*_ (push-nt 1 (fin 1) .η 1 .fst e₁f)
+        (C₁._⁻¹ (push-nt 1 (fin 2) .η 1 .fst e₁f))
+    ≡ C₁._*_ (gen {Δ[ 2 ] .F₀ 1} (δ (fin 1)))
+        (C₁._⁻¹ (gen {Δ[ 2 ] .F₀ 1} (δ (fin 2))))
+  mid-collapse =
+      ap₂ C₁._*_ (pE1 (fin 1))
+        (ap C₁._⁻¹ (pE1 (fin 2) ∙ ap (C₁._*_ (gen {Δ[ 2 ] .F₀ 1} (δ (fin 2))))
+          (ap C₁._⁻¹ (sym v-eq))))
+    ∙ A₁.pass-diff (gen {Δ[ 2 ] .F₀ 1} (δ (fin 1)))
+        (gen {Δ[ 2 ] .F₀ 1} (δ (fin 2))) (corr (fin 1))
+
+  d₁Q≡mid : S2.d (fin 1) Q
+          ≡ C₁._*_ (push-nt 1 (fin 1) .η 1 .fst e₁f)
+              (C₁._⁻¹ (push-nt 1 (fin 2) .η 1 .fst e₁f))
+  d₁Q≡mid = d₁Q≡ ∙ sym mid-collapse
+
+  tail₂ : Σalt 1 1 2 refl ≡ push-nt 1 (fin 2 ⦃ Nat.s≤s (Nat.s≤s (Nat.s≤s Nat.0≤x)) ⦄) .η 1 .fst e₁f
+  tail₂ =
+      ap (C₁._*_ (push-nt 1 (fin 2 ⦃ Nat.s≤s (Nat.s≤s (Nat.s≤s Nat.0≤x)) ⦄) .η 1 .fst e₁f))
+        (abl.inv-1g (G₂ .F₀ 1 .snd))
+    ∙ C₁.idr
+
+  tail₁ : Σalt 1 2 1 refl
+        ≡ C₁._*_ (push-nt 1 (fin 1) .η 1 .fst e₁f)
+            (C₁._⁻¹ (push-nt 1 (fin 2) .η 1 .fst e₁f))
+  tail₁ = ap (C₁._*_ (push-nt 1 (fin 1 ⦃ Nat.s≤s (Nat.s≤s Nat.0≤x) ⦄) .η 1 .fst e₁f))
+    (ap C₁._⁻¹ tail₂)
+
+  Σc₁ : Σalt 1 3 0 refl
+      ≡ C₁._*_ (push-nt 1 (fin 0) .η 1 .fst e₁f)
+          (C₁._⁻¹ (C₁._*_ (push-nt 1 (fin 1) .η 1 .fst e₁f)
+            (C₁._⁻¹ (push-nt 1 (fin 2) .η 1 .fst e₁f))))
+  Σc₁ = ap (C₁._*_ (push-nt 1 (fin 0 ⦃ Nat.s≤s Nat.0≤x ⦄) .η 1 .fst e₁f))
+    (ap C₁._⁻¹ tail₁)
+```
+
+## The boundary formula, uniformly
+
+```agda
+∂-fundamental
+  : (k : Nat)
+  → Simplicial-operators.d ℤ⟨ Δ[ suc k ] ⟩ (fin 0 ⦃ Nat.s≤s Nat.0≤x ⦄)
+      (fundamental (suc k) .fst)
+  ≡ Σalt k (suc (suc k)) 0 refl
+∂-fundamental zero = boundary-formula₀
+∂-fundamental (suc zero) = boundary-formula₁
+∂-fundamental (suc (suc m₀')) = boundary-formula m₀'
+```
+
+With the boundary of every fundamental class computed as the
+alternating sum of coface pushforwards of the previous one, the
+Dold–Kan counit's chain condition is an evaluation argument: a
+normalized simplex of $\Gamma(C)$ kills every positive-face
+pushforward, leaving exactly the zeroth term — the square that makes
+$\varepsilon$ a chain map. That assembly, and the two inverse
+isomorphisms, are the remaining plumbing of the correspondence.
