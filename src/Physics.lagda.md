@@ -80,6 +80,7 @@ import Cat.Instances.SimplicialPresheaves.Cech
 import Cat.Instances.SimplicialSets.Kan
 import Algebra.ChainComplex.DoldKan.Unit
 import Algebra.ChainComplex.DoldKan.Fundamental
+import Algebra.ChainComplex.DoldKan.Normalization
 import Cat.Instances.SimplicialSets.ActionGroupoid
 import Cat.Instances.SuperSmoothSets
 import Cat.Instances.FormalSmoothSets.DeRham
@@ -839,6 +840,7 @@ _ = Cat.Instances.SimplicialSets.Kan.H-functor
 _ = Algebra.ChainComplex.DoldKan.Unit.dk-unit
 _ = Algebra.ChainComplex.DoldKan.Fundamental.fundamental
 _ = Algebra.ChainComplex.DoldKan.Fundamental.dk-counit-level
+_ = Algebra.ChainComplex.DoldKan.Normalization.normalized-degenerate-vanish
 _ = Cat.Site.Sheafification.Lex.Sheafification-pres-⊤
 _ = Cat.Site.Sheafification.Locality.locally-equal→inc-path
 _ = Cat.Site.Sheafification.Locality.sheaf-detects
@@ -973,7 +975,11 @@ mapping spaces into any simplicial abelian group, and both canonical
 comparison maps of (30) now *constructed* — the unit $A \to
 \Gamma(NA)$ by adjunct transposition and the levelwise counit by
 evaluation at the fundamental class of the normalization operator —
-with only their invertibility (the normalization theorem) remaining;
+with the normalization theorem's irreducible core — **normalized
+degenerate simplices vanish**, $N \cap D = 0$ — now also proven
+(the complementary half, $N + D$ = everything, being witnessed by
+the normalization operator itself), leaving only the assembly of
+the boundary formula and the inverse isomorphisms;
 closure of Kan
 complexes under mapping spaces with *arbitrary* Kan targets needs
 the theory of anodyne extensions; and the *external presentation* of the simplicial
