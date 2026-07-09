@@ -3,10 +3,13 @@
 open import Cat.Instances.SimplicialSets.Kan
 open import Cat.Instances.SimplicialSets
 open import Cat.Instances.Simplex
+open import Cat.Functor.Adjoint
+open import Cat.Functor.Compose
 open import Cat.Displayed.Total
 open import Cat.Prelude
 
 open import Algebra.Group.Cat.Base
+open import Algebra.Group.Ab.Free
 open import Algebra.Group.Ab.Hom
 open import Algebra.Group.Ab
 open import Algebra.Group
@@ -23,6 +26,7 @@ import Data.Nat as Nat
 
 open Functor
 open _=>_
+open _⊣_
 ```
 -->
 
@@ -75,6 +79,9 @@ private
               ∙ ap (λ z → A._*_ z a) A.commutes)
           ∙ sym A.associative
 
+    inv-1g : A._⁻¹ A.1g ≡ A.1g
+    inv-1g = sym A.idl ∙ A.inverser
+
     cancel-eq : ∀ a b → A._*_ a (A._⁻¹ b) ≡ A.1g → a ≡ b
     cancel-eq a b p =
         sym A.idr
@@ -82,6 +89,9 @@ private
       ∙ A.associative
       ∙ ap (λ z → A._*_ z b) p
       ∙ A.idl
+
+    inv-inv : ∀ a → A._⁻¹ (A._⁻¹ a) ≡ a
+    inv-inv a = cancel-eq _ _ A.inversel
 
   ¬sucx≤x : ∀ {x} → ¬ (suc x Nat.≤ x)
   ¬sucx≤x {zero}  le = Nat.¬suc≤0 le
@@ -270,4 +280,108 @@ module _ (G : Functor (Δ ^op) (Ab lzero)) where
     path = sym Gsm.associative
          ∙ ap (Gsm._*_ y) Gsm.commutes
          ∙ Gsm.associative
+```
+
+## The alternating sum of pushforwards
+
+<!--
+```agda
+private
+  adj : Free-abelian-functor {lzero} ⊣ Ab↪Sets
+  adj = Free-abelian⊣Forget
+
+  gen : {T : Set lzero} → ⌞ T ⌟ → ⌞ Free-abelian-functor .F₀ T ⌟
+  gen {T} = adj .unit .η T
+
+  gen-nat
+    : {T T' : Set lzero} (f : ⌞ T ⌟ → ⌞ T' ⌟) (x : ⌞ T ⌟)
+    → Free-abelian-functor .F₁ {T} {T'} f .fst (gen {T} x) ≡ gen {T'} (f x)
+  gen-nat {T} {T'} f x = sym (happly (adj .unit .is-natural T T' f) x)
+
+  pred-fin
+    : ∀ {n} (F : Fin (suc n)) → 0 Nat.< F .lower
+    → Σ[ P ∈ Fin n ] (F .lower ≡ suc (P .lower))
+  pred-fin {n} F pos = go (F .lower) (F .Fin.bounded) pos
+    where
+    go : (l : Nat) → l Nat.< suc n → 0 Nat.< l → Σ[ P ∈ Fin n ] (l ≡ suc (P .lower))
+    go zero    _  p = absurd (Nat.¬suc≤0 p)
+    go (suc l) bd _ = fin l ⦃ Nat.≤-peel bd ⦄ , refl
+
+  fin-path : ∀ {n} {x y : Fin n} → x .lower ≡ y .lower → x ≡ y
+  fin-path {n} = fin-ap {n = λ _ → n}
+```
+-->
+
+The right-hand side of the boundary formula, defined by recursion —
+the alternation is carried by the inverse in each step.
+
+```agda
+module _ (k : Nat) where
+  private
+    module Ck = Abelian-group-on (ℤ⟨ Δ[ suc k ] ⟩ .F₀ k .snd)
+
+  push-nt : (j : Fin (suc (suc k))) → ℤ⟨ Δ[ k ] ⟩ => ℤ⟨ Δ[ suc k ] ⟩
+  push-nt j = Free-abelian-functor ▸ Δmap-nt (δ j)
+
+  Σalt : (fuel j : Nat) → j Nat.+ fuel ≡ suc (suc k)
+       → ⌞ ℤ⟨ Δ[ suc k ] ⟩ .F₀ k ⌟
+  Σalt zero j eq = Ck.1g
+  Σalt (suc fuel) j eq = Ck._*_
+    (push-nt (fin j ⦃ bj ⦄) .η k .fst (fundamental k .fst))
+    (Ck._⁻¹ (Σalt fuel (suc j) (sym (Nat.+-sucr j fuel) ∙ eq)))
+    where
+    bj : j Nat.< suc (suc k)
+    bj = subst (suc j Nat.≤_) (sym (Nat.+-sucr j fuel) ∙ eq)
+           (Nat.s≤s (le-plus j fuel))
+```
+
+Every summand is normalized, so the whole sum is.
+
+```agda
+module _ (k₁ : Nat) where
+  private
+    k : Nat
+    k = suc k₁
+    G+ : Functor (Δ ^op) (Ab lzero)
+    G+ = ℤ⟨ Δ[ suc k ] ⟩
+    Gk : Functor (Δ ^op) (Ab lzero)
+    Gk = ℤ⟨ Δ[ k ] ⟩
+    module S+ = Simplicial-operators G+
+    module Sk = Simplicial-operators Gk
+    module Ck = Abelian-group-on (G+ .F₀ k .snd)
+    module Ck- = Abelian-group-on (G+ .F₀ k₁ .snd)
+
+  fundamental-norm-any
+    : (i : Fin (suc k)) → 1 Nat.≤ i .lower
+    → Sk.d i (fundamental k .fst)
+    ≡ Abelian-group-on.1g (Gk .F₀ k₁ .snd)
+  fundamental-norm-any i pos =
+      ap (λ z → Sk.d z (fundamental k .fst))
+        (fin-path {x = i} {y = fsuc (pred-fin i pos .fst)} (pred-fin i pos .snd))
+    ∙ fundamental k .snd (pred-fin i pos .fst)
+
+  Σalt-norm
+    : (fuel j : Nat) (eq : j Nat.+ fuel ≡ suc (suc k))
+      (i : Fin (suc k)) → 1 Nat.≤ i .lower
+    → S+.d i (Σalt k fuel j eq) ≡ Ck-.1g
+  Σalt-norm zero j eq i pos =
+    is-group-hom.pres-id (G+ .F₁ (δ i) .snd)
+  Σalt-norm (suc fuel) j eq i pos =
+      S+.d-⋆ i
+        (push-nt k (fin j ⦃ bj ⦄) .η k .fst (fundamental k .fst))
+        (Ck._⁻¹ (Σalt k fuel (suc j) (sym (Nat.+-sucr j fuel) ∙ eq)))
+    ∙ ap₂ Ck-._*_
+        ( sym (happly (ap ∫Hom.fst
+            (push-nt k (fin j ⦃ bj ⦄) .is-natural k k₁ (δ i)))
+            (fundamental k .fst))
+        ∙ ap (push-nt k (fin j ⦃ bj ⦄) .η k₁ .fst) (fundamental-norm-any i pos)
+        ∙ is-group-hom.pres-id (push-nt k (fin j ⦃ bj ⦄) .η k₁ .snd))
+        ( S+.d-inv i (Σalt k fuel (suc j) (sym (Nat.+-sucr j fuel) ∙ eq))
+        ∙ ap Ck-._⁻¹ (Σalt-norm fuel (suc j) (sym (Nat.+-sucr j fuel) ∙ eq) i pos)
+        ∙ abl.inv-1g (G+ .F₀ k₁ .snd))
+    ∙ Ck-.idr
+    where
+    bj : j Nat.< suc (suc k)
+    bj = subst (suc j Nat.≤_) (sym (Nat.+-sucr j fuel) ∙ eq)
+           (Nat.s≤s (le-plus j fuel))
 ```
