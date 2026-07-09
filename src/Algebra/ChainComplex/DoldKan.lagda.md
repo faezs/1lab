@@ -308,9 +308,9 @@ H[ X , n ]⟨ A ⟩ = π₀ˢ SC.[ X , K-sset A n ]
 ```
 
 The Kan fibrancy of $K(A,n)$ — indeed of every simplicial abelian
-group — is proven in `Cat.Instances.SimplicialSets.Kan`{.Agda} by
-Moore's explicit filler algorithm. That these sets compute singular
-cohomology of the geometric realization — and carry the abelian
-group structure inherited from $K(A,n)$ — further depends on
-simplicial homotopies of mapping spaces, catalogued as future work
-in the [[reading guide|higher-topos-theory-in-physics]].
+group, and of every mapping space into one — is proven in
+`Cat.Instances.SimplicialSets.Kan`{.Agda} by Moore's explicit filler
+algorithm, and the same module equips these cohomology sets with the
+abelian group structure inherited from $K(A,n)$. That they compute
+singular cohomology of the geometric realization is catalogued as
+future work in the [[reading guide|higher-topos-theory-in-physics]].

@@ -815,7 +815,9 @@ simplicial abelian group is a Kan complex**, so $K(A,n)$ satisfies
 the Kan condition and (31) closes. Moreover the mapping space
 $\mathrm{Maps}(X, K(A,n))$ *itself* is a simplicial abelian group
 with pointwise operations, hence also Kan — so the homotopies that
-cohomology quotients by live in a fibrant object. And toward the topos-theoretic
+cohomology quotients by live in a fibrant object — and its
+$\pi_0$ inherits the group operations, so **cohomology
+$H[X,n]\langle A\rangle$ is an abelian group**, as classically. And toward the topos-theoretic
 completion of (8), sheafification over an *arbitrary* coverage is
 proven to preserve the terminal object.
 
@@ -828,6 +830,7 @@ _ = Algebra.ChainComplex.DoldKan.H[_,_]⟨_⟩
 _ = Cat.Instances.SimplicialSets.Kan.sab-is-kan
 _ = Cat.Instances.SimplicialSets.Kan.K-is-kan
 _ = Cat.Instances.SimplicialSets.Kan.Maps-K-is-kan
+_ = Cat.Instances.SimplicialSets.Kan.H-Ab
 _ = Cat.Site.Sheafification.Lex.Sheafification-pres-⊤
 _ = Cat.Site.Sheafification.Locality.locally-equal→inc-path
 _ = Cat.Site.Sheafification.Locality.sheaf-detects
