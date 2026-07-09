@@ -93,6 +93,31 @@ private
     inv-inv : ∀ a → A._⁻¹ (A._⁻¹ a) ≡ a
     inv-inv a = cancel-eq _ _ A.inversel
 
+    inv-flip : ∀ a b → A._⁻¹ (A._*_ a (A._⁻¹ b)) ≡ A._*_ b (A._⁻¹ a)
+    inv-flip a b =
+        inv-distr a (A._⁻¹ b)
+      ∙ ap (A._*_ (A._⁻¹ a)) (inv-inv b)
+      ∙ A.commutes
+
+    pass-diff : ∀ a b w
+      → A._*_ (A._*_ a (A._⁻¹ w)) (A._⁻¹ (A._*_ b (A._⁻¹ w)))
+      ≡ A._*_ a (A._⁻¹ b)
+    pass-diff a b w =
+        ap (A._*_ (A._*_ a (A._⁻¹ w))) (inv-flip b w)
+      ∙ sym A.associative
+      ∙ ap (A._*_ a)
+          (A.associative ∙ ap (λ z → A._*_ z (A._⁻¹ b)) A.inversel ∙ A.idl)
+
+    rearr : ∀ a b p t
+      → A._*_ (A._*_ a (A._⁻¹ b)) (A._⁻¹ (A._*_ p (A._⁻¹ t)))
+      ≡ A._*_ (A._*_ a (A._⁻¹ p)) (A._⁻¹ (A._*_ b (A._⁻¹ t)))
+    rearr a b p t =
+        ap (A._*_ (A._*_ a (A._⁻¹ b))) (inv-flip p t)
+      ∙ shuffle4 a (A._⁻¹ b) t (A._⁻¹ p)
+      ∙ ap (A._*_ (A._*_ a t)) A.commutes
+      ∙ sym (shuffle4 a (A._⁻¹ p) t (A._⁻¹ b))
+      ∙ ap (A._*_ (A._*_ a (A._⁻¹ p))) (sym (inv-flip b t))
+
   ¬sucx≤x : ∀ {x} → ¬ (suc x Nat.≤ x)
   ¬sucx≤x {zero}  le = Nat.¬suc≤0 le
   ¬sucx≤x {suc x} le = ¬sucx≤x (Nat.≤-peel le)
@@ -384,4 +409,207 @@ module _ (k₁ : Nat) where
     bj : j Nat.< suc (suc k)
     bj = subst (suc j Nat.≤_) (sym (Nat.+-sucr j fuel) ∙ eq)
            (Nat.s≤s (le-plus j fuel))
+```
+
+## The telescoping claim
+
+For horn dimension at least two, the telescoping lemmas expand the
+boundary of the fundamental class into the alternating sum, modulo
+degeneracies.
+
+```agda
+module _ (m₀' : Nat) where
+  private
+    k : Nat
+    k = suc (suc m₀')
+    G+ Gk : Functor (Δ ^op) (Ab lzero)
+    G+ = ℤ⟨ Δ[ suc k ] ⟩
+    Gk = ℤ⟨ Δ[ k ] ⟩
+    module S+ = Simplicial-operators G+
+    module C+ = Abelian-group-on (G+ .F₀ k .snd)
+    module A+ = abl (G+ .F₀ k .snd)
+    module Agk = abl (Gk .F₀ k .snd)
+
+    idk+ : ⌞ G+ .F₀ (suc k) ⌟
+    idk+ = gen {Δ[ suc k ] .F₀ (suc k)} (Δ .Precategory.id)
+    idkk : ⌞ Gk .F₀ k ⌟
+    idkk = gen {Δ[ k ] .F₀ k} (Δ .Precategory.id)
+
+    face-gen
+      : (i : Fin (suc (suc k)))
+      → S+.d i idk+ ≡ push-nt k i .η k .fst idkk
+    face-gen i =
+        gen-nat {Δ[ suc k ] .F₀ (suc k)} {Δ[ suc k ] .F₀ k}
+          (Δ[ suc k ] .F₁ (δ i)) (Δ .Precategory.id)
+      ∙ ap (gen {Δ[ suc k ] .F₀ k}) (Δ .Precategory.idl (δ i))
+      ∙ sym ( gen-nat {Δ[ k ] .F₀ k} {Δ[ suc k ] .F₀ k}
+                (Δmap-nt (δ i) .η k) (Δ .Precategory.id)
+            ∙ ap (gen {Δ[ suc k ] .F₀ k}) (Δ .Precategory.idr (δ i)))
+
+    push-split
+      : (j : Fin (suc (suc k))) (a b : ⌞ Gk .F₀ k ⌟)
+      → push-nt k j .η k .fst (Abelian-group-on._*_ (Gk .F₀ k .snd) a
+          (Abelian-group-on._⁻¹ (Gk .F₀ k .snd) b))
+      ≡ C+._*_ (push-nt k j .η k .fst a) (C+._⁻¹ (push-nt k j .η k .fst b))
+    push-split j a b =
+        is-group-hom.pres-⋆ (push-nt k j .η k .snd) a
+          (Abelian-group-on._⁻¹ (Gk .F₀ k .snd) b)
+      ∙ ap (C+._*_ (push-nt k j .η k .fst a))
+          (is-group-hom.pres-inv (push-nt k j .η k .snd) {x = b})
+
+    eK : ⌞ Gk .F₀ k ⌟
+    eK = fundamental k .fst
+
+  tele
+    : (fuel j : Nat)
+      (eqP : suc j Nat.+ fuel ≡ suc (suc (suc (suc m₀'))))
+      (eqS : j Nat.+ suc fuel ≡ suc (suc (suc (suc m₀'))))
+      (bj : j Nat.< suc (suc (suc (suc m₀'))))
+    → Deg G+ {suc m₀'} (suc m₀')
+        (C+._*_
+          (S+.d (fin j ⦃ bj ⦄)
+            (normalize-desc G+ fuel (suc j) eqP (Nat.s≤s Nat.0≤x) idk+ .fst))
+          (C+._⁻¹ (Σalt k (suc fuel) j eqS)))
+  tele zero j eqP eqS bj =
+    subst (Deg G+ {suc m₀'} (suc m₀')) (sym whole)
+      (subst (Deg G+ {suc m₀'} (suc m₀'))
+        (push-split (fin j ⦃ bj ⦄) idkk eK)
+        (deg-push (push-nt k (fin j ⦃ bj ⦄)) (suc m₀')
+          (subst (Deg Gk {suc m₀'} (suc m₀'))
+            (Agk.inv-flip eK idkk)
+            (deg-inv Gk (suc m₀')
+              (pass-defect Gk (suc (suc m₀')) 0 refl idkk)))))
+    where
+    PA : ⌞ G+ .F₀ k ⌟
+    PA = push-nt k (fin j ⦃ bj ⦄) .η k .fst eK
+    Σ1 : Σalt k 1 j eqS ≡ PA
+    Σ1 = ap (C+._*_ PA) A+.inv-1g ∙ C+.idr
+    whole
+      : C+._*_ (S+.d (fin j ⦃ bj ⦄) idk+)
+          (C+._⁻¹ (Σalt k 1 j eqS))
+      ≡ C+._*_ (push-nt k (fin j ⦃ bj ⦄) .η k .fst idkk) (C+._⁻¹ PA)
+    whole = ap₂ C+._*_ (face-gen (fin j ⦃ bj ⦄)) (ap C+._⁻¹ Σ1)
+  tele (suc fuel') j eqP eqS bj =
+    subst (Deg G+ {suc m₀'} (suc m₀')) (sym (step₁ ∙ step₂))
+      (deg-sum G+ (suc m₀') DegFF (deg-inv G+ (suc m₀') IH))
+    where
+    bsj : suc j Nat.< suc (suc (suc (suc m₀')))
+    bsj = subst (suc (suc j) Nat.≤_)
+            (sym (Nat.+-sucr (suc j) fuel') ∙ eqP)
+            (Nat.s≤s (le-plus (suc j) fuel'))
+    eq₂ : suc (suc j) Nat.+ fuel' ≡ suc (suc (suc (suc m₀')))
+    eq₂ = sym (Nat.+-sucr (suc j) fuel') ∙ eqP
+    eq' : suc j Nat.+ fuel' ≡ suc (suc (suc m₀'))
+    eq' = Nat.suc-inj eq₂
+    eqS' : suc j Nat.+ suc fuel' ≡ suc (suc (suc (suc m₀')))
+    eqS' = sym (Nat.+-sucr j (suc fuel')) ∙ eqS
+
+    Q : ⌞ G+ .F₀ (suc k) ⌟
+    Q = normalize-desc G+ fuel' (suc (suc j)) eq₂ (Nat.s≤s Nat.0≤x) idk+ .fst
+
+    Pk' : ⌞ Gk .F₀ k ⌟
+    Pk' = normalize-desc Gk fuel' (suc j) eq' (Nat.s≤s Nat.0≤x) idkk .fst
+
+    TB : ⌞ G+ .F₀ k ⌟
+    TB = Σalt k (suc fuel') (suc j) eqS'
+
+    B : ⌞ G+ .F₀ k ⌟
+    B = S+.d (fin (suc j) ⦃ bsj ⦄) Q
+
+    PAe : ⌞ G+ .F₀ k ⌟
+    PAe = push-nt k (fin j ⦃ bj ⦄) .η k .fst eK
+
+    FF-path : S+.d (fin j ⦃ bj ⦄) Q ≡ push-nt k (fin j ⦃ bj ⦄) .η k .fst Pk'
+    FF-path =
+        pass-pull G+ fuel' j eq₂ eq' (fin j ⦃ bj ⦄) Nat.≤-refl idk+
+      ∙ ap (λ w → normalize-desc G+ fuel' (suc j) eq' (Nat.s≤s Nat.0≤x) w .fst)
+          (face-gen (fin j ⦃ bj ⦄))
+      ∙ sym (normalize-desc-natural (push-nt k (fin j ⦃ bj ⦄)) fuel' (suc j) eq'
+          (Nat.s≤s Nat.0≤x) idkk)
+
+    DegGk : Deg Gk {suc m₀'} (suc m₀')
+      (Abelian-group-on._*_ (Gk .F₀ k .snd) Pk'
+        (Abelian-group-on._⁻¹ (Gk .F₀ k .snd) eK))
+    DegGk = subst (Deg Gk {suc m₀'} (suc m₀'))
+      (Agk.pass-diff Pk' eK idkk)
+      (deg-sum Gk (suc m₀')
+        (pass-defect Gk fuel' j eq' idkk)
+        (deg-inv Gk (suc m₀') (pass-defect Gk (suc (suc m₀')) 0 refl idkk)))
+
+    DegFF : Deg G+ {suc m₀'} (suc m₀')
+      (C+._*_ (S+.d (fin j ⦃ bj ⦄) Q) (C+._⁻¹ PAe))
+    DegFF = subst
+      (λ z → Deg G+ {suc m₀'} (suc m₀') (C+._*_ z (C+._⁻¹ PAe)))
+      (sym FF-path)
+      (subst (Deg G+ {suc m₀'} (suc m₀'))
+        (push-split (fin j ⦃ bj ⦄) Pk' eK)
+        (deg-push (push-nt k (fin j ⦃ bj ⦄)) (suc m₀') DegGk))
+
+    IH : Deg G+ {suc m₀'} (suc m₀') (C+._*_ B (C+._⁻¹ TB))
+    IH = tele fuel' (suc j) eq₂ eqS' bsj
+
+    step₁
+      : C+._*_
+          (S+.d (fin j ⦃ bj ⦄)
+            (normalize-desc G+ (suc fuel') (suc j) eqP (Nat.s≤s Nat.0≤x) idk+ .fst))
+          (C+._⁻¹ (Σalt k (suc (suc fuel')) j eqS))
+      ≡ C+._*_ (C+._*_ (S+.d (fin j ⦃ bj ⦄) Q) (C+._⁻¹ B))
+          (C+._⁻¹ (C+._*_ PAe (C+._⁻¹ TB)))
+    step₁ = ap (λ z → C+._*_ z (C+._⁻¹ (Σalt k (suc (suc fuel')) j eqS)))
+      (boundary-step G+ fuel' j eqP (fin j ⦃ bj ⦄) (fin (suc j) ⦃ bsj ⦄)
+        refl refl idk+)
+
+    step₂
+      : C+._*_ (C+._*_ (S+.d (fin j ⦃ bj ⦄) Q) (C+._⁻¹ B))
+          (C+._⁻¹ (C+._*_ PAe (C+._⁻¹ TB)))
+      ≡ C+._*_ (C+._*_ (S+.d (fin j ⦃ bj ⦄) Q) (C+._⁻¹ PAe))
+          (C+._⁻¹ (C+._*_ B (C+._⁻¹ TB)))
+    step₂ = A+.rearr (S+.d (fin j ⦃ bj ⦄) Q) B PAe TB
+```
+
+## The boundary formula
+
+```agda
+  boundary-formula
+    : S+.d (fin 0 ⦃ Nat.s≤s Nat.0≤x ⦄) (fundamental (suc k) .fst)
+    ≡ Σalt k (suc (suc k)) 0 refl
+  boundary-formula = A+.cancel-eq _ _
+    (normalized-degenerate-vanish G+ diff diff-norm (suc m₀') tele₀)
+    where
+    d₀e : ⌞ G+ .F₀ k ⌟
+    d₀e = S+.d (fin 0 ⦃ Nat.s≤s Nat.0≤x ⦄) (fundamental (suc k) .fst)
+    ΣF : ⌞ G+ .F₀ k ⌟
+    ΣF = Σalt k (suc (suc k)) 0 refl
+    diff : ⌞ G+ .F₀ k ⌟
+    diff = C+._*_ d₀e (C+._⁻¹ ΣF)
+
+    tele₀ : Deg G+ {suc m₀'} (suc m₀') diff
+    tele₀ = tele (suc (suc (suc m₀'))) 0 refl refl (Nat.s≤s Nat.0≤x)
+
+    d₀e-norm
+      : (i : Fin (suc k)) → 1 Nat.≤ i .lower
+      → S+.d i d₀e ≡ Abelian-group-on.1g (G+ .F₀ (suc m₀') .snd)
+    d₀e-norm i pos =
+        S+.d-d-comm (fin 0 ⦃ Nat.s≤s Nat.0≤x ⦄) i
+          (fin (suc (i .lower)) ⦃ Nat.s≤s (i .Fin.bounded) ⦄)
+          (fin 0 ⦃ Nat.s≤s Nat.0≤x ⦄)
+          refl refl Nat.0≤x (fundamental (suc k) .fst)
+      ∙ ap (S+.d (fin 0 ⦃ Nat.s≤s Nat.0≤x ⦄))
+          (fundamental-norm-any (suc (suc m₀'))
+            (fin (suc (i .lower)) ⦃ Nat.s≤s (i .Fin.bounded) ⦄)
+            (Nat.s≤s Nat.0≤x))
+      ∙ is-group-hom.pres-id (G+ .F₁ (δ (fin 0 ⦃ Nat.s≤s Nat.0≤x ⦄)) .snd)
+
+    diff-norm
+      : (i : Fin (suc k)) → 1 Nat.≤ i .lower
+      → S+.d i diff ≡ Abelian-group-on.1g (G+ .F₀ (suc m₀') .snd)
+    diff-norm i pos =
+        S+.d-⋆ i d₀e (C+._⁻¹ ΣF)
+      ∙ ap₂ (Abelian-group-on._*_ (G+ .F₀ (suc m₀') .snd))
+          (d₀e-norm i pos)
+          ( S+.d-inv i ΣF
+          ∙ ap (Abelian-group-on._⁻¹ (G+ .F₀ (suc m₀') .snd))
+              (Σalt-norm (suc m₀') (suc (suc k)) 0 refl i pos)
+          ∙ abl.inv-1g (G+ .F₀ (suc m₀') .snd))
+      ∙ Abelian-group-on.idl (G+ .F₀ (suc m₀') .snd)
 ```
