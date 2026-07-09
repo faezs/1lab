@@ -15,6 +15,7 @@ open import Algebra.Group
 
 open import Algebra.ChainComplex.DoldKan
 
+open import Data.Set.Coequaliser
 open import Data.Fin
 open import Data.Sum
 
@@ -723,11 +724,11 @@ The underlying simplicial set of this simplicial abelian group *is*
 the exponential, so the mapping space is a Kan complex.
 
 ```agda
+  Maps-ab-underlying : (Ab↪Sets F∘ Maps-ab) ≡ SC.[ X , Y ]
+  Maps-ab-underlying = Functor-path (λ n → refl) (λ f → refl)
+
   Maps-into-ab-is-kan : is-kan SC.[ X , Y ]
-  Maps-into-ab-is-kan = subst is-kan agree (sab-is-kan Maps-ab)
-    where
-    agree : (Ab↪Sets F∘ Maps-ab) ≡ SC.[ X , Y ]
-    agree = Functor-path (λ n → refl) (λ f → refl)
+  Maps-into-ab-is-kan = subst is-kan Maps-ab-underlying (sab-is-kan Maps-ab)
 ```
 
 In particular, the mapping spaces defining
@@ -740,4 +741,109 @@ Maps-K-is-kan
   : (X : ⌞ sSet ⌟) (A : Abelian-group lzero) (n : Nat)
   → is-kan SC.[ X , K-sset A n ]
 Maps-K-is-kan X A n = Maps-into-ab-is-kan (K A n) X
+```
+
+## The group structure on connected components
+
+The set of [[connected components|simplicial-set]] of a simplicial
+abelian group is itself an abelian group: the operations descend to
+the coequaliser because multiplying a boundary by a degenerate
+simplex is again a boundary — if $h$ connects $d_0 h$ to $d_1 h$,
+then $h \cdot s_0 b$ connects $d_0 h \cdot b$ to $d_1 h \cdot b$.
+
+```agda
+module _ (G : Functor (Δ ^op) (Ab lzero)) where
+  private
+    module G = Functor G
+    module G0 = Abelian-group-on (G.₀ 0 .snd)
+    module G1 = Abelian-group-on (G.₀ 1 .snd)
+
+    d₀ d₁ : ⌞ G.₀ 1 ⌟ → ⌞ G.₀ 0 ⌟
+    d₀ = G.₁ (δ fzero) .fst
+    d₁ = G.₁ (δ (fsuc fzero)) .fst
+
+    s₀ : ⌞ G.₀ 0 ⌟ → ⌞ G.₀ 1 ⌟
+    s₀ = G.₁ (σ fzero) .fst
+
+    unit-law : (i : Fin 2) → σ fzero ∘Δ δ i ≡ Δ .Precategory.id → ∀ b
+             → G.₁ (δ i) .fst (s₀ b) ≡ b
+    unit-law i p b =
+        sym (happly (ap ∫Hom.fst (G.F-∘ (δ i) (σ fzero))) b)
+      ∙ happly (ap (λ w → ∫Hom.fst (G.₁ w)) p) b
+      ∙ happly (ap ∫Hom.fst G.F-id) b
+
+    d₀-s₀ : ∀ b → d₀ (s₀ b) ≡ b
+    d₀-s₀ = unit-law fzero (σ-δ-id fzero)
+
+    d₁-s₀ : ∀ b → d₁ (s₀ b) ≡ b
+    d₁-s₀ = unit-law (fsuc fzero) (σ-δ-id' fzero)
+
+    inc₀ : ⌞ G.₀ 0 ⌟ → π₀ˢ (Ab↪Sets F∘ G)
+    inc₀ = inc
+
+    connect
+      : (dh : ⌞ G.₀ 1 ⌟ → ⌞ G.₀ 0 ⌟)
+        (hom : is-group-hom (Abelian→Group-on (G.₀ 1 .snd)) (Abelian→Group-on (G.₀ 0 .snd)) dh)
+      → (ds : ∀ b → dh (s₀ b) ≡ b)
+      → ∀ a h → dh (G1._*_ h (s₀ a)) ≡ G0._*_ (dh h) a
+    connect dh hom ds a h =
+        is-group-hom.pres-⋆ hom h (s₀ a)
+      ∙ ap (G0._*_ (dh h)) (ds a)
+
+  π₀-ab : Abelian-group lzero
+  π₀-ab = to-ab mk where
+    mk : make-abelian-group (π₀ˢ (Ab↪Sets F∘ G))
+    mk .make-abelian-group.ab-is-set = squash
+    mk .make-abelian-group.mul = Coeq-rec₂ squash ci r1 r2 where
+      ci : ⌞ G.₀ 0 ⌟ → ⌞ G.₀ 0 ⌟ → π₀ˢ (Ab↪Sets F∘ G)
+      ci a b = inc (G0._*_ a b)
+      r1 : ∀ a h → ci (d₀ h) a ≡ ci (d₁ h) a
+      r1 a h =
+          sym (ap inc₀ (connect d₀ (G.₁ (δ fzero) .snd) d₀-s₀ a h))
+        ∙ Coeq.glue (G1._*_ h (s₀ a))
+        ∙ ap inc₀ (connect d₁ (G.₁ (δ (fsuc fzero)) .snd) d₁-s₀ a h)
+      r2 : ∀ a h → ci a (d₀ h) ≡ ci a (d₁ h)
+      r2 a h =
+          sym (ap inc₀
+            ( is-group-hom.pres-⋆ (G.₁ (δ fzero) .snd) (s₀ a) h
+            ∙ ap (λ z → G0._*_ z (d₀ h)) (d₀-s₀ a)))
+        ∙ Coeq.glue (G1._*_ (s₀ a) h)
+        ∙ ap inc₀
+            ( is-group-hom.pres-⋆ (G.₁ (δ (fsuc fzero)) .snd) (s₀ a) h
+            ∙ ap (λ z → G0._*_ z (d₁ h)) (d₁-s₀ a))
+    mk .make-abelian-group.inv = Coeq-rec ci r' where
+      ci : ⌞ G.₀ 0 ⌟ → π₀ˢ (Ab↪Sets F∘ G)
+      ci a = inc (G0._⁻¹ a)
+      r' : ∀ h → ci (d₀ h) ≡ ci (d₁ h)
+      r' h =
+          sym (ap inc₀ (is-group-hom.pres-inv (G.₁ (δ fzero) .snd)))
+        ∙ Coeq.glue (G1._⁻¹ h)
+        ∙ ap inc₀ (is-group-hom.pres-inv (G.₁ (δ (fsuc fzero)) .snd))
+    mk .make-abelian-group.1g = inc G0.1g
+    mk .make-abelian-group.idl = Coeq-elim-prop (λ _ → hlevel 1)
+      λ a → ap inc₀ (G0.idl)
+    mk .make-abelian-group.assoc =
+      Coeq-elim-prop (λ _ → hlevel 1) λ a →
+      Coeq-elim-prop (λ _ → hlevel 1) λ b →
+      Coeq-elim-prop (λ _ → hlevel 1) λ c →
+      ap inc₀ G0.associative
+    mk .make-abelian-group.invl = Coeq-elim-prop (λ _ → hlevel 1)
+      λ a → ap inc₀ G0.inversel
+    mk .make-abelian-group.comm =
+      Coeq-elim-prop (λ _ → hlevel 1) λ a →
+      Coeq-elim-prop (λ _ → hlevel 1) λ b →
+      ap inc₀ G0.commutes
+```
+
+Combining with the mapping-space structure: **cohomology is an
+abelian group**, the group structure it classically inherits from
+the target $K(A,n)$.
+
+```agda
+H-Ab
+  : (X : ⌞ sSet ⌟) (n : Nat) (A : Abelian-group lzero)
+  → Abelian-group-on H[ X , n ]⟨ A ⟩
+H-Ab X n A = subst Abelian-group-on
+  (ap π₀ˢ (Maps-ab-underlying (K A n) X))
+  (π₀-ab (Maps-ab (K A n) X) .snd)
 ```
