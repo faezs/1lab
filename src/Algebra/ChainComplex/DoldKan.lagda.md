@@ -109,7 +109,7 @@ module _ {A B : Functor (Δ ^op) (Ab lzero)} (α : A => B) where
 
 <!--
 ```agda
-private abstract
+abstract
   moore-map-id
     : {A : Functor (Δ ^op) (Ab lzero)}
     → moore-map (idnt {F = A}) ≡ ChC.id {MC.Moore A}
