@@ -993,7 +993,14 @@ presenting a particular gros ∞-topos by simplicially localising
 simplicial presheaves needs quasicategory or complete-Segal-object
 infrastructure the 1Lab does not have;
 the local weak equivalence of the Čech augmentation over covers,
-giving cofibrant resolutions (full (39)); cohesion over the orbi-singular site (the site itself now exists,
+giving cofibrant resolutions (the projective-cofibrancy claim under
+(39)); the singular simplicial complex $\int X$ of a topological
+space (28), which needs a formalized theory of topological spaces
+and real analysis and is genuinely out of the present scope; the
+loop-space property $\mathbf{B}^n A \simeq \Omega\,
+\mathbf{B}^{n+1} A$ of the Eilenberg–MacLane objects (34), a
+concrete target now plausibly within reach of the Dold–Kan
+machinery; cohesion over the orbi-singular site (the site itself now exists,
 with terminal probe; the instantiation awaits level-polymorphic
 cohesion); and the stable localisation of presheaves on $\rm{Lin}$
 presenting the tangent topos (41). Each is a well-posed project over
