@@ -817,7 +817,9 @@ $\mathrm{Maps}(X, K(A,n))$ *itself* is a simplicial abelian group
 with pointwise operations, hence also Kan — so the homotopies that
 cohomology quotients by live in a fibrant object — and its
 $\pi_0$ inherits the group operations, so **cohomology
-$H[X,n]\langle A\rangle$ is an abelian group**, as classically. And toward the topos-theoretic
+$H[X,n]\langle A\rangle$ is an abelian group**, as classically —
+and a contravariant *functor* $\mathrm{sSet}^{\mathrm{op}} \to
+\mathrm{Ab}$: cohomology classes pull back along maps of spaces. And toward the topos-theoretic
 completion of (8), sheafification over an *arbitrary* coverage is
 proven to preserve the terminal object.
 
@@ -831,6 +833,7 @@ _ = Cat.Instances.SimplicialSets.Kan.sab-is-kan
 _ = Cat.Instances.SimplicialSets.Kan.K-is-kan
 _ = Cat.Instances.SimplicialSets.Kan.Maps-K-is-kan
 _ = Cat.Instances.SimplicialSets.Kan.H-Ab
+_ = Cat.Instances.SimplicialSets.Kan.H-functor
 _ = Cat.Site.Sheafification.Lex.Sheafification-pres-⊤
 _ = Cat.Site.Sheafification.Locality.locally-equal→inc-path
 _ = Cat.Site.Sheafification.Locality.sheaf-detects
