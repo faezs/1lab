@@ -205,3 +205,27 @@ assembles into a chain map — and that unit and counit are inverse
 isomorphisms — rests on the combinatorial expansion of the
 normalization operator (the normalization theorem), which remains
 future work.
+
+## The levelwise counit
+
+Evaluation at the fundamental class gives the counit's components:
+a normalized $k$-simplex of $\Gamma(C)$ — a chain map
+$N\bZ[\Delta^k] \to C$ killed by the positive faces — evaluates at
+$e_k$ to an element of $C_k$, homomorphically.
+
+```agda
+dk-counit-level
+  : (C : Chain-complex lzero) (k : Nat)
+  → Ab lzero .Precategory.Hom
+      (Algebra.ChainComplex.Moore.Moore (Γ C) .ob k) (C .ob k)
+dk-counit-level C k .fst (φ , _) = φ .Chain-map.map k .fst (fundamental k)
+dk-counit-level C k .snd .is-group-hom.pres-⋆ (φ , _) (ψ , _) = refl
+```
+
+Assembling these into a chain map requires commuting evaluation past
+the boundary: the face identity $d_0 e_{k+1} \equiv
+\delta_0 \cdot e_k$ *modulo the images of the positive coface
+pushforwards* (which normalized $\varphi$ kills). That combinatorial
+expansion of the normalization operator — and with it the
+invertibility of both unit and counit — is the normalization
+theorem, and remains future work.
