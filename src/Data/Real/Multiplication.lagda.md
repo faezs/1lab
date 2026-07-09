@@ -1043,6 +1043,118 @@ private abstract
               (≤-trans C≤Y₋ (≤-trans Y₋≤Y₊ Y₊≤D)))
             (min₄-tighten₂ A B C D Y₋ Y₊ C≤Y₋ Y₋≤Y₊ Y₊≤D)
 
+  max₄-tighten
+    : ∀ A B a b c d → a ≤ A → A ≤ B → B ≤ b → c ≤ d
+    → max₄ (A *ℚ c) (A *ℚ d) (B *ℚ c) (B *ℚ d)
+      ≤ max₄ (a *ℚ c) (a *ℚ d) (b *ℚ c) (b *ℚ d)
+  max₄-tighten A B a b c d a≤A A≤B B≤b c≤d = max₄-univ
+    (bracket-upper A c a b c d a≤A A≤b ≤-refl c≤d)
+    (bracket-upper A d a b c d a≤A A≤b c≤d ≤-refl)
+    (bracket-upper B c a b c d a≤B B≤b ≤-refl c≤d)
+    (bracket-upper B d a b c d a≤B B≤b c≤d ≤-refl)
+    where
+    A≤b : A ≤ b
+    A≤b = ≤-trans A≤B B≤b
+    a≤B : a ≤ B
+    a≤B = ≤-trans a≤A A≤B
+
+  max₄-tighten₂
+    : ∀ A B C D c d → C ≤ c → c ≤ d → d ≤ D
+    → max₄ (A *ℚ c) (A *ℚ d) (B *ℚ c) (B *ℚ d)
+      ≤ max₄ (A *ℚ C) (A *ℚ D) (B *ℚ C) (B *ℚ D)
+  max₄-tighten₂ A B C D c d C≤c c≤d d≤D = max₄-univ
+    (≤-trans (bracket₁-upper A c C D C≤c c≤D) mtl)
+    (≤-trans (bracket₁-upper A d C D C≤d d≤D) mtl)
+    (≤-trans (bracket₁-upper B c C D C≤c c≤D) mtr)
+    (≤-trans (bracket₁-upper B d C D C≤d d≤D) mtr)
+    where
+    C≤d : C ≤ d
+    C≤d = ≤-trans C≤c c≤d
+    c≤D : c ≤ D
+    c≤D = ≤-trans c≤d d≤D
+    mtl : maxℚ (A *ℚ C) (A *ℚ D) ≤ max₄ (A *ℚ C) (A *ℚ D) (B *ℚ C) (B *ℚ D)
+    mtl = maxℚ-≤l {maxℚ (A *ℚ C) (A *ℚ D)} {maxℚ (B *ℚ C) (B *ℚ D)}
+    mtr : maxℚ (B *ℚ C) (B *ℚ D) ≤ max₄ (A *ℚ C) (A *ℚ D) (B *ℚ C) (B *ℚ D)
+    mtr = maxℚ-≤r {maxℚ (A *ℚ C) (A *ℚ D)} {maxℚ (B *ℚ C) (B *ℚ D)}
+
+  max₄-tighten-both
+    : ∀ A B a b Y₋ Y₊ C D
+    → a ≤ A → A ≤ B → B ≤ b → C ≤ Y₋ → Y₋ ≤ Y₊ → Y₊ ≤ D
+    → max₄ (A *ℚ Y₋) (A *ℚ Y₊) (B *ℚ Y₋) (B *ℚ Y₊)
+      ≤ max₄ (a *ℚ C) (a *ℚ D) (b *ℚ C) (b *ℚ D)
+  max₄-tighten-both A B a b Y₋ Y₊ C D a≤A A≤B B≤b C≤Y₋ Y₋≤Y₊ Y₊≤D =
+    ≤-trans (max₄-tighten₂ A B C D Y₋ Y₊ C≤Y₋ Y₋≤Y₊ Y₊≤D)
+            (max₄-tighten A B a b C D a≤A A≤B B≤b
+              (≤-trans C≤Y₋ (≤-trans Y₋≤Y₊ Y₊≤D)))
+
+  max₄-choice
+    : ∀ p q r s
+    → (max₄ p q r s ≡ p) ⊎ ((max₄ p q r s ≡ q) ⊎ ((max₄ p q r s ≡ r) ⊎ (max₄ p q r s ≡ s)))
+  max₄-choice p q r s with maxℚ-choice (maxℚ p q) (maxℚ r s) | maxℚ-choice p q | maxℚ-choice r s
+  ... | inl e | inl e' | _      = inl (e ∙ e')
+  ... | inl e | inr e' | _      = inr (inl (e ∙ e'))
+  ... | inr e | _      | inl e' = inr (inr (inl (e ∙ e')))
+  ... | inr e | _      | inr e' = inr (inr (inr (e ∙ e')))
+
+  -- Associativity core: min of ([A,B]·[Y₋,Y₊])·[e,f] ≤ min of [A,B]·([Y₋,Y₊]·[e,f]).
+  -- Both are the minimum of the same eight corner triple products; this containment
+  -- is proved by choosing which yz-corner realises each inner extremum.
+  assoc-ML≤MR
+    : ∀ A B Y₋ Y₊ e f → A ≤ B → Y₋ ≤ Y₊ → e ≤ f
+    → min₄ (min₄ (A *ℚ Y₋) (A *ℚ Y₊) (B *ℚ Y₋) (B *ℚ Y₊) *ℚ e)
+           (min₄ (A *ℚ Y₋) (A *ℚ Y₊) (B *ℚ Y₋) (B *ℚ Y₊) *ℚ f)
+           (max₄ (A *ℚ Y₋) (A *ℚ Y₊) (B *ℚ Y₋) (B *ℚ Y₊) *ℚ e)
+           (max₄ (A *ℚ Y₋) (A *ℚ Y₊) (B *ℚ Y₋) (B *ℚ Y₊) *ℚ f)
+      ≤ min₄ (A *ℚ min₄ (Y₋ *ℚ e) (Y₋ *ℚ f) (Y₊ *ℚ e) (Y₊ *ℚ f))
+             (A *ℚ max₄ (Y₋ *ℚ e) (Y₋ *ℚ f) (Y₊ *ℚ e) (Y₊ *ℚ f))
+             (B *ℚ min₄ (Y₋ *ℚ e) (Y₋ *ℚ f) (Y₊ *ℚ e) (Y₊ *ℚ f))
+             (B *ℚ max₄ (Y₋ *ℚ e) (Y₋ *ℚ f) (Y₊ *ℚ e) (Y₊ *ℚ f))
+  assoc-ML≤MR A B Y₋ Y₊ e f A≤B Y₋≤Y₊ e≤f =
+    min₄-univ (myz-le A AY₋lo AY₋hi AY₊lo AY₊hi) (mxyz-le A AY₋lo AY₋hi AY₊lo AY₊hi)
+              (myz-le B BY₋lo BY₋hi BY₊lo BY₊hi) (mxyz-le B BY₋lo BY₋hi BY₊lo BY₊hi)
+    where
+    Mxy Mxxy Myz Mxyz ML : Ratio
+    Mxy  = min₄ (A *ℚ Y₋) (A *ℚ Y₊) (B *ℚ Y₋) (B *ℚ Y₊)
+    Mxxy = max₄ (A *ℚ Y₋) (A *ℚ Y₊) (B *ℚ Y₋) (B *ℚ Y₊)
+    Myz  = min₄ (Y₋ *ℚ e) (Y₋ *ℚ f) (Y₊ *ℚ e) (Y₊ *ℚ f)
+    Mxyz = max₄ (Y₋ *ℚ e) (Y₋ *ℚ f) (Y₊ *ℚ e) (Y₊ *ℚ f)
+    ML   = min₄ (Mxy *ℚ e) (Mxy *ℚ f) (Mxxy *ℚ e) (Mxxy *ℚ f)
+    base : ∀ p w → Mxy ≤ p → p ≤ Mxxy → e ≤ w → w ≤ f → ML ≤ (p *ℚ w)
+    base p w mp pM ew wf = bracket-lower p w Mxy Mxxy e f mp pM ew wf
+    AY₋lo : Mxy ≤ (A *ℚ Y₋)
+    AY₋lo = min₄-≤₁ {A *ℚ Y₋} {A *ℚ Y₊} {B *ℚ Y₋} {B *ℚ Y₊}
+    AY₊lo : Mxy ≤ (A *ℚ Y₊)
+    AY₊lo = min₄-≤₂ {A *ℚ Y₋} {A *ℚ Y₊} {B *ℚ Y₋} {B *ℚ Y₊}
+    BY₋lo : Mxy ≤ (B *ℚ Y₋)
+    BY₋lo = min₄-≤₃ {A *ℚ Y₋} {A *ℚ Y₊} {B *ℚ Y₋} {B *ℚ Y₊}
+    BY₊lo : Mxy ≤ (B *ℚ Y₊)
+    BY₊lo = min₄-≤₄ {A *ℚ Y₋} {A *ℚ Y₊} {B *ℚ Y₋} {B *ℚ Y₊}
+    AY₋hi : (A *ℚ Y₋) ≤ Mxxy
+    AY₋hi = max₄-≥₁ {A *ℚ Y₋} {A *ℚ Y₊} {B *ℚ Y₋} {B *ℚ Y₊}
+    AY₊hi : (A *ℚ Y₊) ≤ Mxxy
+    AY₊hi = max₄-≥₂ {A *ℚ Y₋} {A *ℚ Y₊} {B *ℚ Y₋} {B *ℚ Y₊}
+    BY₋hi : (B *ℚ Y₋) ≤ Mxxy
+    BY₋hi = max₄-≥₃ {A *ℚ Y₋} {A *ℚ Y₊} {B *ℚ Y₋} {B *ℚ Y₊}
+    BY₊hi : (B *ℚ Y₊) ≤ Mxxy
+    BY₊hi = max₄-≥₄ {A *ℚ Y₋} {A *ℚ Y₊} {B *ℚ Y₋} {B *ℚ Y₊}
+    eqn-myz : ∀ p Yj wk → Myz ≡ (Yj *ℚ wk) → ((p *ℚ Yj) *ℚ wk) ≡ (p *ℚ Myz)
+    eqn-myz p Yj wk qq = sym (*ℚ-associative p Yj wk) ∙ ap (p *ℚ_) (sym qq)
+    eqn-mxyz : ∀ p Yj wk → Mxyz ≡ (Yj *ℚ wk) → ((p *ℚ Yj) *ℚ wk) ≡ (p *ℚ Mxyz)
+    eqn-mxyz p Yj wk qq = sym (*ℚ-associative p Yj wk) ∙ ap (p *ℚ_) (sym qq)
+    myz-le : ∀ p → Mxy ≤ (p *ℚ Y₋) → (p *ℚ Y₋) ≤ Mxxy → Mxy ≤ (p *ℚ Y₊) → (p *ℚ Y₊) ≤ Mxxy → ML ≤ (p *ℚ Myz)
+    myz-le p lo₋ hi₋ lo₊ hi₊ with min₄-choice (Y₋ *ℚ e) (Y₋ *ℚ f) (Y₊ *ℚ e) (Y₊ *ℚ f)
+    ... | inl q             = ≤-resp refl (eqn-myz p Y₋ e q) (base (p *ℚ Y₋) e lo₋ hi₋ ≤-refl e≤f)
+    ... | inr (inl q)       = ≤-resp refl (eqn-myz p Y₋ f q) (base (p *ℚ Y₋) f lo₋ hi₋ e≤f ≤-refl)
+    ... | inr (inr (inl q)) = ≤-resp refl (eqn-myz p Y₊ e q) (base (p *ℚ Y₊) e lo₊ hi₊ ≤-refl e≤f)
+    ... | inr (inr (inr q)) = ≤-resp refl (eqn-myz p Y₊ f q) (base (p *ℚ Y₊) f lo₊ hi₊ e≤f ≤-refl)
+    mxyz-le : ∀ p → Mxy ≤ (p *ℚ Y₋) → (p *ℚ Y₋) ≤ Mxxy → Mxy ≤ (p *ℚ Y₊) → (p *ℚ Y₊) ≤ Mxxy → ML ≤ (p *ℚ Mxyz)
+    mxyz-le p lo₋ hi₋ lo₊ hi₊ with max₄-choice (Y₋ *ℚ e) (Y₋ *ℚ f) (Y₊ *ℚ e) (Y₊ *ℚ f)
+    ... | inl q             = ≤-resp refl (eqn-mxyz p Y₋ e q) (base (p *ℚ Y₋) e lo₋ hi₋ ≤-refl e≤f)
+    ... | inr (inl q)       = ≤-resp refl (eqn-mxyz p Y₋ f q) (base (p *ℚ Y₋) f lo₋ hi₋ e≤f ≤-refl)
+    ... | inr (inr (inl q)) = ≤-resp refl (eqn-mxyz p Y₊ e q) (base (p *ℚ Y₊) e lo₊ hi₊ ≤-refl e≤f)
+    ... | inr (inr (inr q)) = ≤-resp refl (eqn-mxyz p Y₊ f q) (base (p *ℚ Y₊) f lo₊ hi₊ e≤f ≤-refl)
+
+
   sub-move : ∀ {a b} s → a ≤ (b +ℚ s) → (a +ℚ (-ℚ s)) ≤ b
   sub-move {a} {b} s a≤bs = ≤-resp refl b+s-s≡b (+ℚ-preserves-≤ a≤bs (≤-refl { -ℚ s}))
     where
