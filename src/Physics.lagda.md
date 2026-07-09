@@ -77,6 +77,7 @@ import Data.Real.Multiplication
 import Data.Real.Ring
 import Data.Real.Reciprocal
 import Cat.Instances.SimplicialPresheaves.Cech
+import Cat.Instances.SimplicialSets.Kan
 import Cat.Instances.SimplicialSets.ActionGroupoid
 import Cat.Instances.SuperSmoothSets
 import Cat.Instances.FormalSmoothSets.DeRham
@@ -808,9 +809,12 @@ of homomorphisms — with the trivial cone as terminal probe. The
 chain complexes back to simplicial abelian groups, hom-theoretically
 (so no shuffle combinatorics), and with it the Eilenberg–MacLane
 objects $K(A,n)$ of (31) and ordinary **cohomology** as $\pi_0$ of
-mapping spaces. And toward the topos-theoretic completion of (8),
-sheafification over an *arbitrary* coverage is proven to preserve
-the terminal object.
+mapping spaces — and these are now genuinely *fibrant*: by Moore's
+theorem, proven by the explicit two-pass filler algorithm, **every
+simplicial abelian group is a Kan complex**, so $K(A,n)$ satisfies
+the Kan condition and (31) closes. And toward the topos-theoretic
+completion of (8), sheafification over an *arbitrary* coverage is
+proven to preserve the terminal object.
 
 ```agda
 _ = Cat.Instances.Singular.Snglr
@@ -818,6 +822,8 @@ _ = Cat.Instances.Singular.Snglr-terminal
 _ = Algebra.ChainComplex.DoldKan.Γ
 _ = Algebra.ChainComplex.DoldKan.K
 _ = Algebra.ChainComplex.DoldKan.H[_,_]⟨_⟩
+_ = Cat.Instances.SimplicialSets.Kan.sab-is-kan
+_ = Cat.Instances.SimplicialSets.Kan.K-is-kan
 _ = Cat.Site.Sheafification.Lex.Sheafification-pres-⊤
 _ = Cat.Site.Sheafification.Locality.locally-equal→inc-path
 _ = Cat.Site.Sheafification.Locality.sheaf-detects
@@ -947,7 +953,7 @@ degree two, the differential as a map of smooth sets, and
 Deligne/connection refinements ((39), (40)) remain); the unit and counit of the
 Dold–Kan correspondence (30) — both functors now exist, the Moore
 complex $N$ and its inverse $\Gamma$, with $K(A,n)$ and ordinary
-cohomology defined — together with Kan fibrancy of $K(A,n)$; closure of Kan complexes under
+cohomology defined, and $K(A,n)$ now proven Kan; closure of Kan complexes under
 mapping spaces and the *external presentation* of the simplicial
 localisations $L^{\rm{heq}}, L^{\rm{lheq}}$ ((32)–(36)) — their
 internal shadow now exists as [[modalities|modality]], but
