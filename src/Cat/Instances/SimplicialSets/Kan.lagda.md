@@ -5,6 +5,8 @@ open import Cat.Instances.Simplex
 open import Cat.Displayed.Total
 open import Cat.Prelude
 
+import Cat.Reasoning
+
 open import Algebra.Group.Cat.Base
 open import Algebra.Group.Ab
 open import Algebra.Group
@@ -265,4 +267,66 @@ shut: multiplying by a difference retargets a face.
       ∙ Gr.associative m
       ∙ ap (λ z → Gr._*_ m z b) (Gr.inverser m)
       ∙ Gr.idl m
+```
+
+## From horns to faces
+
+A natural transformation out of a horn is determined by where it
+sends the top-dimensional faces $\delta_i$ ($i \neq k$), since every
+horn simplex misses a vertex and hence factors through one of them.
+We now extract those faces, show that *all* their compatibilities
+follow from one naturality lemma, and reduce the Kan condition to
+producing a single group element with prescribed faces.
+
+```agda
+  private
+    yo-b : ∀ {n} → ⌞ G.₀ n ⌟ → Δ[ n ] => (Ab↪Sets F∘ G)
+    yo-b b .η l f = G.₁ f .fst b
+    yo-b b .is-natural l l' g = funext λ f →
+      happly (ap ∫Hom.fst (G.F-∘ g f)) b
+
+    module sSet = Cat.Reasoning sSet
+
+  module Fill {m : Nat} (k : Fin (suc (suc m)))
+              (α : Λ[ suc m , k ] => (Ab↪Sets F∘ G)) where
+    private
+      x : (i : Fin (suc (suc m))) (i≠k : ¬ i ≡ k) → ⌞ G.₀ m ⌟
+      x i i≠k = α .η m (δ i , δ-is-horn k i i≠k)
+
+      x-eq
+        : ∀ {i j} (p : i ≡ j) (i≠k : ¬ i ≡ k) (j≠k : ¬ j ≡ k)
+        → x i i≠k ≡ x j j≠k
+      x-eq p i≠k j≠k = ap (α .η m) (Σ-prop-path (λ f → hlevel 1) (ap δ p))
+
+      x-natural
+        : ∀ {l} (a b : Fin (suc (suc m))) (a≠k : ¬ a ≡ k) (b≠k : ¬ b ≡ k)
+          (u : Δ-map l m) (v : Δ-map l m)
+        → δ a ∘Δ u ≡ δ b ∘Δ v
+        → G.₁ u .fst (x a a≠k) ≡ G.₁ v .fst (x b b≠k)
+      x-natural {l} a b a≠k b≠k u v p =
+          sym (happly (α .is-natural m l u) (δ a , δ-is-horn k a a≠k))
+        ∙ ap (α .η l) (Σ-prop-path (λ f → hlevel 1) p)
+        ∙ happly (α .is-natural m l v) (δ b , δ-is-horn k b b≠k)
+
+    extend
+      : (b : ⌞ G.₀ (suc m) ⌟)
+      → (∀ i (i≠k : ¬ i ≡ k) → d i b ≡ x i i≠k)
+      → ∃[ β ∈ (Δ[ suc m ] => (Ab↪Sets F∘ G)) ]
+          (β sSet.∘ horn-inclusion (suc m) k ≡ α)
+    extend b faces = inc (yo-b b , ext-p)
+      where
+      ext-p : yo-b b sSet.∘ horn-inclusion (suc m) k ≡ α
+      ext-p = Nat-path λ l → funext λ where
+        (f , h) → ∥-∥-rec (G.₀ l .fst .is-tr _ _)
+          (λ (j , j≠k , miss) →
+            let
+              f'  = Δ-unskip j f miss
+              fac = Δ-unskip-factor j f miss
+            in
+              ap (λ w → G.₁ w .fst b) (sym fac)
+            ∙ happly (ap ∫Hom.fst (G.F-∘ f' (δ j))) b
+            ∙ ap (G.₁ f' .fst) (faces j j≠k)
+            ∙ sym (happly (α .is-natural m l f') (δ j , δ-is-horn k j j≠k))
+            ∙ ap (α .η l) (Σ-prop-path (λ g → hlevel 1) fac))
+          h
 ```
