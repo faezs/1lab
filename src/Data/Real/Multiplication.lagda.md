@@ -1033,6 +1033,16 @@ private abstract
     mtr : min₄ (A *ℚ C) (A *ℚ D) (B *ℚ C) (B *ℚ D) ≤ minℚ (B *ℚ C) (B *ℚ D)
     mtr = minℚ-≤r {minℚ (A *ℚ C) (A *ℚ D)} {minℚ (B *ℚ C) (B *ℚ D)}
 
+  min₄-tighten-both
+    : ∀ A B a b Y₋ Y₊ C D
+    → a ≤ A → A ≤ B → B ≤ b → C ≤ Y₋ → Y₋ ≤ Y₊ → Y₊ ≤ D
+    → min₄ (a *ℚ C) (a *ℚ D) (b *ℚ C) (b *ℚ D)
+      ≤ min₄ (A *ℚ Y₋) (A *ℚ Y₊) (B *ℚ Y₋) (B *ℚ Y₊)
+  min₄-tighten-both A B a b Y₋ Y₊ C D a≤A A≤B B≤b C≤Y₋ Y₋≤Y₊ Y₊≤D =
+    ≤-trans (min₄-tighten A B a b C D a≤A A≤B B≤b
+              (≤-trans C≤Y₋ (≤-trans Y₋≤Y₊ Y₊≤D)))
+            (min₄-tighten₂ A B C D Y₋ Y₊ C≤Y₋ Y₋≤Y₊ Y₊≤D)
+
   sub-move : ∀ {a b} s → a ≤ (b +ℚ s) → (a +ℚ (-ℚ s)) ≤ b
   sub-move {a} {b} s a≤bs = ≤-resp refl b+s-s≡b (+ℚ-preserves-≤ a≤bs (≤-refl { -ℚ s}))
     where
