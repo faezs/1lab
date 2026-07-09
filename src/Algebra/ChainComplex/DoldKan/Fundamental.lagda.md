@@ -291,3 +291,111 @@ module _ {G G' : Functor (Δ ^op) (Ab lzero)} (α : G => G') where
     rec = normalize-desc-natural fuel (suc (suc c₀))
             (sym (Nat.+-sucr (suc c₀) fuel) ∙ eq) (Nat.s≤s Nat.0≤x) x
 ```
+
+## Pulling faces through the pass
+
+A face operator below every correction index commutes with the pass,
+shifting it down one simplicial level: this and the (trivial)
+boundary-step below are the two halves of the telescoping expansion
+of $d_0 \circ T$ into an alternating sum of faces, the combinatorial
+engine of the counit's chain condition.
+
+```agda
+module _ (G : Functor (Δ ^op) (Ab lzero)) where
+  open Simplicial-operators G
+
+  pass-pull
+    : {m₀' : Nat} (fuel c₀ : Nat)
+      (eq : suc (suc c₀) Nat.+ fuel ≡ suc (suc (suc (suc m₀'))))
+      (eq' : suc c₀ Nat.+ fuel ≡ suc (suc (suc m₀')))
+      (i : Fin (suc (suc (suc (suc m₀')))))
+    → i .lower Nat.≤ c₀
+    → (x : ⌞ G .F₀ (suc (suc (suc m₀'))) ⌟)
+    → d i (normalize-desc G fuel (suc (suc c₀)) eq (Nat.s≤s Nat.0≤x) x .fst)
+    ≡ normalize-desc G fuel (suc c₀) eq' (Nat.s≤s Nat.0≤x) (d i x) .fst
+  pass-pull zero c₀ eq eq' i le x = refl
+  pass-pull {m₀'} (suc fuel) c₀ eq eq' i le x =
+      d-⋆ i y _
+    ∙ ap (Gr._*_ (suc (suc m₀')) (d i y)) (d-inv i (s Jf (d Ff y)))
+    ∙ ap₂ (λ u w → Gr._*_ (suc (suc m₀')) u (Gr._⁻¹ (suc (suc m₀')) w))
+        rec
+        ( d-s-comm-below i Jf i' Jd refl refl (Nat.s≤s le) (d Ff y)
+        ∙ ap (s Jd)
+            ( sym (d-d-comm i Fd Ff i' refl refl (Nat.≤-sucr le) y)
+            ∙ ap (d Fd) rec))
+    where
+    bF : suc (suc (suc c₀)) Nat.≤ suc (suc (suc (suc m₀')))
+    bF = subst (suc (suc (suc c₀)) Nat.≤_)
+           (sym (Nat.+-sucr (suc (suc c₀)) fuel) ∙ eq)
+           (Nat.s≤s (le-plus (suc (suc c₀)) fuel))
+    Ff : Fin (suc (suc (suc (suc m₀'))))
+    Ff = fin (suc (suc c₀)) ⦃ bF ⦄
+    Jf : Fin (suc (suc (suc m₀')))
+    Jf = fin (suc c₀) ⦃ Nat.≤-peel bF ⦄
+    Jd : Fin (suc (suc m₀'))
+    Jd = fin c₀ ⦃ Nat.≤-peel (Nat.≤-peel bF) ⦄
+    Fd : Fin (suc (suc (suc m₀')))
+    Fd = fin (suc c₀) ⦃ Nat.≤-peel bF ⦄
+    i' : Fin (suc (suc (suc m₀')))
+    i' = fin (i .lower)
+      ⦃ Nat.≤-sucr (Nat.≤-trans (Nat.s≤s le) (Nat.≤-peel (Nat.≤-peel bF))) ⦄
+    y : ⌞ G .F₀ (suc (suc (suc m₀'))) ⌟
+    y = normalize-desc G fuel (suc (suc (suc c₀)))
+          (sym (Nat.+-sucr (suc (suc c₀)) fuel) ∙ eq) (Nat.s≤s Nat.0≤x) x .fst
+    rec : d i y
+        ≡ normalize-desc G fuel (suc (suc c₀))
+            (sym (Nat.+-sucr (suc c₀) fuel) ∙ eq') (Nat.s≤s Nat.0≤x) (d i x) .fst
+    rec = pass-pull fuel (suc c₀)
+            (sym (Nat.+-sucr (suc (suc c₀)) fuel) ∙ eq)
+            (sym (Nat.+-sucr (suc c₀) fuel) ∙ eq')
+            i (Nat.≤-sucr le) x
+```
+
+The boundary-step: hitting the pass with the face just below its
+range splits off one alternating pair, by the unit law
+$d_{c-1} s_{c-1} = \mathrm{id}$.
+
+```agda
+  boundary-step
+    : {m₀ : Nat} (fuel c₀ : Nat)
+      (eq : suc c₀ Nat.+ suc fuel ≡ suc (suc (suc m₀)))
+      (Dc DF : Fin (suc (suc (suc m₀))))
+    → Dc .lower ≡ c₀ → DF .lower ≡ suc c₀
+    → (x : ⌞ G .F₀ (suc (suc m₀)) ⌟)
+    → d Dc (normalize-desc G (suc fuel) (suc c₀) eq (Nat.s≤s Nat.0≤x) x .fst)
+    ≡ Gr._*_ (suc m₀)
+        (d Dc (normalize-desc G fuel (suc (suc c₀))
+          (sym (Nat.+-sucr (suc c₀) fuel) ∙ eq) (Nat.s≤s Nat.0≤x) x .fst))
+        (Gr._⁻¹ (suc m₀)
+          (d DF (normalize-desc G fuel (suc (suc c₀))
+            (sym (Nat.+-sucr (suc c₀) fuel) ∙ eq) (Nat.s≤s Nat.0≤x) x .fst)))
+  boundary-step {m₀} fuel c₀ eq Dc DF pc pF x =
+      d-⋆ Dc y _
+    ∙ ap (Gr._*_ (suc m₀) (d Dc y)) (d-inv Dc (s Jf (d Ff y)))
+    ∙ ap (λ w → Gr._*_ (suc m₀) (d Dc y) (Gr._⁻¹ (suc m₀) w))
+        ( d-s-id Dc Jf (inl pc) (d Ff y)
+        ∙ ap (λ w → d w y) (fin-path {x = Ff} {y = DF} (sym pF)))
+    where
+    bF : suc (suc c₀) Nat.≤ suc (suc (suc m₀))
+    bF = subst (suc (suc c₀) Nat.≤_)
+           (sym (Nat.+-sucr (suc c₀) fuel) ∙ eq)
+           (Nat.s≤s (le-plus (suc c₀) fuel))
+    Ff : Fin (suc (suc (suc m₀)))
+    Ff = fin (suc c₀) ⦃ bF ⦄
+    Jf : Fin (suc (suc m₀))
+    Jf = fin c₀ ⦃ Nat.≤-peel bF ⦄
+    y : ⌞ G .F₀ (suc (suc m₀)) ⌟
+    y = normalize-desc G fuel (suc (suc c₀))
+          (sym (Nat.+-sucr (suc c₀) fuel) ∙ eq) (Nat.s≤s Nat.0≤x) x .fst
+```
+
+Together, `pass-pull`{.Agda} and `boundary-step`{.Agda} telescope
+$d_0 \circ T$ into the alternating sum $\sum_j (-1)^j R_j \circ d_j$
+of partial passes applied to faces. What separates this from the
+clean boundary formula $d_0\, e_{k+1} = \sum_i (-1)^i
+\delta_i \cdot e_k$ — and hence from the counit's chain condition —
+is precisely the vanishing lemma $N \cap D = 0$: a normalized chain
+that is a sum of degenerate chains is zero. That is the remaining
+irreducible half of the normalization theorem (the other half, $N +
+D = \mathrm{everything}$, is already witnessed by the normalization
+operator, since $x - Tx$ is a sum of degeneracies).
