@@ -73,6 +73,9 @@ import Homotopy.Modality
 import Data.Real.Arithmetic
 import Data.Real.Order
 import Data.Real.Base
+import Data.Real.Multiplication
+import Data.Real.Ring
+import Data.Real.Reciprocal
 import Cat.Instances.SimplicialPresheaves.Cech
 import Cat.Instances.SimplicialSets.ActionGroupoid
 import Cat.Instances.SuperSmoothSets
@@ -889,21 +892,24 @@ group structure ([[Minkowski addition|real-addition]] of cuts, with
 the rational embedding an additive homomorphism), the
 [[lattice|real-lattice]] of join, meet and absolute value, and
 [[multiplication|real-multiplication]] of cuts by the interval
-product — sign-analysis-free, commutative, with a two-sided unit,
-zero absorption, and **full distributivity** over addition
-(`*ᴿ-distribˡ`{.Agda}): the reverse containment $x \cdot (y + z) \le
-x \cdot y + x \cdot z$ is proven by a simultaneous
-$\delta$-budget tightening of *all three* factor brackets against
-the super-additive defect of the four-fold minimum. Strictly
-positive reals even have **reciprocals**
-(`Data.Real.Reciprocal`{.Agda}): the reciprocal cut and the full
-inverse law $x \cdot x^{-1} = 1$. The reals are thus a commutative
-distributive structure with inverses; what remains before the
-ordered field is complete is associativity of multiplication (the
-same interval technique on triple products) and reciprocals of reals
-merely apart from zero (the sign-indeterminate case). With the field
-comes a constructive theory of $C^\infty$ maps and the classical
-smooth site. Concretely missing, then:
+product — sign-analysis-free, and now carrying *every* ring axiom:
+commutativity, a two-sided unit, zero absorption, **full
+distributivity** (`*ᴿ-distribˡ`{.Agda}, whose reverse containment
+needs a simultaneous $\delta$-budget tightening of all three factor
+brackets against the super-additive defect of the four-fold minimum)
+and **associativity** (`*ᴿ-assoc`{.Agda}, exact once the interval
+product of three brackets is seen to associate on the nose, needing
+only a corner choice and one $\eta$-shift). These assemble via the
+`make-ring`{.Agda} smart constructor into `ℝ-comm`{.Agda}: **the
+Dedekind reals are a commutative ring** (`Data.Real.Ring`{.Agda}),
+with **zero postulates**. Every nonzero real, moreover, has a
+two-sided multiplicative **reciprocal** (`recip±`{.Agda} in
+`Data.Real.Reciprocal`{.Agda}: the reciprocal cut with all eight
+analytic axioms, the inverse law $x \cdot x^{-1} = 1$, and both
+signs), so $\bR$ is a constructive field bar the packaging of
+apartness as data rather than a proposition. With multiplication in
+hand comes a constructive theory of $C^\infty$ maps and the
+classical smooth site. Concretely missing, then:
 the smooth-site instance of (7) (localisation over the
 good-open-cover coverage, with shrinking-neighbourhood germs); the
 pullback half of left exactness for the higher-inductive
