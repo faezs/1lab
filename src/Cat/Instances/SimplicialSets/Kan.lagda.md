@@ -2,7 +2,9 @@
 ```agda
 open import Cat.Instances.SimplicialSets
 open import Cat.Instances.Simplex
+open import Cat.Diagram.Exponential
 open import Cat.Displayed.Total
+open import Cat.Functor.Base
 open import Cat.Prelude
 
 import Cat.Reasoning
@@ -659,4 +661,83 @@ the missing ingredient of the paper's diagram (31).
 ```agda
 K-is-kan : (A : Abelian-group lzero) (n : Nat) → is-kan (K-sset A n)
 K-is-kan A n = sab-is-kan (K A n)
+```
+
+## Mapping spaces into simplicial abelian groups
+
+The internal mapping space $\mathrm{Maps}(X, Y)$ of simplicial sets
+is Kan whenever $Y$ is — but the general proof needs the theory of
+anodyne extensions. For the mapping spaces this development actually
+uses — those into $K(A,n)$ — there is a purely algebraic route:
+when the target is a simplicial *abelian group*, the mapping space
+is again a simplicial abelian group, with all operations pointwise,
+so Moore's theorem applies directly.
+
+<!--
+```agda
+private module SC = Cartesian-closed sSet-closed
+```
+-->
+
+```agda
+module _ (G : Functor (Δ ^op) (Ab lzero)) (X : ⌞ sSet ⌟) where
+  private
+    module G = Functor G
+    module Gr (m : Nat) = Abelian-group-on (G.₀ m .snd)
+
+    Y : ⌞ sSet ⌟
+    Y = Ab↪Sets F∘ G
+
+  Maps-ab : Functor (Δ ^op) (Ab lzero)
+  Maps-ab .F₀ n = SC.[ X , Y ] .F₀ n , make-abelian-group.to-abelian-group-on mk where
+    mk : make-abelian-group ⌞ SC.[ X , Y ] .F₀ n ⌟
+    mk .make-abelian-group.ab-is-set = SC.[ X , Y ] .F₀ n .is-tr
+    mk .make-abelian-group.mul α β = NT
+      (λ m p → Gr._*_ m (α .η m p) (β .η m p))
+      (λ a b f → funext λ p →
+          ap₂ (Gr._*_ b)
+            (happly (α .is-natural a b f) p)
+            (happly (β .is-natural a b f) p)
+        ∙ sym (is-group-hom.pres-⋆ (G.₁ f .snd) _ _))
+    mk .make-abelian-group.inv α = NT
+      (λ m p → Gr._⁻¹ m (α .η m p))
+      (λ a b f → funext λ p →
+          ap (Gr._⁻¹ b) (happly (α .is-natural a b f) p)
+        ∙ sym (is-group-hom.pres-inv (G.₁ f .snd)))
+    mk .make-abelian-group.1g = NT
+      (λ m p → Gr.1g m)
+      (λ a b f → funext λ p → sym (is-group-hom.pres-id (G.₁ f .snd)))
+    mk .make-abelian-group.idl α = Nat-path λ m → funext λ p → Gr.idl m
+    mk .make-abelian-group.assoc α β γ = Nat-path λ m → funext λ p → Gr.associative m
+    mk .make-abelian-group.invl α = Nat-path λ m → funext λ p → Gr.inversel m
+    mk .make-abelian-group.comm α β = Nat-path λ m → funext λ p → Gr.commutes m
+  Maps-ab .F₁ f .fst = SC.[ X , Y ] .F₁ f
+  Maps-ab .F₁ f .snd .is-group-hom.pres-⋆ α β = Nat-path λ m → funext λ p → refl
+  Maps-ab .F-id = ext λ α i g x' →
+    ap (α .η i) (Σ-pathp (Δ .Precategory.idl _) refl)
+  Maps-ab .F-∘ f g = ext λ α i h x' →
+    ap (α .η i) (Σ-pathp (sym (Δ .Precategory.assoc g f h)) refl)
+```
+
+The underlying simplicial set of this simplicial abelian group *is*
+the exponential, so the mapping space is a Kan complex.
+
+```agda
+  Maps-into-ab-is-kan : is-kan SC.[ X , Y ]
+  Maps-into-ab-is-kan = subst is-kan agree (sab-is-kan Maps-ab)
+    where
+    agree : (Ab↪Sets F∘ Maps-ab) ≡ SC.[ X , Y ]
+    agree = Functor-path (λ n → refl) (λ f → refl)
+```
+
+In particular, the mapping spaces defining
+[[cohomology|eilenberg-maclane-object]] are Kan complexes: the
+homotopies that $H[X,n]\langle A \rangle$ quotients by are honest
+homotopies in a fibrant object.
+
+```agda
+Maps-K-is-kan
+  : (X : ⌞ sSet ⌟) (A : Abelian-group lzero) (n : Nat)
+  → is-kan SC.[ X , K-sset A n ]
+Maps-K-is-kan X A n = Maps-into-ab-is-kan (K A n) X
 ```
