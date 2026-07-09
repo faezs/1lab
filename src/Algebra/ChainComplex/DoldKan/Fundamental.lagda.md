@@ -229,3 +229,65 @@ pushforwards* (which normalized $\varphi$ kills). That combinatorial
 expansion of the normalization operator — and with it the
 invertibility of both unit and counit — is the normalization
 theorem, and remains future work.
+
+## Naturality of the normalization pass
+
+Maps of simplicial abelian groups commute with every face,
+degeneracy, and group operation, so they commute with each
+correction step and hence with the whole pass. This is the first of
+the three lemmas reducing the counit's chain condition to the
+combinatorial core.
+
+```agda
+module _ {G G' : Functor (Δ ^op) (Ab lzero)} (α : G => G') where
+  private
+    module S  = Simplicial-operators G
+    module S' = Simplicial-operators G'
+
+    αf : ∀ m → ⌞ G .F₀ m ⌟ → ⌞ G' .F₀ m ⌟
+    αf m = α .η m .fst
+
+    α-d : ∀ {m} (i : Fin (suc (suc m))) (x : ⌞ G .F₀ (suc m) ⌟)
+        → αf m (S.d i x) ≡ S'.d i (αf (suc m) x)
+    α-d {m} i x = happly (ap ∫Hom.fst (α .is-natural (suc m) m (δ i))) x
+
+    α-s : ∀ {m} (j : Fin (suc m)) (x : ⌞ G .F₀ m ⌟)
+        → αf (suc m) (S.s j x) ≡ S'.s j (αf m x)
+    α-s {m} j x = happly (ap ∫Hom.fst (α .is-natural m (suc m) (σ j))) x
+
+  normalize-desc-natural
+    : {m₀ : Nat} (fuel c : Nat)
+      (eq : c Nat.+ fuel ≡ suc (suc (suc m₀))) (pos : 0 Nat.< c)
+      (x : ⌞ G .F₀ (suc (suc m₀)) ⌟)
+    → αf (suc (suc m₀)) (normalize-desc G fuel c eq pos x .fst)
+    ≡ normalize-desc G' fuel c eq pos (αf (suc (suc m₀)) x) .fst
+  normalize-desc-natural zero c eq pos x = refl
+  normalize-desc-natural (suc fuel) zero eq pos x = absurd (Nat.¬suc≤0 pos)
+  normalize-desc-natural {m₀} (suc fuel) (suc c₀) eq pos x =
+      is-group-hom.pres-⋆ (α .η (suc (suc m₀)) .snd) y _
+    ∙ ap₂ (Gr'._*_ (suc (suc m₀)))
+        rec
+        ( is-group-hom.pres-inv (α .η (suc (suc m₀)) .snd)
+        ∙ ap (Gr'._⁻¹ (suc (suc m₀)))
+            ( α-s Jf (S.d Ff y)
+            ∙ ap (S'.s Jf) (α-d Ff y ∙ ap (S'.d Ff) rec)))
+    where
+    module Gr' (m : Nat) = Abelian-group-on (G' .F₀ m .snd)
+    bF : suc (suc c₀) Nat.≤ suc (suc (suc m₀))
+    bF = subst (suc (suc c₀) Nat.≤_)
+           (sym (Nat.+-sucr (suc c₀) fuel) ∙ eq)
+           (Nat.s≤s (le-plus (suc c₀) fuel))
+    Ff : Fin (suc (suc (suc m₀)))
+    Ff = fin (suc c₀) ⦃ bF ⦄
+    Jf : Fin (suc (suc m₀))
+    Jf = fin c₀ ⦃ Nat.≤-peel bF ⦄
+    y : ⌞ G .F₀ (suc (suc m₀)) ⌟
+    y = normalize-desc G fuel (suc (suc c₀))
+          (sym (Nat.+-sucr (suc c₀) fuel) ∙ eq) (Nat.s≤s Nat.0≤x) x .fst
+    rec : αf (suc (suc m₀)) y
+        ≡ normalize-desc G' fuel (suc (suc c₀))
+            (sym (Nat.+-sucr (suc c₀) fuel) ∙ eq) (Nat.s≤s Nat.0≤x)
+            (αf (suc (suc m₀)) x) .fst
+    rec = normalize-desc-natural fuel (suc (suc c₀))
+            (sym (Nat.+-sucr (suc c₀) fuel) ∙ eq) (Nat.s≤s Nat.0≤x) x
+```
