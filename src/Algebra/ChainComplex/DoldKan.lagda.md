@@ -236,8 +236,15 @@ Chain-hom-ab A B = to-ab mk where
 ```
 
 Together with the [[Moore complex|moore-complex]] $N$, both halves
-of the Dold–Kan correspondence are now present; the unit and counit
-exhibiting them as inverse equivalences remain future work.
+of the Dold–Kan correspondence are now present, along with both of
+its canonical comparison maps: the unit $A \to \Gamma(NA)$ (in
+`Algebra.ChainComplex.DoldKan.Unit`{.Agda}, by transposing the Yoneda
+character across the free–forget adjunction) and the levelwise
+counit $N\Gamma(C) \to C$ (in
+`Algebra.ChainComplex.DoldKan.Fundamental`{.Agda}, by evaluation at
+the fundamental class produced by the normalization operator). That
+these are inverse isomorphisms is the normalization theorem, which
+remains future work.
 
 ## Eilenberg–MacLane objects
 

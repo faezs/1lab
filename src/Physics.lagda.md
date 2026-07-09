@@ -78,6 +78,8 @@ import Data.Real.Ring
 import Data.Real.Reciprocal
 import Cat.Instances.SimplicialPresheaves.Cech
 import Cat.Instances.SimplicialSets.Kan
+import Algebra.ChainComplex.DoldKan.Unit
+import Algebra.ChainComplex.DoldKan.Fundamental
 import Cat.Instances.SimplicialSets.ActionGroupoid
 import Cat.Instances.SuperSmoothSets
 import Cat.Instances.FormalSmoothSets.DeRham
@@ -834,6 +836,9 @@ _ = Cat.Instances.SimplicialSets.Kan.K-is-kan
 _ = Cat.Instances.SimplicialSets.Kan.Maps-K-is-kan
 _ = Cat.Instances.SimplicialSets.Kan.H-Ab
 _ = Cat.Instances.SimplicialSets.Kan.H-functor
+_ = Algebra.ChainComplex.DoldKan.Unit.dk-unit
+_ = Algebra.ChainComplex.DoldKan.Fundamental.fundamental
+_ = Algebra.ChainComplex.DoldKan.Fundamental.dk-counit-level
 _ = Cat.Site.Sheafification.Lex.Sheafification-pres-⊤
 _ = Cat.Site.Sheafification.Locality.locally-equal→inc-path
 _ = Cat.Site.Sheafification.Locality.sheaf-detects
@@ -964,7 +969,12 @@ Deligne/connection refinements ((39), (40)) remain); the unit and counit of the
 Dold–Kan correspondence (30) — both functors now exist, the Moore
 complex $N$ and its inverse $\Gamma$, with $K(A,n)$ and ordinary
 cohomology defined, and $K(A,n)$ now proven Kan, along with the
-mapping spaces into any simplicial abelian group — closure of Kan
+mapping spaces into any simplicial abelian group, and both canonical
+comparison maps of (30) now *constructed* — the unit $A \to
+\Gamma(NA)$ by adjunct transposition and the levelwise counit by
+evaluation at the fundamental class of the normalization operator —
+with only their invertibility (the normalization theorem) remaining;
+closure of Kan
 complexes under mapping spaces with *arbitrary* Kan targets needs
 the theory of anodyne extensions; and the *external presentation* of the simplicial
 localisations $L^{\rm{heq}}, L^{\rm{lheq}}$ ((32)–(36)) — their
