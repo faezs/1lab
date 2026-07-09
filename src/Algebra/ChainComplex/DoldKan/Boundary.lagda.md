@@ -613,3 +613,58 @@ module _ (m₀' : Nat) where
           ∙ abl.inv-1g (G+ .F₀ (suc m₀') .snd))
       ∙ Abelian-group-on.idl (G+ .F₀ (suc m₀') .snd)
 ```
+
+## The low-dimensional cases
+
+The machinery above needs at least two levels of faces below the top;
+the two low cases are direct computations. In dimension one the
+formula is immediate; in dimension two the corrections of adjacent
+pushforwards coincide — $\delta_1 \delta_1 = \delta_2 \delta_1$ — and
+cancel exactly.
+
+```agda
+boundary-formula₀
+  : Simplicial-operators.d ℤ⟨ Δ[ 1 ] ⟩ (fin 0 ⦃ Nat.s≤s Nat.0≤x ⦄)
+      (fundamental 1 .fst)
+  ≡ Σalt 0 2 0 refl
+boundary-formula₀ =
+    S.d-⋆ (fin 0) x₀
+      (Abelian-group-on._⁻¹ (ℤ⟨ Δ[ 1 ] ⟩ .F₀ 1 .snd)
+        (S.s fzero (S.d (fsuc fzero) x₀)))
+  ∙ ap₂ C._*_
+      (dgen (fin 0))
+      ( S.d-inv (fin 0) (S.s fzero (S.d (fsuc fzero) x₀))
+      ∙ ap C._⁻¹
+          ( S.d-s-id (fin 0) fzero (inl refl) (S.d (fsuc fzero) x₀)
+          ∙ dgen (fsuc fzero)))
+  ∙ sym Σc
+  where
+  module S = Simplicial-operators ℤ⟨ Δ[ 1 ] ⟩
+  module C = Abelian-group-on (ℤ⟨ Δ[ 1 ] ⟩ .F₀ 0 .snd)
+  x₀ : ⌞ ℤ⟨ Δ[ 1 ] ⟩ .F₀ 1 ⌟
+  x₀ = gen {Δ[ 1 ] .F₀ 1} (Δ .Precategory.id)
+
+  dgen : (i : Fin 2) → S.d i x₀ ≡ gen {Δ[ 1 ] .F₀ 0} (δ i)
+  dgen i =
+      gen-nat {Δ[ 1 ] .F₀ 1} {Δ[ 1 ] .F₀ 0} (Δ[ 1 ] .F₁ (δ i)) (Δ .Precategory.id)
+    ∙ ap (gen {Δ[ 1 ] .F₀ 0}) (Δ .Precategory.idl (δ i))
+
+  pgen : (i : Fin 2)
+       → push-nt 0 i .η 0 .fst (fundamental 0 .fst) ≡ gen {Δ[ 1 ] .F₀ 0} (δ i)
+  pgen i =
+      gen-nat {Δ[ 0 ] .F₀ 0} {Δ[ 1 ] .F₀ 0} (Δmap-nt (δ i) .η 0) (Δ .Precategory.id)
+    ∙ ap (gen {Δ[ 1 ] .F₀ 0}) (Δ .Precategory.idr (δ i))
+
+  tail : Σalt 0 1 1 refl ≡ gen {Δ[ 1 ] .F₀ 0} (δ (fin 1))
+  tail =
+      ap (C._*_ (push-nt 0 (fin 1 ⦃ Nat.s≤s (Nat.s≤s Nat.0≤x) ⦄) .η 0 .fst
+           (fundamental 0 .fst)))
+        (abl.inv-1g (ℤ⟨ Δ[ 1 ] ⟩ .F₀ 0 .snd))
+    ∙ C.idr
+    ∙ pgen (fin 1)
+
+  Σc : Σalt 0 2 0 refl
+     ≡ C._*_ (gen {Δ[ 1 ] .F₀ 0} (δ (fin 0)))
+         (C._⁻¹ (gen {Δ[ 1 ] .F₀ 0} (δ (fin 1))))
+  Σc = ap₂ C._*_ (pgen (fin 0)) (ap C._⁻¹ tail)
+```
