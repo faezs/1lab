@@ -82,6 +82,7 @@ import Algebra.ChainComplex.DoldKan.Unit
 import Algebra.ChainComplex.DoldKan.Fundamental
 import Algebra.ChainComplex.DoldKan.Normalization
 import Algebra.ChainComplex.DoldKan.Boundary
+import Algebra.ChainComplex.DoldKan.Counit
 import Cat.Instances.SimplicialSets.ActionGroupoid
 import Cat.Instances.SuperSmoothSets
 import Cat.Instances.FormalSmoothSets.DeRham
@@ -843,6 +844,7 @@ _ = Algebra.ChainComplex.DoldKan.Fundamental.fundamental
 _ = Algebra.ChainComplex.DoldKan.Fundamental.dk-counit-level
 _ = Algebra.ChainComplex.DoldKan.Normalization.normalized-degenerate-vanish
 _ = Algebra.ChainComplex.DoldKan.Boundary.∂-fundamental
+_ = Algebra.ChainComplex.DoldKan.Counit.dk-counit
 _ = Cat.Site.Sheafification.Lex.Sheafification-pres-⊤
 _ = Cat.Site.Sheafification.Locality.locally-equal→inc-path
 _ = Cat.Site.Sheafification.Locality.sheaf-detects
@@ -982,8 +984,8 @@ degenerate simplices vanish**, $N \cap D = 0$ — now also proven
 (the complementary half, $N + D$ = everything, being witnessed by
 the normalization operator itself), and from it the **boundary
 formula** $d_0 e_{k+1} = \sum_i (-1)^i \delta_i \cdot e_k$ for the
-fundamental classes at every dimension — leaving the counit's
-evaluation square and the inverse isomorphisms;
+fundamental classes at every dimension — and with it the counit assembled as an honest **chain map**
+$N\Gamma(C) \to C$ — leaving only the inverse isomorphisms;
 closure of Kan
 complexes under mapping spaces with *arbitrary* Kan targets needs
 the theory of anodyne extensions; and the *external presentation* of the simplicial
