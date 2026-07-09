@@ -1096,6 +1096,43 @@ private abstract
   ... | inr e | _      | inl e' = inr (inr (inl (e ∙ e')))
   ... | inr e | _      | inr e' = inr (inr (inr (e ∙ e')))
 
+
+
+  sub-move : ∀ {a b} s → a ≤ (b +ℚ s) → (a +ℚ (-ℚ s)) ≤ b
+  sub-move {a} {b} s a≤bs = ≤-resp refl b+s-s≡b (+ℚ-preserves-≤ a≤bs (≤-refl { -ℚ s}))
+    where
+    b+s-s≡b : (b +ℚ s) +ℚ (-ℚ s) ≡ b
+    b+s-s≡b = rational!
+
+  lt-move : ∀ {a b} s → s < (b +ℚ (-ℚ a)) → a < (b +ℚ (-ℚ s))
+  lt-move {a} {b} s s<b-a = <-resp a+s-s≡a refl (+ℚ-preserves-<r (-ℚ s) a+s<b)
+    where
+    a+[b-a]≡b : a +ℚ (b +ℚ (-ℚ a)) ≡ b
+    a+[b-a]≡b = rational!
+    a+s<b : (a +ℚ s) < b
+    a+s<b = <-resp refl a+[b-a]≡b (+ℚ-preserves-<l a s<b-a)
+    a+s-s≡a : (a +ℚ s) +ℚ (-ℚ s) ≡ a
+    a+s-s≡a = rational!
+
+  ps-ring : ∀ a b h → ((a +ℚ (-ℚ h)) +ℚ (b +ℚ (-ℚ h))) ≡ ((a +ℚ b) +ℚ (-ℚ (h +ℚ h)))
+  ps-ring a b h = rational!
+
+  sum4-ring : ∀ a p b r → ((a +ℚ p) +ℚ (b +ℚ r)) ≡ ((a +ℚ b) +ℚ (p +ℚ r))
+  sum4-ring a p b r = rational!
+
+  sum-pos : ∀ {a b} → 0 < a → 0 ≤ b → 0 < (a +ℚ b)
+  sum-pos {a} {b} 0<a 0≤b = <-≤-trans 0<a
+    (≤-resp (+ℚ-idr a) refl (+ℚ-preserves-≤ (≤-refl {a}) 0≤b))
+
+  shift-minus : ∀ p m η → (p *ℚ (m +ℚ (-ℚ η))) ≡ ((p *ℚ m) +ℚ (-ℚ (p *ℚ η)))
+  shift-minus p m η = rational!
+
+  shift-plus : ∀ p m η → (p *ℚ (m +ℚ η)) ≡ ((p *ℚ m) +ℚ (p *ℚ η))
+  shift-plus p m η = rational!
+
+  neg-mul-l : ∀ p η → ((-ℚ p) *ℚ η) ≡ (-ℚ (p *ℚ η))
+  neg-mul-l p η = rational!
+
   -- Associativity core: min of ([A,B]·[Y₋,Y₊])·[e,f] ≤ min of [A,B]·([Y₋,Y₊]·[e,f]).
   -- Both are the minimum of the same eight corner triple products; this containment
   -- is proved by choosing which yz-corner realises each inner extremum.
@@ -1154,32 +1191,133 @@ private abstract
     ... | inr (inr (inl q)) = ≤-resp refl (eqn-mxyz p Y₊ e q) (base (p *ℚ Y₊) e lo₊ hi₊ ≤-refl e≤f)
     ... | inr (inr (inr q)) = ≤-resp refl (eqn-mxyz p Y₊ f q) (base (p *ℚ Y₊) f lo₊ hi₊ e≤f ≤-refl)
 
-
-  sub-move : ∀ {a b} s → a ≤ (b +ℚ s) → (a +ℚ (-ℚ s)) ≤ b
-  sub-move {a} {b} s a≤bs = ≤-resp refl b+s-s≡b (+ℚ-preserves-≤ a≤bs (≤-refl { -ℚ s}))
+  assoc-witness
+    : ∀ x y z q a b c d a' b' c' d' e f P Q
+    → ∣ x .lower a ∣ → ∣ x .upper b ∣ → ∣ y .lower c ∣ → ∣ y .upper d ∣
+    → (P < min₄ (a *ℚ c) (a *ℚ d) (b *ℚ c) (b *ℚ d))
+    → ∣ x .lower a' ∣ → ∣ x .upper b' ∣ → ∣ y .lower c' ∣ → ∣ y .upper d' ∣
+    → (max₄ (a' *ℚ c') (a' *ℚ d') (b' *ℚ c') (b' *ℚ d') < Q)
+    → ∣ z .lower e ∣ → ∣ z .upper f ∣
+    → (q < min₄ (P *ℚ e) (P *ℚ f) (Q *ℚ e) (Q *ℚ f))
+    → ∣ (x *ᴿ (y *ᴿ z)) .lower q ∣
+  assoc-witness x y z q a b c d a' b' c' d' e f P Q
+    la ub lyc uyd P<m la' ub' lyc' uyd' m<Q lze uzf q<m =
+    inc (A , B , E , F , lA , uB , yz-lo , yz-hi , q<MEF)
     where
-    b+s-s≡b : (b +ℚ s) +ℚ (-ℚ s) ≡ b
-    b+s-s≡b = rational!
-
-  lt-move : ∀ {a b} s → s < (b +ℚ (-ℚ a)) → a < (b +ℚ (-ℚ s))
-  lt-move {a} {b} s s<b-a = <-resp a+s-s≡a refl (+ℚ-preserves-<r (-ℚ s) a+s<b)
-    where
-    a+[b-a]≡b : a +ℚ (b +ℚ (-ℚ a)) ≡ b
-    a+[b-a]≡b = rational!
-    a+s<b : (a +ℚ s) < b
-    a+s<b = <-resp refl a+[b-a]≡b (+ℚ-preserves-<l a s<b-a)
-    a+s-s≡a : (a +ℚ s) +ℚ (-ℚ s) ≡ a
-    a+s-s≡a = rational!
-
-  ps-ring : ∀ a b h → ((a +ℚ (-ℚ h)) +ℚ (b +ℚ (-ℚ h))) ≡ ((a +ℚ b) +ℚ (-ℚ (h +ℚ h)))
-  ps-ring a b h = rational!
-
-  sum4-ring : ∀ a p b r → ((a +ℚ p) +ℚ (b +ℚ r)) ≡ ((a +ℚ b) +ℚ (p +ℚ r))
-  sum4-ring a p b r = rational!
-
-  sum-pos : ∀ {a b} → 0 < a → 0 ≤ b → 0 < (a +ℚ b)
-  sum-pos {a} {b} 0<a 0≤b = <-≤-trans 0<a
-    (≤-resp (+ℚ-idr a) refl (+ℚ-preserves-≤ (≤-refl {a}) 0≤b))
+    A B Y₋ Y₊ : Ratio
+    A  = maxℚ a a'
+    B  = minℚ b b'
+    Y₋ = maxℚ c c'
+    Y₊ = minℚ d d'
+    lA : ∣ x .lower A ∣
+    lA = maxℚ-lower-mem x la la'
+    uB : ∣ x .upper B ∣
+    uB = minℚ-upper-mem x ub ub'
+    lY₋ : ∣ y .lower Y₋ ∣
+    lY₋ = maxℚ-lower-mem y lyc lyc'
+    uY₊ : ∣ y .upper Y₊ ∣
+    uY₊ = minℚ-upper-mem y uyd uyd'
+    a≤A : a ≤ A
+    a≤A = maxℚ-≤l {a} {a'}
+    a'≤A : a' ≤ A
+    a'≤A = maxℚ-≤r {a} {a'}
+    B≤b : B ≤ b
+    B≤b = minℚ-≤l {b} {b'}
+    B≤b' : B ≤ b'
+    B≤b' = minℚ-≤r {b} {b'}
+    c≤Y₋ : c ≤ Y₋
+    c≤Y₋ = maxℚ-≤l {c} {c'}
+    c'≤Y₋ : c' ≤ Y₋
+    c'≤Y₋ = maxℚ-≤r {c} {c'}
+    Y₊≤d : Y₊ ≤ d
+    Y₊≤d = minℚ-≤l {d} {d'}
+    Y₊≤d' : Y₊ ≤ d'
+    Y₊≤d' = minℚ-≤r {d} {d'}
+    A≤B : A ≤ B
+    A≤B = <-weaken (lower<upper x lA uB)
+    Y₋≤Y₊ : Y₋ ≤ Y₊
+    Y₋≤Y₊ = <-weaken (lower<upper y lY₋ uY₊)
+    e≤f : e ≤ f
+    e≤f = <-weaken (lower<upper z lze uzf)
+    Mxy Mxxy Myz Mxyz ML MR : Ratio
+    Mxy  = min₄ (A *ℚ Y₋) (A *ℚ Y₊) (B *ℚ Y₋) (B *ℚ Y₊)
+    Mxxy = max₄ (A *ℚ Y₋) (A *ℚ Y₊) (B *ℚ Y₋) (B *ℚ Y₊)
+    Myz  = min₄ (Y₋ *ℚ e) (Y₋ *ℚ f) (Y₊ *ℚ e) (Y₊ *ℚ f)
+    Mxyz = max₄ (Y₋ *ℚ e) (Y₋ *ℚ f) (Y₊ *ℚ e) (Y₊ *ℚ f)
+    ML   = min₄ (Mxy *ℚ e) (Mxy *ℚ f) (Mxxy *ℚ e) (Mxxy *ℚ f)
+    MR   = min₄ (A *ℚ Myz) (A *ℚ Mxyz) (B *ℚ Myz) (B *ℚ Mxyz)
+    P<Mxy : P < Mxy
+    P<Mxy = <-≤-trans P<m (min₄-tighten-both A B a b Y₋ Y₊ c d a≤A A≤B B≤b c≤Y₋ Y₋≤Y₊ Y₊≤d)
+    Mxxy<Q : Mxxy < Q
+    Mxxy<Q = ≤-<-trans (max₄-tighten-both A B a' b' Y₋ Y₊ c' d' a'≤A A≤B B≤b' c'≤Y₋ Y₋≤Y₊ Y₊≤d') m<Q
+    Mxy≤Mxxy : Mxy ≤ Mxxy
+    Mxy≤Mxxy = ≤-trans (min₄-≤₁ {A *ℚ Y₋} {A *ℚ Y₊} {B *ℚ Y₋} {B *ℚ Y₊})
+                       (max₄-≥₁ {A *ℚ Y₋} {A *ℚ Y₊} {B *ℚ Y₋} {B *ℚ Y₊})
+    q<ML : q < ML
+    q<ML = <-≤-trans q<m (min₄-tighten Mxy Mxxy P Q e f (<-weaken P<Mxy) Mxy≤Mxxy (<-weaken Mxxy<Q) e≤f)
+    q<MR : q < MR
+    q<MR = <-≤-trans q<ML (assoc-ML≤MR A B Y₋ Y₊ e f A≤B Y₋≤Y₊ e≤f)
+    K : Ratio
+    K = maxℚ 1 (maxℚ B (-ℚ A))
+    0<K : 0 < K
+    0<K = bound-pos A B
+    K-nz : Nonzero K
+    K-nz = inc (positive→nonzero (to-positive 0<K))
+    slack₂ : Ratio
+    slack₂ = MR +ℚ (-ℚ q)
+    0<slack₂ : 0 < slack₂
+    0<slack₂ = <→positive-diff q<MR
+    η : Ratio
+    η = (half slack₂ /ℚ K) ⦃ K-nz ⦄
+    0<η : 0 < η
+    0<η = div-pos (half slack₂) K ⦃ K-nz ⦄ (half-pos 0<slack₂) 0<K
+    E F : Ratio
+    E = Myz +ℚ (-ℚ η)
+    F = Mxyz +ℚ η
+    E<Myz : E < Myz
+    E<Myz = sub-pos-< Myz η 0<η
+    Mxyz<F : Mxyz < F
+    Mxyz<F = add-pos-< Mxyz η 0<η
+    -K≤A : (-ℚ K) ≤ A
+    -K≤A = bound-lo A B
+    B≤K : B ≤ K
+    B≤K = bound-hi A B
+    A≤K : A ≤ K
+    A≤K = ≤-trans A≤B B≤K
+    -K≤B : (-ℚ K) ≤ B
+    -K≤B = ≤-trans -K≤A A≤B
+    Kη≡ : K *ℚ η ≡ half slack₂
+    Kη≡ = *ℚ-commutative K η ∙ /ℚ-cancel (half slack₂) K ⦃ K-nz ⦄
+    negKη≡ : ((-ℚ K) *ℚ η) ≡ (-ℚ half slack₂)
+    negKη≡ = neg-mul-l K η ∙ ap (-ℚ_) Kη≡
+    q<MR-half : q < (MR +ℚ (-ℚ half slack₂))
+    q<MR-half = lt-move {q} {MR} (half slack₂) (half-lt 0<slack₂)
+    cornerE : ∀ p → (-ℚ K) ≤ p → p ≤ K → MR ≤ (p *ℚ Myz) → q < (p *ℚ E)
+    cornerE p -K≤p p≤K MR≤pM = <-≤-trans q<MR-half pE≥
+      where
+      pη≤half : (p *ℚ η) ≤ half slack₂
+      pη≤half = ≤-resp refl Kη≡ (*ℚ-preserves-≤r η p≤K (<-weaken 0<η))
+      pE≥ : (MR +ℚ (-ℚ half slack₂)) ≤ (p *ℚ E)
+      pE≥ = ≤-resp refl (sym (shift-minus p Myz η))
+        (+ℚ-preserves-≤ MR≤pM (negℚ-anti-≤ pη≤half))
+    cornerF : ∀ p → (-ℚ K) ≤ p → p ≤ K → MR ≤ (p *ℚ Mxyz) → q < (p *ℚ F)
+    cornerF p -K≤p p≤K MR≤pM = <-≤-trans q<MR-half pF≥
+      where
+      -half≤pη : (-ℚ half slack₂) ≤ (p *ℚ η)
+      -half≤pη = ≤-resp negKη≡ refl (*ℚ-preserves-≤r η -K≤p (<-weaken 0<η))
+      pF≥ : (MR +ℚ (-ℚ half slack₂)) ≤ (p *ℚ F)
+      pF≥ = ≤-resp refl (sym (shift-plus p Mxyz η))
+        (+ℚ-preserves-≤ MR≤pM -half≤pη)
+    q<MEF : q < min₄ (A *ℚ E) (A *ℚ F) (B *ℚ E) (B *ℚ F)
+    q<MEF = min₄-univ-<
+      (cornerE A -K≤A A≤K (min₄-≤₁ {A *ℚ Myz} {A *ℚ Mxyz} {B *ℚ Myz} {B *ℚ Mxyz}))
+      (cornerF A -K≤A A≤K (min₄-≤₂ {A *ℚ Myz} {A *ℚ Mxyz} {B *ℚ Myz} {B *ℚ Mxyz}))
+      (cornerE B -K≤B B≤K (min₄-≤₃ {A *ℚ Myz} {A *ℚ Mxyz} {B *ℚ Myz} {B *ℚ Mxyz}))
+      (cornerF B -K≤B B≤K (min₄-≤₄ {A *ℚ Myz} {A *ℚ Mxyz} {B *ℚ Myz} {B *ℚ Mxyz}))
+    yz-lo : ∣ (y *ᴿ z) .lower E ∣
+    yz-lo = inc (Y₋ , Y₊ , e , f , lY₋ , uY₊ , lze , uzf , E<Myz)
+    yz-hi : ∣ (y *ᴿ z) .upper F ∣
+    yz-hi = inc (Y₋ , Y₊ , e , f , lY₋ , uY₊ , lze , uzf , Mxyz<F)
 ```
 -->
 
@@ -1578,3 +1716,38 @@ structure of the reals.
 ```
 
 
+
+Finally, **associativity**. The interval product of three brackets is
+associative on the nose — $([A,B]\cdot[Y_-,Y_+])\cdot[e,f]$ and
+$[A,B]\cdot([Y_-,Y_+]\cdot[e,f])$ are the same set of triple products
+— so the containment `assoc-ML≤MR`{.Agda} needs no $\delta$-budget,
+only a choice of which corner realises each inner extremum. Wrapping
+it with the bracket reconciliation and a single $\eta$-shift to make
+the $y\cdot z$ bracket strict gives one direction; commutativity
+gives the other.
+
+```agda
+*ᴿ-assoc-≤ : ∀ x y z → ((x *ᴿ y) *ᴿ z) ≤ᴿ (x *ᴿ (y *ᴿ z))
+*ᴿ-assoc-≤ x y z q = □-rec prop
+  (λ (P , Q , e , f , lxyP , uxyQ , lze , uzf , q<PQ) →
+    □-rec prop (λ (a , b , c , d , la , ub , lyc , uyd , P<m) →
+      □-rec prop (λ (a' , b' , c' , d' , la' , ub' , lyc' , uyd' , m<Q) →
+        assoc-witness x y z q a b c d a' b' c' d' e f P Q
+          la ub lyc uyd P<m la' ub' lyc' uyd' m<Q lze uzf q<PQ)
+        uxyQ)
+      lxyP)
+  where
+  prop : is-prop ∣ (x *ᴿ (y *ᴿ z)) .lower q ∣
+  prop = (x *ᴿ (y *ᴿ z)) .lower q .is-tr
+
+*ᴿ-assoc-≥ : ∀ x y z → (x *ᴿ (y *ᴿ z)) ≤ᴿ ((x *ᴿ y) *ᴿ z)
+*ᴿ-assoc-≥ x y z = subst₂ _≤ᴿ_ eq1 eq2 (*ᴿ-assoc-≤ z y x)
+  where
+  eq1 : ((z *ᴿ y) *ᴿ x) ≡ (x *ᴿ (y *ᴿ z))
+  eq1 = *ᴿ-comm (z *ᴿ y) x ∙ ap (x *ᴿ_) (*ᴿ-comm z y)
+  eq2 : (z *ᴿ (y *ᴿ x)) ≡ ((x *ᴿ y) *ᴿ z)
+  eq2 = *ᴿ-comm z (y *ᴿ x) ∙ ap (_*ᴿ z) (*ᴿ-comm y x)
+
+*ᴿ-assoc : ∀ x y z → (x *ᴿ y) *ᴿ z ≡ x *ᴿ (y *ᴿ z)
+*ᴿ-assoc x y z = ≤ᴿ-antisym (*ᴿ-assoc-≤ x y z) (*ᴿ-assoc-≥ x y z)
+```
