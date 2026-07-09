@@ -847,3 +847,76 @@ H-Ab X n A = subst Abelian-group-on
   (ap π₀ˢ (Maps-ab-underlying (K A n) X))
   (π₀-ab (Maps-ab (K A n) X) .snd)
 ```
+
+## Functoriality
+
+Cohomology is contravariantly functorial: a map of simplicial sets
+$w : X' \to X$ pulls mapping spaces back by precomposition, the
+pullback is a homomorphism degreewise since the operations are
+pointwise in the target, and everything descends to $\pi_0$.
+
+```agda
+module _ (G : Functor (Δ ^op) (Ab lzero)) where
+  private
+    module G = Functor G
+    module Gr (m : Nat) = Abelian-group-on (G.₀ m .snd)
+
+  Maps-ab-precompose
+    : {X X' : ⌞ sSet ⌟} (w : X' => X)
+    → Maps-ab G X => Maps-ab G X'
+  Maps-ab-precompose {X} {X'} w .η n .fst nt = NT
+    (λ m p → nt .η m (p .fst , w .η m (p .snd)))
+    (λ a b f → funext λ p →
+        ap (λ z → nt .η b (p .fst ∘Δ f , z)) (happly (w .is-natural a b f) (p .snd))
+      ∙ happly (nt .is-natural a b f) (p .fst , w .η a (p .snd)))
+  Maps-ab-precompose w .η n .snd .is-group-hom.pres-⋆ α β =
+    Nat-path λ m → funext λ p → refl
+  Maps-ab-precompose w .is-natural n n' g = ext λ nt m h x' → refl
+
+module _ {G G' : Functor (Δ ^op) (Ab lzero)} (α : G => G') where
+  private
+    module G = Functor G
+    module G' = Functor G'
+
+    inc' : ⌞ G'.₀ 0 ⌟ → π₀ˢ (Ab↪Sets F∘ G')
+    inc' = inc
+
+  π₀-ab-map : Ab lzero .Precategory.Hom (π₀-ab G) (π₀-ab G')
+  π₀-ab-map .fst = Coeq-rec ci r where
+    ci : ⌞ G.₀ 0 ⌟ → π₀ˢ (Ab↪Sets F∘ G')
+    ci a = inc (α .η 0 .fst a)
+    r : ∀ h → ci (G.₁ (δ fzero) .fst h) ≡ ci (G.₁ (δ (fsuc fzero)) .fst h)
+    r h =
+        ap inc' (happly (ap ∫Hom.fst (α .is-natural 1 0 (δ fzero))) h)
+      ∙ Coeq.glue (α .η 1 .fst h)
+      ∙ sym (ap inc' (happly (ap ∫Hom.fst (α .is-natural 1 0 (δ (fsuc fzero)))) h))
+  π₀-ab-map .snd .is-group-hom.pres-⋆ =
+    Coeq-elim-prop (λ _ → hlevel 1) λ a →
+    Coeq-elim-prop (λ _ → hlevel 1) λ b →
+    ap inc' (is-group-hom.pres-⋆ (α .η 0 .snd) a b)
+```
+
+Assembling: for every abelian group $A$ and degree $n$, cohomology
+is a functor $\mathrm{sSet}^{\mathrm{op}} \to \mathrm{Ab}$, whose
+value at $X$ has underlying set $H[X,n]\langle A\rangle$.
+
+```agda
+H-functor : (A : Abelian-group lzero) (n : Nat) → Functor (sSet ^op) (Ab lzero)
+H-functor A n .F₀ X = π₀-ab (Maps-ab (K A n) X)
+H-functor A n .F₁ w = π₀-ab-map (Maps-ab-precompose (K A n) w)
+H-functor A n .F-id {X} = ext λ nt →
+  ap inc-X (Nat-path λ m → funext λ p → refl)
+  where
+  inc-X : ⌞ Maps-ab (K A n) X .F₀ 0 ⌟ → π₀ˢ (Ab↪Sets F∘ Maps-ab (K A n) X)
+  inc-X = inc
+H-functor A n .F-∘ {x} {y} {z} w v = ext λ nt →
+  ap inc-z (Nat-path λ m → funext λ p → refl)
+  where
+  inc-z : ⌞ Maps-ab (K A n) z .F₀ 0 ⌟ → π₀ˢ (Ab↪Sets F∘ Maps-ab (K A n) z)
+  inc-z = inc
+
+H-functor-carrier
+  : (A : Abelian-group lzero) (n : Nat) (X : ⌞ sSet ⌟)
+  → ⌞ H-functor A n .F₀ X ⌟ ≡ H[ X , n ]⟨ A ⟩
+H-functor-carrier A n X = ap π₀ˢ (Maps-ab-underlying (K A n) X)
+```
