@@ -8,6 +8,7 @@ open import Data.Real.Base
 
 open import Data.Fin
 open import Data.Dec
+open import Data.Sum
 
 import Data.Nat as Nat
 ```
@@ -419,4 +420,109 @@ smooth-mul
   : ∀ {n} {f g : Fun n}
   → Smooth n f → Smooth n g → Smooth n (λ x → f x *ᴿ g x)
 smooth-mul S T k = tower-mul k _ _ _ (S k) (T k)
+```
+
+## The chain rule
+
+The quotient of a composite telescopes over the coordinates of the
+middle tuple: switching one coordinate at a time from the unmoved
+point to the moved one, each step picks up one component's quotient
+against one quotient of the outer function, evaluated on the mixed
+frame.
+
+<!--
+```agda
+private
+  le-plus : ∀ x y → x Nat.≤ x Nat.+ y
+  le-plus zero    y = Nat.0≤x
+  le-plus (suc x) y = Nat.s≤s (le-plus x y)
+
+  switch : ∀ {m} → (Fin m → ℝ) → (Fin m → ℝ) → Nat → Fin m → ℝ
+  switch u v c j with holds? (suc (j .lower) Nat.≤ c)
+  ... | yes _ = v j
+  ... | no  _ = u j
+
+  switch-hi
+    : ∀ {m} (u v : Fin m → ℝ) (c : Nat) (j : Fin m)
+    → ¬ (suc (j .lower) Nat.≤ c) → switch u v c j ≡ u j
+  switch-hi u v c j hi with holds? (suc (j .lower) Nat.≤ c)
+  ... | yes p = absurd (hi p)
+  ... | no  _ = refl
+
+  switch-lo
+    : ∀ {m} (u v : Fin m → ℝ) (c : Nat) (j : Fin m)
+    → suc (j .lower) Nat.≤ c → switch u v c j ≡ v j
+  switch-lo u v c j lo with holds? (suc (j .lower) Nat.≤ c)
+  ... | yes _ = refl
+  ... | no ¬p = absurd (¬p lo)
+
+  switch-step
+    : ∀ {m} (u v : Fin m → ℝ) (c : Nat) (cf : Fin m)
+    → cf .lower ≡ c
+    → set (switch u v c) cf (v cf) ≡ switch u v (suc c)
+  switch-step u v c cf ce = funext λ j → go j where
+    go : ∀ j → set (switch u v c) cf (v cf) j ≡ switch u v (suc c) j
+    go j with Discrete-Fin .decide cf j
+    ... | yes p =
+        ap v p
+      ∙ sym (switch-lo u v (suc c) j
+          (Nat.s≤s (subst (λ z → j .lower Nat.≤ z) ce
+            (subst (λ z → j .lower Nat.≤ z .lower) (sym p) Nat.≤-refl))))
+    ... | no ¬p with holds? (suc (j .lower) Nat.≤ c)
+    ...   | yes lo = sym (switch-lo u v (suc c) j (Nat.≤-sucr lo))
+    ...   | no hi = sym (switch-hi u v (suc c) j no-suc)
+      where
+      no-suc : ¬ (suc (j .lower) Nat.≤ suc c)
+      no-suc le with Nat.≤-split (j .lower) c
+      ... | inl lt = hi lt
+      ... | inr (inl gt) =
+        Nat.¬sucx≤x _ (Nat.≤-trans gt (Nat.≤-peel le))
+      ... | inr (inr e) =
+        ¬p (fin-ap {n = λ _ → _} (ce ∙ sym e))
+```
+-->
+
+The frame bookkeeping is a fuel-indexed sum, exactly parallel on
+values and on towers.
+
+```agda
+teleT
+  : ∀ {m} (gq : Fin m → Fun (suc m)) (u v : Fin m → ℝ)
+  → (fuel c : Nat) → c Nat.+ fuel ≡ m → ℝ
+teleT gq u v zero c eq = 0ᴿ
+teleT {m} gq u v (suc fuel) c eq =
+  ((u cf −ᴿ v cf) *ᴿ gq cf (cons (v cf) (switch u v c)))
+    +ᴿ teleT gq u v fuel (suc c) (sym (Nat.+-sucr c fuel) ∙ eq)
+  where
+  cf : Fin m
+  cf = fin c ⦃ subst (suc c Nat.≤_) (sym (Nat.+-sucr c fuel) ∙ eq)
+        (Nat.s≤s (le-plus c fuel)) ⦄
+
+telescope
+  : ∀ {m} (g : Fun m) (gq : Fin m → Fun (suc m))
+  → (∀ j → Quot m g j (gq j))
+  → (u v : Fin m → ℝ)
+  → (fuel c : Nat) (eq : c Nat.+ fuel ≡ m)
+  → g (switch u v c) −ᴿ g v ≡ teleT gq u v fuel c eq
+telescope {m} g gq gis u v zero c eq =
+    ap (λ w → g w −ᴿ g v)
+      (funext λ j → switch-lo u v c j
+        (subst (suc (j .lower) Nat.≤_)
+          (sym (sym (Nat.+-zeror c) ∙ eq))
+          (j .Fin.bounded)))
+  ∙ +ᴿ-invr (g v)
+telescope {m} g gq gis u v (suc fuel) c eq =
+    tele (g (switch u v c)) (g (switch u v (suc c))) (g v)
+  ∙ ap₂ _+ᴿ_
+      ( ap (λ w → g (switch u v c) −ᴿ g w)
+          (sym (switch-step u v c cf refl))
+      ∙ gis cf (switch u v c) (v cf)
+      ∙ ap (λ a → (a −ᴿ v cf) *ᴿ gq cf (cons (v cf) (switch u v c)))
+          (switch-hi u v c cf (λ le → Nat.¬sucx≤x c le)))
+      (telescope g gq gis u v fuel (suc c)
+        (sym (Nat.+-sucr c fuel) ∙ eq))
+  where
+  cf : Fin m
+  cf = fin c ⦃ subst (suc c Nat.≤_) (sym (Nat.+-sucr c fuel) ∙ eq)
+        (Nat.s≤s (le-plus c fuel)) ⦄
 ```
