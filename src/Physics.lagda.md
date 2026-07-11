@@ -809,6 +809,7 @@ _ = Cat.Instances.SimplicialSets.ActionGroupoid.Action-groupoid
 _ = Cat.Instances.SimplicialSets.ActionGroupoid.homotopy-quotient
 _ = Cat.Instances.SimplicialSets.ActionGroupoid.quotient-edges
 _ = Cat.Instances.NegativeSpheres.Lin
+_ = Cat.Instances.Singular.Orb-cohesion.Disc⊣Γ
 _ = Cat.Instances.NegativeSpheres.base-section
 ```
 
@@ -1034,9 +1035,9 @@ $n$-concentrated complex, definitionally, and the functorial
 $\Gamma$ transports the isomorphism to simplicial abelian groups
 (identifying the shift with the simplicial loop space of the
 underlying Kan complex is part of the full Dold–Kan equivalence,
-which remains); cohesion over the orbi-singular site (the site itself now exists,
-with terminal probe; the instantiation awaits level-polymorphic
-cohesion); and the stable localisation of presheaves on $\rm{Lin}$
+which remains); cohesion over the orbi-singular site is now instantiated, by
+lifting the site's homomorphism classes one level
+(`Orb-cohesion`{.Agda}); and the stable localisation of presheaves on $\rm{Lin}$
 presenting the tangent topos (41). Each is a well-posed project over
 the infrastructure assembled above.
 
