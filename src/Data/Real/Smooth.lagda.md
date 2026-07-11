@@ -533,17 +533,20 @@ are renamings of the components, so the whole tower recurses.
 
 <!--
 ```agda
-private
-  Frame
-    : ∀ {n m} (F : Fin m → Fun n) (i : Fin n) (c : Nat) (cf : Fin m)
-    → Fin (suc m) → Fun (suc n)
-  Frame F i c cf l with fin-view l
-  ... | zero = λ y → F cf (λ j → y (σᵢ i j))
-  ... | suc l' with holds? (suc (l' .lower) Nat.≤ c)
-  ...   | yes _ = λ y → F l' (λ j → y (σᵢ i j))
-  ...   | no  _ = λ y → F l' (λ j → y (fsuc j))
+Frame
+  : ∀ {n m} (F : Fin m → Fun n) (i : Fin n) (c : Nat) (cf : Fin m)
+  → Fin (suc m) → Fun (suc n)
+Frame F i c cf l with fin-view l
+... | zero = λ y → F cf (λ j → y (σᵢ i j))
+... | suc l' with holds? (suc (l' .lower) Nat.≤ c)
+...   | yes _ = λ y → F l' (λ j → y (σᵢ i j))
+...   | no  _ = λ y → F l' (λ j → y (fsuc j))
 ```
 -->
+
+The internals of the chain rule are exposed as a parametrised
+module, so that later developments — notably the bound-enriched
+towers — can name the telescoping quotient and its tower.
 
 ```agda
 tower-comp
@@ -551,9 +554,12 @@ tower-comp
   → (∀ j → TowerTo k n (F j))
   → TowerTo k m g
   → TowerTo k n (λ x → g (λ j → F j x))
-tower-comp zero F g _ _ = lift tt
-tower-comp (suc k) {n} {m} F g TF Tg i =
-  Qs m 0 refl , (λ x t → qproof x t) , Qs-tower m 0 refl
+
+module Comp
+  (k : Nat) {n m : Nat} (F : Fin m → Fun n) (g : Fun m)
+  (TF : (j : Fin m) → TowerTo (suc k) n (F j))
+  (Tg : TowerTo (suc k) m g)
+  (i : Fin n)
   where
   gq : (j : Fin m) → Fun (suc m)
   gq j = Tg j .fst
@@ -657,6 +663,12 @@ tower-comp (suc k) {n} {m} F g TF Tg i =
       cf : Fin m
       cf = fin c ⦃ subst (suc c Nat.≤_) (sym (Nat.+-sucr c fuel) ∙ eq)
             (Nat.s≤s (le-plus c fuel)) ⦄
+
+tower-comp zero F g _ _ = lift tt
+tower-comp (suc k) {n} {m} F g TF Tg i =
+    Comp.Qs k F g TF Tg i m 0 refl
+  , (λ x t → Comp.qproof k F g TF Tg i x t)
+  , Comp.Qs-tower k F g TF Tg i m 0 refl
 
 smooth-comp
   : ∀ {n m} {F : Fin m → Fun n} {g : Fun m}
