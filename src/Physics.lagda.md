@@ -1030,7 +1030,9 @@ simplicial presheaves needs quasicategory or complete-Segal-object
 infrastructure the 1Lab does not have;
 the local weak equivalence of the Čech augmentation over covers,
 giving cofibrant resolutions (the projective-cofibrancy claim under
-(39)); the singular simplicial complex $\int X$ of a topological
+(39)) — over the trivial coverage that our sites carry the claim
+trivialises, and the substantive statement quantifies over good open
+covers of manifolds, out of scope for the same reason as (28); the singular simplicial complex $\int X$ of a topological
 space (28), which needs a formalized theory of topological spaces
 and real analysis and is genuinely out of the present scope; the
 loop-space property $\mathbf{B}^n A \simeq \Omega\,
@@ -1044,7 +1046,11 @@ underlying Kan complex is part of the full Dold–Kan equivalence,
 which remains); cohesion over the orbi-singular site is now instantiated, by
 lifting the site's homomorphism classes one level
 (`Orb-cohesion`{.Agda}); and the stable localisation of presheaves on $\rm{Lin}$
-presenting the tangent topos (41). Each is a well-posed project over
+presenting the tangent topos (41) — the site, its spectra objects,
+and their section functors exist; what is missing is the *class* of
+stable weak equivalences, which requires stable homotopy groups and
+hence the suspension–loop machinery whose simplicial half is the
+anodyne-extension theory above. Each is a well-posed project over
 the infrastructure assembled above.
 
 Finally, the *internalization* of [[smooth infinitesimal
