@@ -311,3 +311,219 @@ Tsub-id (suc (suc m₀)) =
     (T-desc-agree ℤ⟨ Δ[ suc (suc m₀) ] ⟩ (suc (suc m₀)) 1 refl
       (Nat.s≤s Nat.0≤x) (genΔ (suc (suc m₀)) (Δ .Precategory.id)))
 ```
+
+## Injectivity of the counit
+
+A normalized simplicial map that vanishes on the fundamental class
+vanishes everywhere: reduce any value to values on generators by
+the corestriction, then classify the generator. Collisions die by
+degeneracy, missed positive values by the normalization field, the
+identity by hypothesis — and the bottom coface by the boundary
+formula, whose positive terms the normalization field kills and
+whose chain square the hypothesis closes.
+
+<!--
+```agda
+private
+  Fin1-path : (a b : Fin 1) → a ≡ b
+  Fin1-path a b = fin-ap {n = λ _ → 1}
+    ( Nat.≤-antisym (Nat.≤-peel (a .Fin.bounded)) Nat.0≤x
+    ∙ sym (Nat.≤-antisym (Nat.≤-peel (b .Fin.bounded)) Nat.0≤x))
+
+  zero-hom' : {X Y : Abelian-group lzero} → Ab lzero .Precategory.Hom X Y
+  zero-hom' {X} {Y} .∫Hom.fst _ = Abelian-group-on.1g (Y .snd)
+  zero-hom' {X} {Y} .∫Hom.snd .is-group-hom.pres-⋆ _ _ =
+    sym (Abelian-group-on.idl (Y .snd))
+```
+-->
+
+```agda
+module _ (C : Chain-complex lzero) where
+  private
+    module Cc (n : Nat) = Abelian-group-on (C .ob n .snd)
+    module ΓC = Functor (Γ C)
+    module MΓ (n : Nat) =
+      Abelian-group-on (MC.Moore (Γ C) .ob n .snd)
+```
+
+The boundary step, isolated: if the evaluation vanishes, so does
+the value on the pushforward of the fundamental class along the
+bottom coface.
+
+```agda
+  head-vanish
+    : (k' : Nat) (φn : ⌞ MC.Moore (Γ C) .ob (suc k') ⌟)
+    → dk-counit-level C (suc k') .∫Hom.fst φn ≡ Cc.1g (suc k')
+    → φn .fst .map k' .∫Hom.fst
+        (NΔ-map (δ fzero) .map k' .∫Hom.fst (fundamental k'))
+    ≡ Cc.1g k'
+  head-vanish k' (φ , nrm) hyp = sym split' ∙ comm-chain
+    where
+    eq₁ : 1 Nat.+ suc k' ≡ suc (suc k')
+    eq₁ = sym (Nat.+-sucr 0 (suc k')) ∙ refl
+
+    tail₁ : ⌞ NΔ (suc k') .ob k' ⌟
+    tail₁ =
+        Σalt k' (suc k') 1 eq₁
+      , Σnorm k' (suc k') 1 eq₁
+
+    head-elem : ⌞ NΔ (suc k') .ob k' ⌟
+    head-elem = NΔ-map (δ fzero) .map k' .∫Hom.fst (fundamental k')
+
+    split'
+      : φ .map k' .∫Hom.fst
+          (Σalt k' (suc (suc k')) 0 refl , Σnorm k' (suc (suc k')) 0 refl)
+      ≡ φ .map k' .∫Hom.fst head-elem
+    split' =
+        ap (φ .map k' .∫Hom.fst)
+          (Σ-prop-path (MC.norm-is-prop ℤ⟨ Δ[ suc k' ] ⟩ k') refl)
+      ∙ is-group-hom.pres-⋆ (φ .map k' .∫Hom.snd) head-elem
+          (Abelian-group-on._⁻¹ (NΔ (suc k') .ob k' .snd) tail₁)
+      ∙ ap (Cc._*_ k' (φ .map k' .∫Hom.fst head-elem))
+          ( is-group-hom.pres-inv (φ .map k' .∫Hom.snd) {x = tail₁}
+          ∙ ap (Cc._⁻¹ k')
+              (kill C k' (φ , nrm) (suc k') 1 eq₁ (Nat.s≤s Nat.0≤x))
+          ∙ (sym (Cc.idl k') ∙ Cc.inverser k'))
+      ∙ Cc.idr k'
+
+    comm-chain
+      : φ .map k' .∫Hom.fst
+          (Σalt k' (suc (suc k')) 0 refl , Σnorm k' (suc (suc k')) 0 refl)
+      ≡ Cc.1g k'
+    comm-chain =
+        ap (φ .map k' .∫Hom.fst)
+          (Σ-prop-path (MC.norm-is-prop ℤ⟨ Δ[ suc k' ] ⟩ k')
+            (sym (∂-fundamental k')))
+      ∙ φ .comm k' (fundamental (suc k'))
+      ∙ ap (C .∂ᶜ k' .∫Hom.fst) hyp
+      ∙ is-group-hom.pres-id (C .∂ᶜ k' .∫Hom.snd)
+```
+
+The theorem.
+
+```agda
+  counit-inj
+    : (k : Nat) (φn : ⌞ MC.Moore (Γ C) .ob k ⌟)
+    → dk-counit-level C k .∫Hom.fst φn ≡ Cc.1g k
+    → φn ≡ MΓ.1g k
+  counit-inj k (φ , nrm) hyp =
+    Σ-prop-path (MC.norm-is-prop (Γ C) k)
+      (Chain-map-path λ j → ext λ x p →
+          ap (φ .map j .∫Hom.fst)
+            (sym (Tsub-fix ℤ⟨ Δ[ k ] ⟩ j (x , p)))
+        ∙ ap (λ w → w .∫Hom.fst x) (vanish j))
+    where
+    Φ : (j : Nat) → Ab lzero .Precategory.Hom
+          (ℤ⟨ Δ[ k ] ⟩ .F₀ j) (C .ob j)
+    Φ j = Ab lzero .Precategory._∘_ (φ .map j) (Tsub ℤ⟨ Δ[ k ] ⟩ j)
+
+    gen-case
+      : (j : Nat) (α : Δ-map j k)
+      → φ .map j .∫Hom.fst
+          (Tsub ℤ⟨ Δ[ k ] ⟩ j .∫Hom.fst (genΔ k α))
+      ≡ Cc.1g j
+    gen-case = go k φ nrm hyp
+      where
+      go : (k : Nat) (φ : Chain-map (NΔ k) C)
+           (nrm : MC.norm (Γ C) k φ)
+         → φ .map k .∫Hom.fst (fundamental k) ≡ Cc.1g k
+         → (j : Nat) (α : Δ-map j k)
+         → φ .map j .∫Hom.fst
+             (Tsub ℤ⟨ Δ[ k ] ⟩ j .∫Hom.fst (genΔ k α))
+         ≡ Cc.1g j
+      go zero φ nrm hyp zero α =
+          ap (λ w → φ .map 0 .∫Hom.fst
+                (Tsub ℤ⟨ Δ[ 0 ] ⟩ 0 .∫Hom.fst (genΔ 0 w)))
+            (Δ-map-path (λ x → Fin1-path _ _))
+        ∙ ap (φ .map 0 .∫Hom.fst) (Tsub-id 0)
+        ∙ hyp
+      go zero φ nrm hyp (suc j') α =
+          ap (φ .map (suc j') .∫Hom.fst)
+            (collision-kill 0 α fzero (Fin1-path _ _))
+        ∙ is-group-hom.pres-id (φ .map (suc j') .∫Hom.snd)
+      go (suc k') φ nrm hyp j α with classify α
+      ... | cls-coll t c = coll-helper j α t c
+        where
+        coll-helper
+          : (j : Nat) (α : Δ-map j (suc k')) (t : Fin j)
+          → α .Δ-map.map (weaken t) ≡ α .Δ-map.map (fsuc t)
+          → φ .map j .∫Hom.fst
+              (Tsub ℤ⟨ Δ[ suc k' ] ⟩ j .∫Hom.fst (genΔ (suc k') α))
+          ≡ Cc.1g j
+        coll-helper zero α t c = absurd (Fin-absurd t)
+        coll-helper (suc j') α t c =
+            ap (φ .map (suc j') .∫Hom.fst)
+              (collision-kill (suc k') α t c)
+          ∙ is-group-hom.pres-id (φ .map (suc j') .∫Hom.snd)
+      ... | cls-miss i' m =
+          ap (φ .map j .∫Hom.fst) (push-Tsub k' α i' m)
+        ∙ happly
+            (ap (λ w → w .map j .∫Hom.fst)
+              (nrm i'))
+            (Tsub ℤ⟨ Δ[ k' ] ⟩ j .∫Hom.fst
+              (genΔ k' (miss-factor α (fsuc i') m .fst)))
+      ... | cls-id jk lid = subst
+          (λ n → (β : Δ-map n (suc k'))
+               → (∀ x → β .Δ-map.map x .lower ≡ x .lower)
+               → φ .map n .∫Hom.fst
+                   (Tsub ℤ⟨ Δ[ suc k' ] ⟩ n .∫Hom.fst (genΔ (suc k') β))
+               ≡ Cc.1g n)
+          (sym jk) univ α lid
+        where
+        univ : (β : Δ-map (suc k') (suc k'))
+             → (∀ x → β .Δ-map.map x .lower ≡ x .lower)
+             → φ .map (suc k') .∫Hom.fst
+                 (Tsub ℤ⟨ Δ[ suc k' ] ⟩ (suc k') .∫Hom.fst (genΔ (suc k') β))
+             ≡ Cc.1g (suc k')
+        univ β lidβ =
+            ap (λ w → φ .map (suc k') .∫Hom.fst
+                  (Tsub ℤ⟨ Δ[ suc k' ] ⟩ (suc k') .∫Hom.fst (genΔ (suc k') w)))
+              (Δ-map-path λ x → fin-ap {n = λ _ → suc (suc k')} (lidβ x))
+          ∙ ap (φ .map (suc k') .∫Hom.fst) (Tsub-id (suc k'))
+          ∙ hyp
+      ... | cls-δ⁰ kj lsuc = subst
+          (λ n → (β : Δ-map n (suc k'))
+               → (∀ x → β .Δ-map.map x .lower ≡ suc (x .lower))
+               → φ .map n .∫Hom.fst
+                   (Tsub ℤ⟨ Δ[ suc k' ] ⟩ n .∫Hom.fst (genΔ (suc k') β))
+               ≡ Cc.1g n)
+          (ap Nat.pred kj) univ' α lsuc
+        where
+        univ' : (β : Δ-map k' (suc k'))
+              → (∀ x → β .Δ-map.map x .lower ≡ suc (x .lower))
+              → φ .map k' .∫Hom.fst
+                  (Tsub ℤ⟨ Δ[ suc k' ] ⟩ k' .∫Hom.fst (genΔ (suc k') β))
+              ≡ Cc.1g k'
+        univ' β lsucβ =
+            ap (φ .map k' .∫Hom.fst) arg-path
+          ∙ head-vanish k' (φ , nrm) hyp
+          where
+          pushα₀ : ℤ⟨ Δ[ k' ] ⟩ => ℤ⟨ Δ[ suc k' ] ⟩
+          pushα₀ = Free-abelian-functor ▸ Δmap-nt (δ fzero)
+
+          β≡δ₀ : β ≡ δ fzero
+          β≡δ₀ = Δ-map-path λ x →
+            fin-ap {n = λ _ → suc (suc k')} (lsucβ x)
+
+          push-path
+            : pushα₀ .η k' .∫Hom.fst (genΔ k' (Δ .Precategory.id))
+            ≡ genΔ (suc k') β
+          push-path =
+              gen-natural (Δ[ k' ] .F₀ k') (Δ[ suc k' ] .F₀ k')
+                (Δmap-nt (δ fzero) .η k') (Δ .Precategory.id)
+            ∙ ap (gen {Δ[ suc k' ] .F₀ k'})
+                (Δ-map-path (λ x → refl) ∙ sym β≡δ₀)
+
+          arg-path
+            : Tsub ℤ⟨ Δ[ suc k' ] ⟩ k' .∫Hom.fst (genΔ (suc k') β)
+            ≡ NΔ-map (δ fzero) .map k' .∫Hom.fst (fundamental k')
+          arg-path = Σ-prop-path
+            (MC.norm-is-prop ℤ⟨ Δ[ suc k' ] ⟩ k')
+            ( ap (λ w → Tsub ℤ⟨ Δ[ suc k' ] ⟩ k' .∫Hom.fst w .fst)
+                (sym push-path)
+            ∙ sym (Tsub-natural pushα₀ k' (genΔ k' (Δ .Precategory.id)))
+            ∙ ap (pushα₀ .η k' .∫Hom.fst) (ap fst (Tsub-id k')))
+
+    vanish : (j : Nat) → Φ j ≡ zero-hom'
+    vanish j = free-ext (Δ[ k ] .F₀ j) (C .ob j) (gen-case j)
+```
