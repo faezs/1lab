@@ -36,6 +36,7 @@ import Neural.Topos.Quantifiers
 import Neural.Topos.Predicates
 import Neural.Stack.Grothendieck
 import Neural.Stack.Equivalence
+import Neural.Stack.Presentation
 import Neural.Stack.Adjunction
 import Neural.Stack.Omega
 import Neural.Stack.Restriction
@@ -338,6 +339,17 @@ _ = Neural.Stack.Restriction.Res
 _ = Neural.Stack.Equivalence.unit
 _ = Neural.Stack.Equivalence.counit
 _ = Neural.Stack.Fibre.ι
+```
+
+**The presentation theorem.** Taking total presheaves is an
+*equivalence of categories* between compatible families and the
+presheaf topos of the total category — fully faithful by fibrewise
+reconstruction, split essentially surjective by the counit — the
+precise content behind the paper's silent interchange of its two
+presentations.
+
+```agda
+_ = Neural.Stack.Presentation.Tot-is-equivalence
 ```
 
 **The glued classifier** (Proposition 2.1). The subobject classifier
