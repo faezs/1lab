@@ -36,6 +36,7 @@ import Neural.Topos.Quantifiers
 import Neural.Topos.Predicates
 import Neural.Stack.Grothendieck
 import Neural.Stack.Equivalence
+import Neural.Stack.Adjunction
 import Neural.Stack.Omega
 import Neural.Stack.Restriction
 import Neural.Stack.Presheaves
@@ -349,6 +350,16 @@ are classified by fibrewise sieve data.
 _ = Neural.Stack.Omega.Ω-family
 _ = Neural.Stack.Omega.Ω-comparison
 _ = Neural.Stack.Omega.counit-invl
+```
+
+**Transporting theories** (Lemma 2.4). At every cartesian arrow, the
+classifier's transition — sieve pullback — is a left Galois adjoint;
+its right adjoint $\tau'_\alpha$ carries a theory at the deeper
+layer to the strongest theory whose pullback it dominates, riding on
+the forcing module's sieve quantifiers.
+
+```agda
+_ = Neural.Stack.Adjunction.Ω⊣τ'
 ```
 
 ## What is missing
