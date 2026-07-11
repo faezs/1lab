@@ -526,3 +526,141 @@ telescope {m} g gq gis u v (suc fuel) c eq =
   cf = fin c ⦃ subst (suc c Nat.≤_) (sym (Nat.+-sucr c fuel) ∙ eq)
         (Nat.s≤s (le-plus c fuel)) ⦄
 ```
+
+The composite's quotient is the telescope with each coordinate
+difference factored through that component's quotient; the frames
+are renamings of the components, so the whole tower recurses.
+
+<!--
+```agda
+private
+  Frame
+    : ∀ {n m} (F : Fin m → Fun n) (i : Fin n) (c : Nat) (cf : Fin m)
+    → Fin (suc m) → Fun (suc n)
+  Frame F i c cf l with fin-view l
+  ... | zero = λ y → F cf (λ j → y (σᵢ i j))
+  ... | suc l' with holds? (suc (l' .lower) Nat.≤ c)
+  ...   | yes _ = λ y → F l' (λ j → y (σᵢ i j))
+  ...   | no  _ = λ y → F l' (λ j → y (fsuc j))
+```
+-->
+
+```agda
+tower-comp
+  : ∀ k {n m} (F : Fin m → Fun n) (g : Fun m)
+  → (∀ j → TowerTo k n (F j))
+  → TowerTo k m g
+  → TowerTo k n (λ x → g (λ j → F j x))
+tower-comp zero F g _ _ = lift tt
+tower-comp (suc k) {n} {m} F g TF Tg i =
+  Qs m 0 refl , (λ x t → qproof x t) , Qs-tower m 0 refl
+  where
+  gq : (j : Fin m) → Fun (suc m)
+  gq j = Tg j .fst
+
+  gis : ∀ j → Quot m g j (gq j)
+  gis j = Tg j .snd .fst
+
+  gdeep : ∀ j → TowerTo k (suc m) (gq j)
+  gdeep j = Tg j .snd .snd
+
+  Fq : (j : Fin m) → Fun (suc n)
+  Fq j = TF j i .fst
+
+  Fis : ∀ j → Quot n (F j) i (Fq j)
+  Fis j = TF j i .snd .fst
+
+  Fdeep : ∀ j → TowerTo k (suc n) (Fq j)
+  Fdeep j = TF j i .snd .snd
+
+  Qs : (fuel c : Nat) → c Nat.+ fuel ≡ m → Fun (suc n)
+  Qs zero c eq = λ _ → 0ᴿ
+  Qs (suc fuel) c eq = λ y →
+      (Fq cf y *ᴿ gq cf (λ l → Frame F i c cf l y))
+    +ᴿ Qs fuel (suc c) (sym (Nat.+-sucr c fuel) ∙ eq) y
+    where
+    cf : Fin m
+    cf = fin c ⦃ subst (suc c Nat.≤_) (sym (Nat.+-sucr c fuel) ∙ eq)
+          (Nat.s≤s (le-plus c fuel)) ⦄
+
+  Frame-tower
+    : (c : Nat) (cf : Fin m) (l : Fin (suc m))
+    → TowerTo k (suc n) (Frame F i c cf l)
+  Frame-tower c cf l with fin-view l
+  ... | zero = tower-rename k (σᵢ i) (σᵢ-inj i) (F cf)
+    (tower-trunc k (TF cf))
+  ... | suc l' with holds? (suc (l' .lower) Nat.≤ c)
+  ...   | yes _ = tower-rename k (σᵢ i) (σᵢ-inj i) (F l')
+    (tower-trunc k (TF l'))
+  ...   | no  _ = tower-rename k fsuc (λ a b → fsuc-inj) (F l')
+    (tower-trunc k (TF l'))
+
+  Qs-tower
+    : (fuel c : Nat) (eq : c Nat.+ fuel ≡ m)
+    → TowerTo k (suc n) (Qs fuel c eq)
+  Qs-tower zero c eq = tower-const k (suc n) 0ᴿ
+  Qs-tower (suc fuel) c eq = tower-add k (suc n) _ _
+    (tower-mul k (suc n) _ _
+      (Fdeep cf)
+      (tower-comp k (Frame F i c cf) (gq cf)
+        (Frame-tower c cf) (gdeep cf)))
+    (Qs-tower fuel (suc c) (sym (Nat.+-sucr c fuel) ∙ eq))
+    where
+    cf : Fin m
+    cf = fin c ⦃ subst (suc c Nat.≤_) (sym (Nat.+-sucr c fuel) ∙ eq)
+          (Nat.s≤s (le-plus c fuel)) ⦄
+
+  qproof
+    : (x : Fin n → ℝ) (t : ℝ)
+    → g (λ j → F j x) −ᴿ g (λ j → F j (set x i t))
+    ≡ (x i −ᴿ t) *ᴿ Qs m 0 refl (cons t x)
+  qproof x t =
+      ap (λ w → g w −ᴿ g v)
+        (funext λ j → sym (switch-hi u v 0 j (λ le → Nat.¬suc≤0 le)))
+    ∙ telescope g gq gis u v m 0 refl
+    ∙ factor m 0 refl
+    where
+    u v : Fin m → ℝ
+    u = λ j → F j x
+    v = λ j → F j (set x i t)
+
+    frame-path
+      : (c : Nat) (cf : Fin m)
+      → cons (v cf) (switch u v c)
+      ≡ (λ l → Frame F i c cf l (cons t x))
+    frame-path c cf = funext λ l → go l where
+      go : ∀ l → cons (v cf) (switch u v c) l
+             ≡ Frame F i c cf l (cons t x)
+      go l with fin-view l
+      ... | zero = ap (F cf) (sym (σᵢ-set i x t))
+      ... | suc l' with holds? (suc (l' .lower) Nat.≤ c)
+      ...   | yes _ = ap (F l') (sym (σᵢ-set i x t))
+      ...   | no  _ = refl
+
+    factor
+      : (fuel c : Nat) (eq : c Nat.+ fuel ≡ m)
+      → teleT gq u v fuel c eq
+      ≡ (x i −ᴿ t) *ᴿ Qs fuel c eq (cons t x)
+    factor zero c eq = sym (*ᴿ-absorbr (x i −ᴿ t))
+    factor (suc fuel) c eq =
+        ap₂ _+ᴿ_
+          ( ap₂ (λ a w → a *ᴿ gq cf w)
+              (Fis cf x t)
+              (frame-path c cf)
+          ∙ *ᴿ-assoc (x i −ᴿ t) (Fq cf (cons t x))
+              (gq cf (λ l → Frame F i c cf l (cons t x))))
+          (factor fuel (suc c) (sym (Nat.+-sucr c fuel) ∙ eq))
+      ∙ sym (*ᴿ-distribˡ (x i −ᴿ t)
+          (Fq cf (cons t x) *ᴿ gq cf (λ l → Frame F i c cf l (cons t x)))
+          (Qs fuel (suc c) (sym (Nat.+-sucr c fuel) ∙ eq) (cons t x)))
+      where
+      cf : Fin m
+      cf = fin c ⦃ subst (suc c Nat.≤_) (sym (Nat.+-sucr c fuel) ∙ eq)
+            (Nat.s≤s (le-plus c fuel)) ⦄
+
+smooth-comp
+  : ∀ {n m} {F : Fin m → Fun n} {g : Fun m}
+  → (∀ j → Smooth n (F j)) → Smooth m g
+  → Smooth n (λ x → g (λ j → F j x))
+smooth-comp SF Sg k = tower-comp k _ _ (λ j → SF j k) (Sg k)
+```
