@@ -32,6 +32,7 @@ open import Neural.Network.Activities
 open import Neural.Network.Sections
 open import Neural.Sheaf.Spontaneous
 
+import Neural.Semantics.InputOutput
 import Neural.Topos.Quantifiers
 import Neural.Topos.Predicates
 import Neural.Stack.Grothendieck
@@ -266,6 +267,16 @@ _ = Network-dynamics.X^
 _ = Network-sections.section≃inputs
 ```
 
+**The input–output relation as H⁰.** Global sections in the honest
+categorical sense — maps from the terminal presheaf — coincide with
+the vertexwise sections of the theorem above, so the zeroth
+cohomology of the network topos with coefficients in the dynamical
+object *is* the input–output relation.
+
+```agda
+_ = Neural.Semantics.InputOutput.Network-H⁰.H⁰≃inputs
+```
+
 **Spontaneous activity** (§1.5's remark, made concrete): a sheaf on
 the diamond network whose tang value admits no equivalence with the
 joint input state — the topos contains dynamics that are not
@@ -391,8 +402,8 @@ _ = Neural.Stack.Boolean.complemented→boolean
 Phase 1 leaves: the universal property of the explicit
 sheafification and its agreement with the HIT `Sheafify`; Alexandrov
 duality for arbitrary posets (Proposition 1.2, generalized); the
-tree-structure theorem 1.2; the input–output relation as `H⁰`; and
-the discrete backpropagation flow (Theorem 1.1, reformulated). The
+tree-structure theorem 1.2; and the discrete backpropagation flow
+(Theorem 1.1, reformulated). The
 threshold description of decidable chain sieves is stated in prose
 only. Phase 3 remainder: the packaging of the family–presheaf
 comparison as an equivalence of categories (triangle identities);
