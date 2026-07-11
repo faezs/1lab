@@ -13,6 +13,7 @@ open import Data.Fin using (Fin ; fzero ; fin-view ; Fin-view ; Fin-absurd)
 
 import Algebra.Ring.DualNumbers as Dual
 import Algebra.Ring.Polynomial
+import Algebra.Ring.Kahler.Exterior
 import Algebra.Ring.Kahler
 import Cat.Reasoning
 
@@ -186,4 +187,34 @@ inside the formal smooth sets.
 
   1≡0 : R'.1r ≡ R'.0r
   1≡0 = ap (λ p → extendᵖ CR.id (λ _ → R'.0r) p) 1x≡0x
+```
+
+## The differential as a map of smooth sets
+
+The classifier story continues one degree up: the [[second exterior
+power|kahler-2-forms]] also assembles into a smooth set, and the
+exterior derivative — being natural in the probe — becomes an
+honest *morphism of smooth sets* $\mathrm{d} : \Omega^1 \to
+\Omega^2$. This is the map that sends a gauge potential to its
+field strength, at the level of classifying objects.
+
+<!--
+```agda
+open Algebra.Ring.Kahler.Exterior R
+```
+-->
+
+```agda
+Ω²-dR : ⌞ FrmlSmthSet ⌟
+Ω²-dR .F₀ U = el (Ω² (O U) (struct U)) squash²
+Ω²-dR .F₁ h = Ω²-map (h .ThHom.fun) (h .ThHom.commutes)
+Ω²-dR .F-id {U} = funext (Ω²-map-id _)
+Ω²-dR .F-∘ f g = funext
+  (Ω²-map-∘ (f .ThHom.fun) (g .ThHom.fun)
+    (f .ThHom.commutes) (g .ThHom.commutes) _)
+
+d-dR : FrmlSmthSet .Precategory.Hom Ω¹-dR Ω²-dR
+d-dR ._=>_.η U = d¹
+d-dR ._=>_.is-natural U V h = funext λ ω →
+  sym (d¹-natural (h .ThHom.fun) (h .ThHom.commutes) ω)
 ```
