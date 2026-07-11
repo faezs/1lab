@@ -664,3 +664,69 @@ smooth-comp
   → Smooth n (λ x → g (λ j → F j x))
 smooth-comp SF Sg k = tower-comp k _ _ (λ j → SF j k) (Sg k)
 ```
+
+## The ring of smooth functions
+
+Smooth functions form a commutative ring — the closure combinators
+are exactly the ring operations — and this is the object that the
+paper's algebraic constructions consume: the infinitesimally
+thickened probes have function algebras $C^\infty(\bR^n) \otimes W$,
+built from this ring by the generic dual-number construction.
+
+<!--
+```agda
+open import Algebra.Ring.Commutative
+open import Algebra.Ring
+```
+-->
+
+```agda
+C∞ : Nat → Type
+C∞ n = Σ[ f ∈ Fun n ] ∥ Smooth n f ∥
+
+private
+  C∞-is-set : ∀ {n} → is-set (C∞ n)
+  C∞-is-set = Σ-is-hlevel 2
+    (Π-is-hlevel 2 λ _ → ℝ-is-set)
+    (λ _ → is-prop→is-set squash)
+
+C∞Ring : Nat → CRing lzero
+C∞Ring n = record
+  { fst = el (C∞ n) C∞-is-set
+  ; snd = record
+    { has-ring-on = ring .snd
+    ; *-commutes = λ {x y} → Σ-prop-path (λ _ → squash)
+        (funext λ v → *ᴿ-comm (x .fst v) (y .fst v))
+    }
+  }
+  where
+  ring : Ring lzero
+  ring = to-ring {R = C∞ n} λ where
+    .make-ring.ring-is-set → C∞-is-set
+    .make-ring.0R → (λ _ → 0ᴿ) , inc (smooth-const 0ᴿ)
+    .make-ring._+_ (f , sf) (g , sg) →
+      (λ v → f v +ᴿ g v) , ∥-∥-map₂ smooth-add sf sg
+    .make-ring.-_ (f , sf) →
+      (λ v → -ᴿ f v) , ∥-∥-map smooth-neg sf
+    .make-ring.+-idl f → Σ-prop-path (λ _ → squash)
+      (funext λ v → +ᴿ-comm 0ᴿ (f .fst v) ∙ +ᴿ-idr (f .fst v))
+    .make-ring.+-invr f → Σ-prop-path (λ _ → squash)
+      (funext λ v → +ᴿ-invr (f .fst v))
+    .make-ring.+-assoc f g h → Σ-prop-path (λ _ → squash)
+      (funext λ v → +ᴿ-assoc (f .fst v) (g .fst v) (h .fst v))
+    .make-ring.+-comm f g → Σ-prop-path (λ _ → squash)
+      (funext λ v → +ᴿ-comm (f .fst v) (g .fst v))
+    .make-ring.1R → (λ _ → 1ᴿ) , inc (smooth-const 1ᴿ)
+    .make-ring._*_ (f , sf) (g , sg) →
+      (λ v → f v *ᴿ g v) , ∥-∥-map₂ smooth-mul sf sg
+    .make-ring.*-idl f → Σ-prop-path (λ _ → squash)
+      (funext λ v → *ᴿ-idl (f .fst v))
+    .make-ring.*-idr f → Σ-prop-path (λ _ → squash)
+      (funext λ v → *ᴿ-idr (f .fst v))
+    .make-ring.*-assoc f g h → Σ-prop-path (λ _ → squash)
+      (funext λ v → sym (*ᴿ-assoc (f .fst v) (g .fst v) (h .fst v)))
+    .make-ring.*-distribl f g h → Σ-prop-path (λ _ → squash)
+      (funext λ v → *ᴿ-distribˡ (f .fst v) (g .fst v) (h .fst v))
+    .make-ring.*-distribr f g h → Σ-prop-path (λ _ → squash)
+      (funext λ v → *ᴿ-distribʳ (f .fst v) (g .fst v) (h .fst v))
+```
