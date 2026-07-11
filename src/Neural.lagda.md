@@ -30,6 +30,10 @@ open import Neural.Topos.Extension
 open import Neural.Topos.Equivalence
 open import Neural.Network.Activities
 open import Neural.Network.Sections
+open import Neural.Sheaf.Spontaneous
+
+import Neural.Topos.Quantifiers
+import Neural.Topos.Predicates
 ```
 -->
 
@@ -247,6 +251,29 @@ activities.
 ```agda
 _ = Network-dynamics.X^
 _ = Network-sections.section≃inputs
+```
+
+**Spontaneous activity** (§1.5's remark, made concrete): a sheaf on
+the diamond network whose tang value admits no equivalence with the
+joint input state — the topos contains dynamics that are not
+feed-forward.
+
+```agda
+_ = spontaneous
+```
+
+## Phase 2: the logic of the layers
+
+The Heyting algebra the paper presumes at every object, and the
+quantifier strings along morphisms — built at the level of Ω-valued
+predicates (natural families of sieves), riding on the sieve
+connectives of `Physics.SmoothWorld.Forcing`, with the new
+pullback-stability lemmas (including stability of implication).
+
+```agda
+_ = Neural.Topos.Predicates.Pred-heyting
+_ = Neural.Topos.Quantifiers.∃ᴾ-adj-from
+_ = Neural.Topos.Quantifiers.∀ᴾ-adj-to
 ```
 
 ## What is missing
