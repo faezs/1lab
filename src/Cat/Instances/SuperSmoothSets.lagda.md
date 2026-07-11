@@ -310,7 +310,180 @@ module SupSmthSet-cohesion =
   Cat.Instances.Presheaf.Cohesive SupCartSp pt-terminal
 ```
 
-The odd-plot description of spinor fields (21) — plots of $\Pi S$ by
-$\bA^{0|1}$ are odd sections — needs a concrete spinor bundle and
-remains future work, as do super-thickenings combining this site with
-the infinitesimal one.
+Super-thickenings combining this site with the infinitesimal one
+remain future work; the odd-plot description of spinor fields (21)
+is the theorem below.
+
+## The odd-plot description of spinor fields {defines="odd-plots"}
+
+The paper's (21): fermion fields are *odd-valued functions*. In the
+super site this is a theorem about representables: a plot of the
+purely-odd affine space $\bA^{0|s}$ — the paper's $\Pi S$ for a
+free spinor module of rank $s$ — by any super probe $x$ is exactly
+a multiplet of $s$ functions on $x$ that are **odd** for the parity
+involution, **anticommute** with one another, and **square to
+zero**. Both universal properties compose, exactly as for the
+terminal probe, with the generators now carrying the physics.
+
+```agda
+Odd-multiplet : SupAff → Nat → Type ℓ
+Odd-multiplet x s =
+  Σ[ t ∈ (Fin s → ⌞ O x ⌟) ]
+    ( (∀ i j → Ox._*_ (t i) (t j) ≡ Ox.-_ (Ox._*_ (t j) (t i)))
+    × (∀ i → Ox._*_ (t i) (t i) ≡ Ox.0r)
+    × (∀ i → σO x (t i) ≡ Ox.-_ (t i)))
+  where module Ox = Ring-on (O x .snd)
+```
+
+<!--
+```agda
+module _ (x : SupAff) (s : Nat) where
+  private
+    module Ox = Ring-on (O x .snd)
+
+    R∅ : CRing ℓ
+    R∅ = R[ Lift ℓ (Fin 0) ]
+
+    ZOx : CRing ℓ
+    ZOx = Z.Centre (O x)
+
+    φZ : CR.Hom R ZOx
+    φZ .∫Hom.fst a = structF x a , cent a where
+      cent : ∀ a → Z.is-central (O x) (structF x a)
+      cent a y = lemma x a y where
+        lemma : ∀ x a y →
+          Ring-on._*_ (O x .snd) (structF x a) y
+          ≡ Ring-on._*_ (O x .snd) y (structF x a)
+        lemma 𝔸[ n ∣ q ] a y = G.con-comm (con a) y
+    φZ .∫Hom.snd .pres-id =
+      Σ-prop-path (Z.is-central-is-prop (O x))
+        (structF-is-ring-hom x .pres-id)
+    φZ .∫Hom.snd .pres-+ a b =
+      Σ-prop-path (Z.is-central-is-prop (O x))
+        (structF-is-ring-hom x .pres-+ a b)
+    φZ .∫Hom.snd .pres-* a b =
+      Σ-prop-path (Z.is-central-is-prop (O x))
+        (structF-is-ring-hom x .pres-* a b)
+
+    ψ : ⌞ R∅ ⌟ → ⌞ O x ⌟
+    ψ z = extendᵖ φZ (no-vars {C = ZOx}) z .fst
+
+    ψ-hom : is-ring-hom (R∅ .snd .CRing-on.has-ring-on) (O x .snd) ψ
+    ψ-hom = ∘-is-ring-hom
+      {A = R∅ .fst , R∅ .snd .CRing-on.has-ring-on}
+      {B = ZOx .fst , ZOx .snd .CRing-on.has-ring-on}
+      {C = O x}
+      (Z.centre-proj-is-ring-hom (O x))
+      (extend φZ (no-vars {C = ZOx}) .∫Hom.snd)
+
+    ψ-central : ∀ z y → Ox._*_ (ψ z) y ≡ Ox._*_ y (ψ z)
+    ψ-central z = extendᵖ φZ (no-vars {C = ZOx}) z .snd
+
+    σ-fixes : ∀ z → σO x (ψ z) ≡ ψ z
+    σ-fixes = Poly-elim-prop _
+      (λ _ → Ox.has-is-set _ _)
+      (λ v → absurd (Fin-absurd (v .Lift.lower)))
+      (λ a → fixes-struct x a)
+      (λ u ihu v ihv →
+          σO-is-ring-hom x .pres-+ _ _
+        ∙ ap₂ Ox._+_ ihu ihv)
+      (λ u ihu v ihv →
+          σO-is-ring-hom x .pres-* _ _
+        ∙ ap₂ Ox._*_ ihu ihv)
+      (λ u ih →
+          is-ring-hom.pres-neg (σO-is-ring-hom x)
+        ∙ ap Ox.-_ ih)
+      where
+      fixes-struct : ∀ x a → σO x (structF x a) ≡ structF x a
+      fixes-struct 𝔸[ n ∣ q ] a = refl
+
+  odd-to : SupHom x 𝔸[ 0 ∣ s ] → Odd-multiplet x s
+  odd-to h = (λ i → h .fun (G.θ i)) , anti , sq , odd where
+    anti : ∀ i j
+      → Ox._*_ (h .fun (G.θ i)) (h .fun (G.θ j))
+      ≡ Ox.-_ (Ox._*_ (h .fun (G.θ j)) (h .fun (G.θ i)))
+    anti i j =
+        sym (h .fun-hom .pres-* (G.θ i) (G.θ j))
+      ∙ ap (h .fun) (G.θ-anticomm i j)
+      ∙ is-ring-hom.pres-neg (h .fun-hom)
+      ∙ ap Ox.-_ (h .fun-hom .pres-* (G.θ j) (G.θ i))
+
+    sq : ∀ i → Ox._*_ (h .fun (G.θ i)) (h .fun (G.θ i)) ≡ Ox.0r
+    sq i =
+        sym (h .fun-hom .pres-* (G.θ i) (G.θ i))
+      ∙ ap (h .fun) (G.θ-sq i)
+      ∙ is-ring-hom.pres-0 (h .fun-hom)
+
+    odd : ∀ i → σO x (h .fun (G.θ i)) ≡ Ox.-_ (h .fun (G.θ i))
+    odd i =
+        sym (h .parity (G.θ i))
+      ∙ is-ring-hom.pres-neg (h .fun-hom)
+
+  odd-from : Odd-multiplet x s → SupHom x 𝔸[ 0 ∣ s ]
+  odd-from (t , anti , sq , odd) .fun =
+    G.grassmann-extend R∅ s (O x) ψ ψ-hom ψ-central t anti sq
+  odd-from (t , anti , sq , odd) .fun-hom =
+    G.grassmann-extend-is-ring-hom R∅ s (O x) ψ ψ-hom ψ-central t anti sq
+  odd-from (t , anti , sq , odd) .commutes a = refl
+  odd-from (t , anti , sq , odd) .parity = G.Grassmann-elim-prop R∅ s _
+    (λ _ → Ox.has-is-set _ _)
+    (λ i → sym (odd i))
+    (λ z → sym (σ-fixes z))
+    (λ u ihu v ihv → ap₂ Ox._+_ ihu ihv
+      ∙ sym (σO-is-ring-hom x .pres-+ _ _))
+    (λ u ihu v ihv → ap₂ Ox._*_ ihu ihv
+      ∙ sym (σO-is-ring-hom x .pres-* _ _))
+    (λ u ih → ap Ox.-_ ih
+      ∙ sym (is-ring-hom.pres-neg (σO-is-ring-hom x)))
+```
+-->
+
+```agda
+  odd-plots : SupHom x 𝔸[ 0 ∣ s ] ≃ Odd-multiplet x s
+  odd-plots = Iso→Equiv (odd-to , iso odd-from rinv linv) where
+    rinv : ∀ d → odd-to (odd-from d) ≡ d
+    rinv (t , _) = Σ-prop-path
+      (λ t' → ×-is-hlevel 1
+        (Π-is-hlevel 1 λ i → Π-is-hlevel 1 λ j → Ox.has-is-set _ _)
+        (×-is-hlevel 1
+          (Π-is-hlevel 1 λ i → Ox.has-is-set _ _)
+          (Π-is-hlevel 1 λ i → Ox.has-is-set _ _)))
+      refl
+
+    linv : ∀ h → odd-from (odd-to h) ≡ h
+    linv h = SupHom-path λ a →
+      sym (G.grassmann-extend-unique R∅ s (O x) ψ ψ-hom ψ-central
+        (odd-to h .fst) (odd-to h .snd .fst)
+        (odd-to h .snd .snd .fst)
+        (h .fun) (h .fun-hom) hcon (λ i → refl) a)
+      where
+      Gcon-hom : is-ring-hom
+        (R∅ .snd .CRing-on.has-ring-on) (O 𝔸[ 0 ∣ s ] .snd) G.con
+      Gcon-hom .pres-id = refl
+      Gcon-hom .pres-+ u v = G.con-+ u v
+      Gcon-hom .pres-* u v = G.con-* u v
+
+      hcon : ∀ z → h .fun (G.con z) ≡ ψ z
+      hcon = Poly-elim-prop _
+        (λ _ → Ox.has-is-set _ _)
+        (λ v → absurd (Fin-absurd (v .Lift.lower)))
+        (λ a → h .commutes a)
+        (λ u ihu v ihv →
+            ap (h .fun) (Gcon-hom .pres-+ u v)
+          ∙ h .fun-hom .pres-+ _ _
+          ∙ ap₂ Ox._+_ ihu ihv)
+        (λ u ihu v ihv →
+            ap (h .fun) (Gcon-hom .pres-* u v)
+          ∙ h .fun-hom .pres-* _ _
+          ∙ ap₂ Ox._*_ ihu ihv)
+        (λ u ih →
+            ap (h .fun) (is-ring-hom.pres-neg Gcon-hom)
+          ∙ is-ring-hom.pres-neg (h .fun-hom)
+          ∙ ap Ox.-_ ih)
+```
+
+For a physicist: a "spinor field configuration" probed by any super
+space is nothing but its multiplet of anticommuting component
+functions — Grassmann-odd, nilpotent, mutually anticommuting — and
+this is not an ansatz but the *unique* answer forced by the two
+universal properties.

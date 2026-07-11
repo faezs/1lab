@@ -198,8 +198,9 @@ to tensor products of [[polynomial rings|polynomial-ring]] with
 Grassmann algebras, with involution-respecting algebra maps — and its
 topos of super smooth sets (20) assemble from this module and the
 polynomial ring exactly as the thickened site did from the dual
-numbers; the assembly, and the odd-plot description of spinor fields
-(21), remain future work.
+numbers; the assembly lives in [[super smooth
+sets|super-smooth-sets]], along with the odd-plot description of
+spinor fields (21).
 
 ## The universal property
 
