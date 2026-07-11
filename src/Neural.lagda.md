@@ -16,6 +16,9 @@ open import Neural.Order.Adjunction
 open import Neural.Order.FrameHeyting
 
 import Neural.Order.Heyting.Reasoning
+
+open import Neural.Chain
+open import Neural.Chain.Omega
 ```
 -->
 
@@ -94,16 +97,56 @@ _ = Neural.Order.Heyting.Reasoning.¬¬¬
 _ = Neural.Order.Heyting.Reasoning.⇨-exclusion
 ```
 
+## Phase 1: the chain network (the golden thread)
+
+The [[chain network|chain-network]] — the multilayer perceptron — is
+the permanent regression test of the development: its site, dynamics,
+and classifier are computed concretely, and the two-layer Boolean
+example runs by `refl`{.Agda}.
+
+**The dynamical objects.** The chain graph, its path-category site,
+directedness (`path-≤`{.Agda}, `chain-no-loop`{.Agda}); the
+functioning `X^`{.Agda} at fixed weights, the presheaf `𝕎`{.Agda} of
+unconsumed weights — strictly functorial, since 1lab's `Nat.≤` is
+definitionally proof-irrelevant — and the crossed object `𝕏`{.Agda}
+with the paper's equation (1.1) dynamics. A total weight assignment
+is a global section of `𝕎`{.Agda}, and the functioning at those
+weights is the fiber of `pr₂ : 𝕏 ⇒ 𝕎` over it.
+
+```agda
+_ = chain-site
+_ = Chain-dynamics.𝕏
+_ = Chain-dynamics.pr₂
+_ = Chain-dynamics.fiber-over-σ
+```
+
+**Thinness and the classifier** (Proposition 1.1 and the $\Omega$
+computation of §1.2, chain case). The free category on the chain
+graph *is* the finite linear order: paths between layers form a
+proposition equivalent to the index ordering. Sieves on a layer are
+exactly up-closed families of propositions on the deeper layers —
+the honest constructive form of the paper's threshold picture
+$(\emptyset, \dots, \star, \dots)$, which is recovered verbatim only
+for decidable sieves (over the one-layer chain, sieves form
+$\Omega$, not $2$).
+
+```agda
+_ = chain-path-is-prop
+_ = chain-thin
+_ = chain-sieve≃upset
+```
+
 ## What is missing
 
-Everything after Phase 0, at this point. In particular, and next in
-order: the golden-thread chain network and its subobject classifier
-computation; the typed-vertex fork site with the tine coverage (the
-branch's first nontrivial `Coverage`); the explicit one-step
+Next, in order: the typed-vertex fork site with the tine coverage
+(the branch's first nontrivial `Coverage`); the explicit one-step
 sheafification and its agreement with the HIT sheafification; the
-reduction `Sh(C,J) ≃ PSh(C_𝐗)` (the paper's Proposition 1.1 and its
+reduction `Sh(C,J) ≃ PSh(C_𝐗)` (Proposition 1.1 in general, and its
 corollary); Alexandrov duality for arbitrary posets (Proposition 1.2,
-generalized); and the discrete backpropagation flow (Theorem 1.1,
-reformulated). The Ran-side Kan extension dualization
-(`precompose ⊣ Ran`) is deliberately deferred to its first consumer;
-over the finite network sites, direct limits will be finite products.
+generalized); the tree-structure theorem 1.2; the input–output
+relation as `H⁰`; and the discrete backpropagation flow (Theorem 1.1,
+reformulated). The threshold description of decidable chain sieves is
+stated in prose only; the finite-search equivalence is future work.
+The Ran-side Kan extension dualization (`precompose ⊣ Ran`) is
+deliberately deferred to its first consumer; over the finite network
+sites, direct limits will be finite products.

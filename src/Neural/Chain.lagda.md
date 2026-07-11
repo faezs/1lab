@@ -47,10 +47,10 @@ record Chain-edge (n : Nat) (k l : Fin (suc n)) : Type where
   constructor chain-edge
   field lowers : suc (k .lower) ≡ l .lower
 
-open Chain-edge
+open Chain-edge public
 
 unquoteDecl H-Level-Chain-edge =
-  declare-record-hlevel 2 H-Level-Chain-edge (quote Chain-edge)
+  declare-record-hlevel 1 H-Level-Chain-edge (quote Chain-edge)
 
 module _ (n : Nat) where
   chain-graph : Graph lzero lzero
