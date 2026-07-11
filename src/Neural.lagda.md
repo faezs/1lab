@@ -364,14 +364,22 @@ _ = Neural.Stack.Adjunction.Ω⊣τ'
 
 ## What is missing
 
-Next, in order: the unit `X ⇒ X⋆` and the universal property of the
-explicit sheafification, with agreement with the HIT `Sheafify`; the
-reduction `Sh(C,J) ≃ PSh(C_𝐗)` (Proposition 1.1 in general, and its
-corollary); Alexandrov duality for arbitrary posets (Proposition 1.2,
-generalized); the tree-structure theorem 1.2; the input–output
-relation as `H⁰`; and the discrete backpropagation flow (Theorem 1.1,
-reformulated). The threshold description of decidable chain sieves is
-stated in prose only; the finite-search equivalence is future work.
-The Ran-side Kan extension dualization (`precompose ⊣ Ran`) is
-deliberately deferred to its first consumer; over the finite network
-sites, direct limits will be finite products.
+Phase 1 leaves: the universal property of the explicit
+sheafification and its agreement with the HIT `Sheafify`; Alexandrov
+duality for arbitrary posets (Proposition 1.2, generalized); the
+tree-structure theorem 1.2; the input–output relation as `H⁰`; and
+the discrete backpropagation flow (Theorem 1.1, reformulated). The
+threshold description of decidable chain sieves is stated in prose
+only. Phase 3 remainder: the packaging of the family–presheaf
+comparison as an equivalence of categories (triangle identities);
+the paper's section equations 2.24–2.29 for $\tau'_\alpha$;
+openness and the transport dictionary (Lemma 2.3, Proposition 2.2);
+the Boolean side lemma under explicit complementedness; the
+contracted product (Lemma 2.2, the recorded research risk); and the
+assembly of Theorem 2.1 with the fibrant-stack models. Phases 4–7
+of the roadmap — semantic information, the memory-cell sites and
+braid tower, the 2-category with its derivator, and the appendix
+gems — are not started. The Ran-side Kan extension dualization
+(`precompose ⊣ Ran`) remains deliberately deferred to its first
+consumer; over the finite network sites, direct limits will be
+finite products.
