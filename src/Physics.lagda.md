@@ -87,6 +87,7 @@ import Algebra.ChainComplex.DoldKan.Functorial
 import Algebra.ChainComplex.DoldKan.Loop
 import Cat.Instances.SimplicialSets.ActionGroupoid
 import Cat.Instances.SuperSmoothSets
+import Cat.Instances.SuperFormalSmoothSets
 import Cat.Instances.FormalSmoothSets.DeRham
 import Cat.Instances.FormalSmoothSets.Deligne
 import Cat.Instances.FormalSmoothSets.GaugeGroupoid
@@ -437,6 +438,8 @@ _ = Cat.Instances.SuperSmoothSets.SupCartSp
 _ = Cat.Instances.SuperSmoothSets.pt-terminal
 _ = Cat.Instances.SuperSmoothSets.SupSmthSet
 _ = Cat.Instances.SuperSmoothSets.odd-plots
+_ = Cat.Instances.SuperFormalSmoothSets.SupThSmthSet
+_ = Cat.Instances.SuperFormalSmoothSets.pt-terminal
 ```
 
 Finally, on the last column of the table: stable homotopy theory. A
@@ -972,11 +975,14 @@ ident=Sh[_,_]} is a `Topos`{.Agda} in the official sense, over any
 coverage — diagram (8) discharged in full); Weil algebras beyond
 second order (the second-order algebra, its jet derivative, and
 Newton's law as a theorem now exist — see
-`Physics.Newton`{.Agda}) and coverages on the thickened site; super-thickenings combining
-the fermionic and infinitesimal sites (the odd-plot description of
-spinor fields (21) is now the theorem `odd-plots`{.Agda}: plots of
-$\bA^{0|s}$ by any super probe are exactly multiplets of odd,
-anticommuting, square-zero functions); de Rham forms beyond degree two (Kähler 2-forms, the exterior
+`Physics.Newton`{.Agda}) and coverages on the thickened site (super-thickenings now exist:
+`Cat.Instances.SuperFormalSmoothSets`{.Agda} combines coordinates,
+infinitesimal thickenings, and odd directions in one cohesive site —
+the paper's full ambient topos in its 1-categorical shadow — and the
+odd-plot description of spinor fields (21) is the theorem
+`odd-plots`{.Agda} on both super sites: plots of $\bA^{0|s}$ by any
+super probe are exactly multiplets of odd, anticommuting,
+square-zero functions); de Rham forms beyond degree two (Kähler 2-forms, the exterior
 derivative with $d \circ d = 0$, gauge invariance of the field
 strength, and electromagnetism in Landau gauge now exist — see
 `Physics.Maxwell`{.Agda}; and the **Deligne complex** $[\bZ \to
