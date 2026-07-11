@@ -35,6 +35,7 @@ open import Neural.Sheaf.Spontaneous
 import Neural.Topos.Quantifiers
 import Neural.Topos.Predicates
 import Neural.Stack.Grothendieck
+import Neural.Stack.Equivalence
 import Neural.Stack.Restriction
 import Neural.Stack.Presheaves
 import Neural.Stack.Family
@@ -332,6 +333,8 @@ each family as a presheaf on the total category.
 _ = Neural.Stack.Family.Families
 _ = Neural.Stack.Presheaves.Tot
 _ = Neural.Stack.Restriction.Res
+_ = Neural.Stack.Equivalence.unit
+_ = Neural.Stack.Equivalence.counit
 _ = Neural.Stack.Fibre.ι
 ```
 
