@@ -15,6 +15,7 @@ open import Algebra.Group.Ab
 open import Algebra.Group
 
 open import Cat.Functor.Adjoint
+open import Cat.Functor.Compose
 
 open import Algebra.ChainComplex.DoldKan.Normalization
 open import Algebra.ChainComplex.DoldKan.Fundamental
@@ -216,4 +217,67 @@ module _ (k : Nat) where
   collision-kill {suc m₀} α t coll =
     Σ-prop-path (MC.norm-is-prop Gk (suc (suc m₀)))
       (T-kill Gk (genΔ α) (t .lower) (CK.rep α t coll))
+```
+
+A generator missing a positive value is the pushforward, along the
+coface skipping that value, of the corresponding generator one
+dimension down — and the operator commutes with pushforwards, being
+natural in the simplicial group.
+
+```agda
+module _ (k' : Nat) where
+  private
+    Gk : Functor (Δ ^op) (Ab lzero)
+    Gk = ℤ⟨ Δ[ suc k' ] ⟩
+
+    G' : Functor (Δ ^op) (Ab lzero)
+    G' = ℤ⟨ Δ[ k' ] ⟩
+
+  push-Tsub
+    : {j : Nat} (α : Δ-map j (suc k')) (i' : Fin (suc k'))
+    → (miss : ∀ x → ¬ (α .Δ-map.map x ≡ fsuc i'))
+    → Tsub Gk j .∫Hom.fst (genΔ (suc k') α)
+    ≡ NΔ-map (δ (fsuc i')) .map j .∫Hom.fst
+        (Tsub G' j .∫Hom.fst (genΔ k' (miss-factor α (fsuc i') miss .fst)))
+  push-Tsub {j} α i' miss =
+    Σ-prop-path (MC.norm-is-prop Gk j) raw-path
+    where
+    β : Δ-map j k'
+    β = miss-factor α (fsuc i') miss .fst
+
+    pushα : G' => Gk
+    pushα = Free-abelian-functor ▸ Δmap-nt (δ (fsuc i'))
+
+    gen-push : pushα .η j .∫Hom.fst (genΔ k' β) ≡ genΔ (suc k') α
+    gen-push =
+        gen-natural (Δ[ k' ] .F₀ j) (Δ[ suc k' ] .F₀ j)
+          (Δmap-nt (δ (fsuc i')) .η j) β
+      ∙ ap (gen {Δ[ suc k' ] .F₀ j})
+          (miss-factor α (fsuc i') miss .snd)
+
+    nat-raw
+      : (v : ⌞ G' .F₀ j ⌟)
+      → pushα .η j .∫Hom.fst (Tsub G' j .∫Hom.fst v .fst)
+      ≡ Tsub Gk j .∫Hom.fst (pushα .η j .∫Hom.fst v) .fst
+    nat-raw v = go j v where
+      go : (j : Nat) (v : ⌞ G' .F₀ j ⌟)
+         → pushα .η j .∫Hom.fst (Tsub G' j .∫Hom.fst v .fst)
+         ≡ Tsub Gk j .∫Hom.fst (pushα .η j .∫Hom.fst v) .fst
+      go zero v = refl
+      go (suc zero) v = T₁-natural pushα v
+      go (suc (suc m₀)) v =
+          ap (pushα .η (suc (suc m₀)) .∫Hom.fst)
+            (T-desc-agree G' (suc (suc m₀)) 1 refl (Nat.s≤s Nat.0≤x) v)
+        ∙ normalize-desc-natural pushα (suc (suc m₀)) 1 refl
+            (Nat.s≤s Nat.0≤x) v
+        ∙ sym (T-desc-agree Gk (suc (suc m₀)) 1 refl (Nat.s≤s Nat.0≤x)
+            (pushα .η (suc (suc m₀)) .∫Hom.fst v))
+
+    raw-path
+      : Tsub Gk j .∫Hom.fst (genΔ (suc k') α) .fst
+      ≡ NΔ-map (δ (fsuc i')) .map j .∫Hom.fst
+          (Tsub G' j .∫Hom.fst (genΔ k' β)) .fst
+    raw-path =
+        ap (λ w → Tsub Gk j .∫Hom.fst w .fst) (sym gen-push)
+      ∙ sym (nat-raw (genΔ k' β))
 ```
