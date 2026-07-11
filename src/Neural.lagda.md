@@ -37,6 +37,7 @@ import Neural.Topos.Predicates
 import Neural.Stack.Grothendieck
 import Neural.Stack.Presheaves
 import Neural.Stack.Family
+import Neural.Stack.Fibre
 import Neural.Stack.Thin
 
 open import Neural.Logic.Hyperdoctrine
@@ -329,6 +330,7 @@ each family as a presheaf on the total category.
 ```agda
 _ = Neural.Stack.Family.Families
 _ = Neural.Stack.Presheaves.Tot
+_ = Neural.Stack.Fibre.ι
 ```
 
 ## What is missing
