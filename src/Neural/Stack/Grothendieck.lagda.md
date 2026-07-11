@@ -15,6 +15,8 @@ open import Cat.Displayed.Base
 open import Cat.Groupoid
 open import Cat.Prelude
 
+open import Neural.Stack.Transport
+
 import Cat.Displayed.Cartesian.Right as Right
 import Cat.Reasoning
 ```
@@ -85,65 +87,10 @@ _·₁_
 ·₀-∘ f g x = ap (λ K → K .F₀ x) (F.F-∘ g f)
 ```
 
-## The transport toolkit
-
-Four lemmas, each by path induction, push every substitution to the
-outside of a term: substitution in the codomain commutes with
-precomposition, functors push substitutions through their action on
-morphisms, a composition against a functor-path can be traded for the
-path's other endpoint, and — the strictness dividend — substitutions
-along parallel paths of fibre objects agree.
-
-```agda
-private
-  sub-∘ˡ
-    : ∀ {oc ℓc} (C : Precategory oc ℓc) {w x y z : C .Ob}
-    → (p : y ≡ z) (h : C .Hom x y) (g : C .Hom w x)
-    → C ._∘_ (subst (C .Hom x) p h) g
-    ≡ subst (C .Hom w) p (C ._∘_ h g)
-  sub-∘ˡ C {w} {x} p h g = J
-    (λ z p → C ._∘_ (subst (C .Hom x) p h) g
-           ≡ subst (C .Hom w) p (C ._∘_ h g))
-    (ap (λ t → C ._∘_ t g) (transport-refl h) ∙ sym (transport-refl _))
-    p
-
-  F₁-sub
-    : ∀ {oc ℓc od ℓd} {C : Precategory oc ℓc} {D : Precategory od ℓd}
-    → (K : Functor C D) {x y y' : C .Ob} (p : y ≡ y') (h : C .Hom x y)
-    → K .F₁ (subst (C .Hom x) p h)
-    ≡ subst (D .Hom (K .F₀ x)) (ap (K .F₀) p) (K .F₁ h)
-  F₁-sub {C = C} {D} K {x} p h = J
-    (λ y' p → K .F₁ (subst (C .Hom x) p h)
-            ≡ subst (D .Hom (K .F₀ x)) (ap (K .F₀) p) (K .F₁ h))
-    (ap (K .F₁) (transport-refl h) ∙ sym (transport-refl _))
-    p
-
-  comp-key
-    : ∀ {oc ℓc od ℓd} {C : Precategory oc ℓc} {D : Precategory od ℓd}
-      {G H : Functor C D} (q : G ≡ H) {a b : C .Ob} (h : C .Hom a b)
-      {w : D .Ob} (k : D .Hom w (H .F₀ a))
-    → D ._∘_ (G .F₁ h) (subst (D .Hom w) (sym (ap (λ K → K .F₀ a) q)) k)
-    ≡ subst (D .Hom w) (sym (ap (λ K → K .F₀ b) q)) (D ._∘_ (H .F₁ h) k)
-  comp-key {D = D} {G = G} q {a} {b} h {w} k = J
-    (λ H q → (k : D .Hom w (H .F₀ a))
-           → D ._∘_ (G .F₁ h) (subst (D .Hom w) (sym (ap (λ K → K .F₀ a) q)) k)
-           ≡ subst (D .Hom w) (sym (ap (λ K → K .F₀ b) q)) (D ._∘_ (H .F₁ h) k))
-    (λ k → ap (D ._∘_ (G .F₁ h)) (transport-refl k) ∙ sym (transport-refl _))
-    q k
-
-  sub-parallel
-    : ∀ {oc ℓc} (C : Precategory oc ℓc) (st : is-set (C .Ob))
-      {x y z : C .Ob} (p q : y ≡ z) (h : C .Hom x y)
-    → subst (C .Hom x) p h ≡ subst (C .Hom x) q h
-  sub-parallel C st {x} p q h =
-    ap (λ e → subst (C .Hom x) e h) (st _ _ p q)
-
-  sub-set
-    : ∀ {oc ℓc} (C : Precategory oc ℓc) (st : is-set (C .Ob))
-      {x y : C .Ob} (p : y ≡ y) (h : C .Hom x y)
-    → subst (C .Hom x) p h ≡ h
-  sub-set C st p h = sub-parallel C st p refl h ∙ transport-refl h
-```
+The [[transport toolkit|stack-transport-toolkit]] — the path lemmas
+that push every substitution to the outside of a term, and the
+parallel-path collapse that strictness then provides — lives in its
+own module, shared by all the stack machinery.
 
 ## The displayed category
 
