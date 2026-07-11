@@ -188,3 +188,45 @@ the other vertices every arrow lies in the identity-generated sieve.
     go (star c f) = sheaf-at-star
     go (tang c f) = sheaf-at-id (tang c f) λ g → inc (tt , g , ++-idr g)
 ```
+
+## The unit
+
+The comparison map $X \To X^\star$ is the identity away from the
+stars, and at a star it restricts a value along each tine. Naturality
+is a per-edge check, folded along paths; the only interesting squares
+are at the tines (a transport appears, killed by `J`) and at the
+socket (functoriality of $X$ for the composite through the star).
+
+```agda
+  private
+    η₀ : ∀ v → X ʻ v → X⋆₀ v
+    η₀ (orig c)   x = x
+    η₀ (star c f) x i = X.₁ (cons (tine i refl) nil) x
+    η₀ (tang c f) x = x
+
+    η-edge
+      : ∀ {v m} (e : F-edge N v m) (b : X ʻ m)
+      → η₀ v (X.₁ (cons e nil) b) ≡ ρₑ e (η₀ m b)
+    η-edge (single q) b = refl
+    η-edge handle     b = refl
+    η-edge (socket {f = f} {f' = f'}) b = funext λ i →
+      sym (X.F-∘ (cons (tine i refl) nil) (cons socket nil))
+    η-edge (tine {b = b'} {c = c} {f = fk} i q) b =
+      J (λ b'' q → X.₁ (cons (tine {b = b''} {c = c} {f = fk} i q) nil) b
+           ≡ ρₑ (tine {b = b''} {c = c} {f = fk} i q) (η₀ (star c fk) b))
+        (sym (transport-refl _))
+        q
+
+    η-nat
+      : ∀ {v u} (p : Path-in Γ v u) (a : X ʻ u)
+      → η₀ v (X.₁ p a) ≡ ρ p (η₀ u a)
+    η-nat {v} nil a = ap (η₀ v) X.F-id
+    η-nat {v} (cons e p) a =
+        ap (η₀ v) (X.F-∘ (cons e nil) p)
+      ∙ η-edge e (X.₁ p a)
+      ∙ ap (ρₑ e) (η-nat p a)
+
+  unit : X => X⋆
+  unit ._=>_.η v = η₀ v
+  unit ._=>_.is-natural u v p = funext (η-nat p)
+```
