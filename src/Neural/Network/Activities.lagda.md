@@ -67,13 +67,12 @@ module Network-dynamics
     Act-is-set (star c f) = Π-is-hlevel 2 λ i → X₀ _ .is-tr
     Act-is-set (tang c f) = Π-is-hlevel 2 λ i → X₀ _ .is-tr
 
-  private
-    one-tuple
-      : ∀ {b} → ∣ X₀ b ∣
-      → (i : Fin (length (b ∷ []))) → ∣ X₀ ((b ∷ []) ! i) ∣
-    one-tuple x i with fin-view i
-    ... | zero  = x
-    ... | suc j = absurd (Nat.¬suc≤0 (Fin.bounded j))
+  one-tuple
+    : ∀ {b} → ∣ X₀ b ∣
+    → (i : Fin (length (b ∷ []))) → ∣ X₀ ((b ∷ []) ! i) ∣
+  one-tuple x (fin zero) = x
+  one-tuple x (fin (suc k) ⦃ b ⦄) =
+    absurd (Nat.¬suc≤0 (Nat.≤-peel b))
 
   αₑ : ∀ {v u} (e : F-edge N v u) → Act u → Act v
   αₑ {orig c} {orig b} (single q) x =
