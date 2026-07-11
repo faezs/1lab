@@ -34,6 +34,9 @@ open import Neural.Sheaf.Spontaneous
 
 import Neural.Topos.Quantifiers
 import Neural.Topos.Predicates
+import Neural.Stack.Grothendieck
+import Neural.Stack.Presheaves
+import Neural.Stack.Family
 import Neural.Stack.Thin
 
 open import Neural.Logic.Hyperdoctrine
@@ -302,6 +305,30 @@ propositional), and reindexing itself provides the cartesian lifts.
 ```agda
 _ = Neural.Stack.Thin.Thin-stack
 _ = Neural.Stack.Thin.Thin-stack-fibration
+```
+
+**The split Grothendieck construction** (equation 2.2). For a
+strictly functorial presheaf of strict categories — the paper's
+normative split stacks — the displayed category, total category,
+projection, and the canonical cleaving, with every coherence law
+closed by a four-lemma transport toolkit over the strict fibre
+object sets; and the right-fibration criterion: groupoid fibers make
+every morphism cartesian.
+
+```agda
+_ = Neural.Stack.Grothendieck.Grothendieck
+_ = Neural.Stack.Grothendieck.Grothendieck-fibration
+_ = Neural.Stack.Grothendieck.Grothendieck-right-fibration
+```
+
+**Compatible families** (equations 2.4–2.6). The category of
+fibrewise presheaves with transition maps and cocycle conditions —
+the presentation the paper computes in — and the functor exhibiting
+each family as a presheaf on the total category.
+
+```agda
+_ = Neural.Stack.Family.Families
+_ = Neural.Stack.Presheaves.Tot
 ```
 
 ## What is missing
