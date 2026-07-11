@@ -524,3 +524,378 @@ tower-sqrt (suc k) n f lb T i = g , quot , rec where
         (tower-sqrt k (suc n) f-suc lb-suc
           (tower-rename k fsuc (λ a b → fsuc-inj) f (tower-trunc k T)))))
 ```
+
+## Bounds for the square root tower
+
+If $|f| \le M$ on a box then $\sqrt f \le \max(M, 1)$ there: with
+$c$ the constant at $\max(M,1)$, monotony gives $f \le c \le c^2$
+— the latter by the two-sided product comparison against $1 \cdot
+c$ — so $c^2 - (\sqrt f)^2 \ge 0$, and multiplying by the
+nonnegative reciprocal of $c + \sqrt f \ge 1$ cancels the squares:
+$c - \sqrt f = (c^2 - (\sqrt f)^2) \cdot \rho \ge 0$. The lower
+side is just $-c \le 0 \le 1 \le \sqrt f$.
+
+```agda
+bd-sqrt
+  : ∀ {n} (f : Fun n) (lb : ∀ x → ratℝ 1 ≤ᴿ f x)
+  → Bd n f → Bd n (λ x → sqrt (f x) (lb x))
+bd-sqrt {n} f lb bf R = ∥-∥-map upgrade (bf R) where
+  upgrade
+    : Σ Ratio (λ M → (x : Fin n → ℝ) → InBox n R x
+        → absᴿ (f x) ≤ᴿ ratℝ M)
+    → Σ Ratio (λ M → (x : Fin n → ℝ) → InBox n R x
+        → absᴿ (sqrt (f x) (lb x)) ≤ᴿ ratℝ M)
+  upgrade (M , h) = maxℚ M 1 , bound where
+    c : ℝ
+    c = ratℝ (maxℚ M 1)
+
+    1≤c : ratℝ 1 ≤ᴿ c
+    1≤c = ratℝ-mono (maxℚ-≤r {M} {1})
+
+    -c≤1 : (-ᴿ c) ≤ᴿ ratℝ 1
+    -c≤1 = ≤ᴿ-trans { -ᴿ c} {0ᴿ} {ratℝ 1}
+      (negrat≤0 (≤-trans 0≤1' (maxℚ-≤r {M} {1})))
+      0≤1ᴿ
+
+    -c≤c : (-ᴿ c) ≤ᴿ c
+    -c≤c = ≤ᴿ-trans { -ᴿ c} {ratℝ 1} {c} -c≤1 1≤c
+
+    c≤cc : c ≤ᴿ (c *ᴿ c)
+    c≤cc = subst (_≤ᴿ (c *ᴿ c)) (*ᴿ-idl c)
+      (prod-≤ {ratℝ 1} {c} {c} {c} 1≤c -c≤1 (≤ᴿ-refl {c}) -c≤c .fst)
+
+    bound
+      : (x : Fin n → ℝ) → InBox n R x
+      → absᴿ (sqrt (f x) (lb x)) ≤ᴿ ratℝ (maxℚ M 1)
+    bound x xb = abs-≤ {z} {c} z≤c -c≤z where
+      z : ℝ
+      z = sqrt (f x) (lb x)
+
+      1≤z : ratℝ 1 ≤ᴿ z
+      1≤z = sqrt-≥1 (f x) (lb x)
+
+      fx≤cc : f x ≤ᴿ (c *ᴿ c)
+      fx≤cc = ≤ᴿ-trans {f x} {c} {c *ᴿ c}
+        (≤ᴿ-trans {f x} {ratℝ M} {c}
+          (abs-out-l {f x} {ratℝ M} (h x xb))
+          (ratℝ-mono (maxℚ-≤l {M} {1})))
+        c≤cc
+
+      zz≤cc : (z *ᴿ z) ≤ᴿ (c *ᴿ c)
+      zz≤cc = subst (_≤ᴿ (c *ᴿ c)) (sym (sqrt-square (f x) (lb x))) fx≤cc
+
+      slb : ratℝ 1 ≤ᴿ (c +ᴿ z)
+      slb = sum-≥1 c z 1≤c (≥1→0≤ {z} 1≤z)
+
+      ρ : ℝ
+      ρ = recip≥1 (c +ᴿ z) slb
+
+      path : c −ᴿ z ≡ ((c *ᴿ c) −ᴿ (z *ᴿ z)) *ᴿ ρ
+      path =
+          sym (*ᴿ-idr (c −ᴿ z))
+        ∙ ap ((c −ᴿ z) *ᴿ_) (sym (recip≥1-invr (c +ᴿ z) slb))
+        ∙ RI.diff-sq-assoc c z ρ
+
+      z≤c : z ≤ᴿ c
+      z≤c = diff-nonneg→≤ᴿ {z} {c} (subst (0ᴿ ≤ᴿ_) (sym path)
+        (*ᴿ-nonneg ((c *ᴿ c) −ᴿ (z *ᴿ z)) ρ
+          (≤ᴿ→diff-nonneg {z *ᴿ z} {c *ᴿ c} zz≤cc)
+          (recip≥1-nonneg (c +ᴿ z) slb)))
+
+      -c≤z : (-ᴿ c) ≤ᴿ z
+      -c≤z = ≤ᴿ-trans { -ᴿ c} {ratℝ 1} {z} -c≤1 1≤z
+```
+
+The bound tower mirrors the raw recursion; the reciprocal factor
+contributes its constant bound, so no bound for the sum of roots
+is ever demanded at the node.
+
+```agda
+bdt-sqrt
+  : ∀ k n (f : Fun n) (lb : ∀ x → ratℝ 1 ≤ᴿ f x)
+  → (T : TowerTo k n f) → Bd n f → BdTower k n f T
+  → BdTower k n (λ x → sqrt (f x) (lb x)) (tower-sqrt k n f lb T)
+bdt-sqrt zero    n f lb T bf BT = lift tt
+bdt-sqrt (suc k) n f lb T bf BT i = node , rec where
+  fq : Fun (suc n)
+  fq = T i .fst
+
+  T' : TowerTo k (suc n) fq
+  T' = T i .snd .snd
+
+  f-σ f-suc : Fun (suc n)
+  f-σ   y = f (λ j → y (σᵢ i j))
+  f-suc y = f (λ j → y (fsuc j))
+
+  lb-σ : ∀ y → ratℝ 1 ≤ᴿ f-σ y
+  lb-σ y = lb (λ j → y (σᵢ i j))
+
+  lb-suc : ∀ y → ratℝ 1 ≤ᴿ f-suc y
+  lb-suc y = lb (λ j → y (fsuc j))
+
+  S-σ S-suc : Fun (suc n)
+  S-σ   y = sqrt (f-σ y) (lb-σ y)
+  S-suc y = sqrt (f-suc y) (lb-suc y)
+
+  sum-lb : ∀ y → ratℝ 1 ≤ᴿ (S-σ y +ᴿ S-suc y)
+  sum-lb y = sum-≥1 (S-σ y) (S-suc y)
+    (sqrt-≥1 (f-σ y) (lb-σ y))
+    (≥1→0≤ {S-suc y} (sqrt-≥1 (f-suc y) (lb-suc y)))
+
+  ρfun : Fun (suc n)
+  ρfun y = recip≥1 (S-σ y +ᴿ S-suc y) (sum-lb y)
+
+  MσT : TowerTo k (suc n) S-σ
+  MσT = tower-sqrt k (suc n) f-σ lb-σ
+    (tower-rename k (σᵢ i) (σᵢ-inj i) f (tower-trunc k T))
+
+  MsucT : TowerTo k (suc n) S-suc
+  MsucT = tower-sqrt k (suc n) f-suc lb-suc
+    (tower-rename k fsuc (λ a b → fsuc-inj) f (tower-trunc k T))
+
+  Madd : TowerTo k (suc n) (λ y → S-σ y +ᴿ S-suc y)
+  Madd = tower-add k (suc n) S-σ S-suc MσT MsucT
+
+  node : Bd (suc n) (λ y → fq y *ᴿ ρfun y)
+  node = bd-mul fq ρfun (BT i .fst)
+    (bd-recip≥1 (λ y → S-σ y +ᴿ S-suc y) sum-lb)
+
+  rec : BdTower k (suc n) (λ y → fq y *ᴿ ρfun y)
+    (tower-sqrt (suc k) n f lb T i .snd .snd)
+  rec = bdt-mul k (suc n) fq ρfun T'
+    (tower-recip k (suc n) (λ y → S-σ y +ᴿ S-suc y) sum-lb Madd)
+    (BT i .fst)
+    (bd-recip≥1 (λ y → S-σ y +ᴿ S-suc y) sum-lb)
+    (BT i .snd)
+    (bdt-recip k (suc n) (λ y → S-σ y +ᴿ S-suc y) sum-lb Madd
+      (bd-add S-σ S-suc
+        (bd-sqrt f-σ lb-σ (bd-rename (σᵢ i) f bf))
+        (bd-sqrt f-suc lb-suc (bd-rename fsuc f bf)))
+      (bdt-add k (suc n) S-σ S-suc MσT MsucT
+        (bdt-sqrt k (suc n) f-σ lb-σ
+          (tower-rename k (σᵢ i) (σᵢ-inj i) f (tower-trunc k T))
+          (bd-rename (σᵢ i) f bf)
+          (bdt-rename k (σᵢ i) (σᵢ-inj i) f (tower-trunc k T)
+            (bdt-trunc k T BT)))
+        (bdt-sqrt k (suc n) f-suc lb-suc
+          (tower-rename k fsuc (λ a b → fsuc-inj) f (tower-trunc k T))
+          (bd-rename fsuc f bf)
+          (bdt-rename k fsuc (λ a b → fsuc-inj) f (tower-trunc k T)
+            (bdt-trunc k T BT)))))
+
+smooth⁺-sqrt
+  : ∀ {n} {f : Fun n} (A : Smooth⁺ n f) (lb : ∀ x → ratℝ 1 ≤ᴿ f x)
+  → Smooth⁺ n (λ x → sqrt (f x) (lb x))
+smooth⁺-sqrt {n} {f} (S , bf , BT) lb =
+    (λ k → tower-sqrt k n f lb (S k))
+  , bd-sqrt f lb bf
+  , (λ k → bdt-sqrt k n f lb (S k) bf (BT k))
+```
+
+## Squares are nonnegative
+
+The remaining ingredient for the patch map's domain condition is
+that squares of reals are nonnegative — constructively, a
+rational $q < 0$ must be trapped under a corner bracket of $z
+\cdot z$. Approximate $z$ to a width $\delta$ below both $-q$ and
+$1$: if the bracket $[a,b]$ sits entirely on one side of zero,
+every corner is a product of same-signed rationals, hence
+nonnegative and above $q$; and if it straddles zero, then both
+endpoints lie in $(-\delta, \delta)$, so the mixed corners exceed
+$-\delta^2 > q$ — witnessed by the decomposition $ab + \delta^2 =
+(\delta + a)b + \delta(\delta - b)$, a sum of products of visibly
+nonnegative factors.
+
+<!--
+```agda
+private abstract
+  nonpos-mul : ∀ {u v} → u ≤ 0 → v ≤ 0 → 0 ≤ (u *ℚ v)
+  nonpos-mul {u} {v} u≤0 v≤0 = ≤-resp refl (neg-mul u v)
+    (*ℚ-nonnegative
+      (≤-resp neg-zero refl (negℚ-anti-≤ u≤0))
+      (≤-resp neg-zero refl (negℚ-anti-≤ v≤0)))
+
+  shuffle-diff
+    : ∀ d u v → (d +ℚ (-ℚ (v +ℚ (-ℚ u)))) ≡ ((d +ℚ u) +ℚ (-ℚ v))
+  shuffle-diff d u v = rational!
+
+  mixed-corner
+    : ∀ u v d
+    → (((d +ℚ u) *ℚ v) +ℚ (d *ℚ (d +ℚ (-ℚ v))))
+    ≡ ((u *ℚ v) +ℚ (d *ℚ d))
+  mixed-corner u v d = rational!
+
+  cancel-shift
+    : ∀ u v d
+    → ((-ℚ (d *ℚ d)) +ℚ ((u *ℚ v) +ℚ (d *ℚ d))) ≡ (u *ℚ v)
+  cancel-shift u v d = rational!
+```
+-->
+
+```agda
+sq-nonneg : ∀ (z : ℝ) → 0ᴿ ≤ᴿ (z *ᴿ z)
+sq-nonneg z q q<0 =
+  ∥-∥-rec ((z *ᴿ z) .lower q .is-tr) mk (approx z δ 0<δ)
+  where
+  0<-q : 0 < (-ℚ q)
+  0<-q = <-resp refl (+ℚ-idl (-ℚ q)) (<→positive-diff q<0)
+
+  m δ : Ratio
+  m = minℚ (-ℚ q) 1
+  δ = half m
+
+  0<m : 0 < m
+  0<m = minℚ-glb 0<-q 0<1'
+
+  0<δ : 0 < δ
+  0<δ = half-pos 0<m
+
+  0≤δ : 0 ≤ δ
+  0≤δ = <-weaken 0<δ
+
+  δ<-q : δ < (-ℚ q)
+  δ<-q = <-≤-trans (half-lt 0<m) (minℚ-≤l { -ℚ q} {1})
+
+  δ≤1 : δ ≤ 1
+  δ≤1 = <-weaken (<-≤-trans (half-lt 0<m) (minℚ-≤r { -ℚ q} {1}))
+
+  δδ≤δ : (δ *ℚ δ) ≤ δ
+  δδ≤δ = ≤-resp refl (*ℚ-idr δ) (*ℚ-preserves-≤l δ 0≤δ δ≤1)
+
+  q<-δδ : q < (-ℚ (δ *ℚ δ))
+  q<-δδ = <-resp (negℚ-invol q) refl
+    (negℚ-anti-< (≤-<-trans δδ≤δ δ<-q))
+
+  mk
+    : Σ Ratio (λ u → Σ Ratio (λ v →
+        ∣ z .lower u ∣ × ∣ z .upper v ∣ × ((v +ℚ (-ℚ u)) < δ)))
+    → ∣ (z *ᴿ z) .lower q ∣
+  mk (a , b , la , ub , width) with holds? (a < 0)
+  ... | no ¬a<0 = inc (a , b , a , b , la , ub , la , ub , q<min)
+    where
+    0≤a : 0 ≤ a
+    0≤a = ¬<→≥ ¬a<0
+
+    0≤b : 0 ≤ b
+    0≤b = ≤-trans 0≤a (<-weaken (lower<upper z la ub))
+
+    q<min : q < min₄ (a *ℚ a) (a *ℚ b) (b *ℚ a) (b *ℚ b)
+    q<min = min₄-univ-<
+      (<-≤-trans q<0 (*ℚ-nonnegative 0≤a 0≤a))
+      (<-≤-trans q<0 (*ℚ-nonnegative 0≤a 0≤b))
+      (<-≤-trans q<0 (*ℚ-nonnegative 0≤b 0≤a))
+      (<-≤-trans q<0 (*ℚ-nonnegative 0≤b 0≤b))
+  ... | yes a<0 with holds? (0 < b)
+  ...   | no ¬0<b = inc (a , b , a , b , la , ub , la , ub , q<min)
+    where
+    a≤0 : a ≤ 0
+    a≤0 = <-weaken a<0
+
+    b≤0 : b ≤ 0
+    b≤0 = ¬<→≥ ¬0<b
+
+    q<min : q < min₄ (a *ℚ a) (a *ℚ b) (b *ℚ a) (b *ℚ b)
+    q<min = min₄-univ-<
+      (<-≤-trans q<0 (nonpos-mul a≤0 a≤0))
+      (<-≤-trans q<0 (nonpos-mul a≤0 b≤0))
+      (<-≤-trans q<0 (nonpos-mul b≤0 a≤0))
+      (<-≤-trans q<0 (nonpos-mul b≤0 b≤0))
+  ...   | yes 0<b = inc (a , b , a , b , la , ub , la , ub , q<min)
+    where
+    a≤0 : a ≤ 0
+    a≤0 = <-weaken a<0
+
+    0≤b : 0 ≤ b
+    0≤b = <-weaken 0<b
+
+    0<-a : 0 < (-ℚ a)
+    0<-a = <-resp neg-zero refl (negℚ-anti-< a<0)
+
+    b<δ : b < δ
+    b<δ = <-trans (add-pos-< b (-ℚ a) 0<-a) width
+
+    0≤δ-b : 0 ≤ (δ +ℚ (-ℚ b))
+    0≤δ-b = <-weaken (<→positive-diff b<δ)
+
+    -b≤0 : (-ℚ b) ≤ 0
+    -b≤0 = ≤-resp refl neg-zero (negℚ-anti-≤ 0≤b)
+
+    0≤δ+a : 0 ≤ (δ +ℚ a)
+    0≤δ+a = <-weaken (<-≤-trans
+      (<-resp refl (shuffle-diff δ a b) (<→positive-diff width))
+      (≤-resp refl (+ℚ-idr (δ +ℚ a))
+        (+ℚ-preserves-≤ (≤-refl {δ +ℚ a}) -b≤0)))
+
+    ab+δδ : 0 ≤ ((a *ℚ b) +ℚ (δ *ℚ δ))
+    ab+δδ = ≤-resp (+ℚ-idr 0) (mixed-corner a b δ)
+      (+ℚ-preserves-≤
+        (*ℚ-nonnegative 0≤δ+a 0≤b)
+        (*ℚ-nonnegative 0≤δ 0≤δ-b))
+
+    q<ab : q < (a *ℚ b)
+    q<ab = <-≤-trans q<-δδ
+      (≤-resp (+ℚ-idr (-ℚ (δ *ℚ δ))) (cancel-shift a b δ)
+        (+ℚ-preserves-≤ (≤-refl { -ℚ (δ *ℚ δ)}) ab+δδ))
+
+    q<min : q < min₄ (a *ℚ a) (a *ℚ b) (b *ℚ a) (b *ℚ b)
+    q<min = min₄-univ-<
+      (<-≤-trans q<0 (nonpos-mul a≤0 a≤0))
+      q<ab
+      (<-resp refl (*ℚ-commutative a b) q<ab)
+      (<-≤-trans q<0 (*ℚ-nonnegative 0≤b 0≤b))
+```
+
+Consequently $1 + h^2 \ge 1$ pointwise, for any real-valued $h$ —
+the normalising argument of the patch map lives in the domain of
+both the square root and the reciprocal. Since `1ᴿ`{.Agda} *is*
+`ratℝ 1`{.Agda}, no bridging path is needed.
+
+```agda
+one-plus-sq-lb
+  : ∀ {n} (h : Fun n) (x : Fin n → ℝ)
+  → ratℝ 1 ≤ᴿ (1ᴿ +ᴿ (h x *ᴿ h x))
+one-plus-sq-lb h x =
+  sum-≥1 1ᴿ (h x *ᴿ h x) (≤ᴿ-refl {ratℝ 1}) (sq-nonneg (h x))
+```
+
+## The patch map
+
+Everything assembles into the **patch map** $x \mapsto x /
+\sqrt{1 + x^2}$, the diffeomorphism $\bR \cong (-1,1)$ from which
+the differentiably good covers are built. Its domain conditions
+are supplied by `one-plus-sq-lb`{.Agda} and `sqrt-≥1`{.Agda}, and
+its [[bounded-smoothness|bounded-smooth-function]] is the literal
+composite of the closure combinators: the underlying function of
+that composite *is* the definition of `patch-fun`{.Agda}, so the
+packaging is definitional.
+
+```agda
+patch-norm-lb
+  : (x : Fin 1 → ℝ) → ratℝ 1 ≤ᴿ (1ᴿ +ᴿ (x fzero *ᴿ x fzero))
+patch-norm-lb = one-plus-sq-lb (λ v → v fzero)
+
+patch-sqrt-lb
+  : (x : Fin 1 → ℝ)
+  → ratℝ 1 ≤ᴿ sqrt (1ᴿ +ᴿ (x fzero *ᴿ x fzero)) (patch-norm-lb x)
+patch-sqrt-lb x = sqrt-≥1 (1ᴿ +ᴿ (x fzero *ᴿ x fzero)) (patch-norm-lb x)
+
+patch-fun : Fun 1
+patch-fun x =
+  x fzero *ᴿ
+    recip≥1 (sqrt (1ᴿ +ᴿ (x fzero *ᴿ x fzero)) (patch-norm-lb x))
+      (patch-sqrt-lb x)
+
+patch-smooth⁺ : Smooth⁺ 1 patch-fun
+patch-smooth⁺ = smooth⁺-mul {1} {λ x → x fzero}
+  {λ x → recip≥1 (sqrt (1ᴿ +ᴿ (x fzero *ᴿ x fzero)) (patch-norm-lb x))
+      (patch-sqrt-lb x)}
+  (smooth⁺-proj fzero)
+  (smooth⁺-recip {1} {λ x → sqrt (1ᴿ +ᴿ (x fzero *ᴿ x fzero)) (patch-norm-lb x)}
+    (smooth⁺-sqrt {1} {λ x → 1ᴿ +ᴿ (x fzero *ᴿ x fzero)}
+      (smooth⁺-add {1} {λ _ → 1ᴿ} {λ x → x fzero *ᴿ x fzero}
+        (smooth⁺-const 1ᴿ)
+        (smooth⁺-mul {1} {λ x → x fzero} {λ x → x fzero}
+          (smooth⁺-proj fzero) (smooth⁺-proj fzero)))
+      patch-norm-lb)
+    patch-sqrt-lb)
+```
