@@ -36,6 +36,7 @@ import Neural.Topos.Quantifiers
 import Neural.Topos.Predicates
 import Neural.Stack.Grothendieck
 import Neural.Stack.Equivalence
+import Neural.Stack.Omega
 import Neural.Stack.Restriction
 import Neural.Stack.Presheaves
 import Neural.Stack.Family
@@ -336,6 +337,18 @@ _ = Neural.Stack.Restriction.Res
 _ = Neural.Stack.Equivalence.unit
 _ = Neural.Stack.Equivalence.counit
 _ = Neural.Stack.Fibre.ι
+```
+
+**The glued classifier** (Proposition 2.1). The subobject classifier
+of the total presheaf topos, restricted to a compatible family of
+fibrewise sieves; the comparison with the total classifier is the
+counit, invertible with identity components — subobjects of a stack
+are classified by fibrewise sieve data.
+
+```agda
+_ = Neural.Stack.Omega.Ω-family
+_ = Neural.Stack.Omega.Ω-comparison
+_ = Neural.Stack.Omega.counit-invl
 ```
 
 ## What is missing
