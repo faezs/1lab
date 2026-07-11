@@ -201,10 +201,9 @@ fundamental (suc (suc m₀)) =
 
 With the fundamental class in hand, the levelwise Dold–Kan counit is
 evaluation $\varepsilon(\varphi) = \varphi_k(e_k)$; that this
-assembles into a chain map — and that unit and counit are inverse
-isomorphisms — rests on the combinatorial expansion of the
-normalization operator (the normalization theorem), which remains
-future work.
+assembles into a chain map, and that unit and counit are inverse
+[[isomorphisms|dold-kan]], is proven downstream from the
+combinatorial expansion of the normalization operator.
 
 ## The levelwise counit
 

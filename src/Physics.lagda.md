@@ -85,6 +85,8 @@ import Algebra.ChainComplex.DoldKan.Boundary
 import Algebra.ChainComplex.DoldKan.Counit
 import Algebra.ChainComplex.DoldKan.Functorial
 import Algebra.ChainComplex.DoldKan.Loop
+import Algebra.ChainComplex.DoldKan.CounitIso
+import Algebra.ChainComplex.DoldKan.UnitIso
 import Cat.Instances.SimplicialSets.ActionGroupoid
 import Cat.Instances.SuperSmoothSets
 import Cat.Instances.SuperFormalSmoothSets
@@ -856,6 +858,8 @@ _ = Algebra.ChainComplex.DoldKan.Boundary.∂-fundamental
 _ = Algebra.ChainComplex.DoldKan.Counit.dk-counit
 _ = Algebra.ChainComplex.DoldKan.Functorial.Γ-functor
 _ = Algebra.ChainComplex.DoldKan.Loop.K-loop
+_ = Algebra.ChainComplex.DoldKan.CounitIso.dk-counit-invertible
+_ = Algebra.ChainComplex.DoldKan.UnitIso.dk-unit-iso
 _ = Cat.Site.Sheafification.Lex.Sheafification-pres-⊤
 _ = Cat.Site.Sheafification.Locality.locally-equal→inc-path
 _ = Cat.Site.Sheafification.Locality.sheaf-detects
@@ -1019,7 +1023,12 @@ degenerate simplices vanish**, $N \cap D = 0$ — now also proven
 the normalization operator itself), and from it the **boundary
 formula** $d_0 e_{k+1} = \sum_i (-1)^i \delta_i \cdot e_k$ for the
 fundamental classes at every dimension — and with it the counit assembled as an honest **chain map**
-$N\Gamma(C) \to C$ — leaving only the inverse isomorphisms;
+$N\Gamma(C) \to C$ — and now **both comparison maps are
+isomorphisms**: the counit by the four-way classification of
+simplex operators driving injectivity and an explicit normalized
+preimage for surjectivity, and the unit by the triangle identity
+together with the Moore functor's reflection of isomorphisms. The
+Dold–Kan correspondence (30) is complete;
 closure of Kan
 complexes under mapping spaces with *arbitrary* Kan targets needs
 the theory of anodyne extensions; and the *external presentation* of the simplicial

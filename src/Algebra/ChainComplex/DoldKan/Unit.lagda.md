@@ -141,6 +141,6 @@ module _ (A : Functor (Δ ^op) (Ab lzero)) where
 ```
 
 The unit is the easy half of the Dold–Kan correspondence's data;
-that it is an *isomorphism* is the normalization theorem — the
-decomposition of every simplicial abelian group into degenerate
-pieces indexed by surjections — which remains future work.
+that it is an *isomorphism* is proven downstream, from the
+normalization operator's fixing of normalized chains and killing of
+degenerate ones.
