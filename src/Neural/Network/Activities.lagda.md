@@ -61,11 +61,10 @@ module Network-dynamics
   Act (star c f) = joint c
   Act (tang c f) = joint c
 
-  private
-    Act-is-set : ∀ v → is-set (Act v)
-    Act-is-set (orig c)   = X₀ c .is-tr
-    Act-is-set (star c f) = Π-is-hlevel 2 λ i → X₀ _ .is-tr
-    Act-is-set (tang c f) = Π-is-hlevel 2 λ i → X₀ _ .is-tr
+  Act-is-set : ∀ v → is-set (Act v)
+  Act-is-set (orig c)   = X₀ c .is-tr
+  Act-is-set (star c f) = Π-is-hlevel 2 λ i → X₀ _ .is-tr
+  Act-is-set (tang c f) = Π-is-hlevel 2 λ i → X₀ _ .is-tr
 
   one-tuple
     : ∀ {b} → ∣ X₀ b ∣

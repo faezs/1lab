@@ -146,27 +146,27 @@ without any `with`-alignment.
         ieq bnd'
 
     tuple-of
-      : ∀ {b} (l : List (Fin (N .size))) (q' : b ∷ [] ≡ l)
+      : ∀ {b} (x : ∣ X₀ b ∣) (l : List (Fin (N .size))) (q' : b ∷ [] ≡ l)
       → (rec : (i : Fin (length l)) → ∣ X₀ (l ! i) ∣)
       → (rec-ok : ∀ (i : Fin (length l)) (ieq : l ! i ≡ b)
-                → rec i ≡ subst (λ m → ∣ X₀ m ∣) (sym ieq) (at₀ b))
+                → rec i ≡ subst (λ m → ∣ X₀ m ∣) (sym ieq) x)
       → subst (λ l' → (i : Fin (length l')) → ∣ X₀ (l' ! i) ∣) q'
-          (one-tuple (at₀ b))
+          (one-tuple x)
       ≡ rec
-    tuple-of {b} l q' = J
+    tuple-of {b} x l q' = J
       (λ l q' →
         (rec : (i : Fin (length l)) → ∣ X₀ (l ! i) ∣)
         → (∀ (i : Fin (length l)) (ieq : l ! i ≡ b)
-           → rec i ≡ subst (λ m → ∣ X₀ m ∣) (sym ieq) (at₀ b))
+           → rec i ≡ subst (λ m → ∣ X₀ m ∣) (sym ieq) x)
         → subst (λ l' → (i : Fin (length l')) → ∣ X₀ (l' ! i) ∣) q'
-            (one-tuple (at₀ b))
+            (one-tuple x)
         ≡ rec)
       (λ rec rec-ok → transport-refl _ ∙ funext λ i → point i rec rec-ok)
       q'
       where
         point
           : ∀ (i : Fin 1) rec rec-ok
-          → one-tuple {b = b} (at₀ b) i ≡ rec i
+          → one-tuple {b = b} x i ≡ rec i
         point (fin zero) rec rec-ok =
           sym (rec-ok fzero refl ∙ transport-refl _)
         point (fin (suc k) ⦃ bd ⦄) rec rec-ok =
@@ -202,7 +202,7 @@ the recursively built one).
             (Nat.≤-trans (N .depth-< c i) (Nat.≤-peel Nat.≤-refl)))
       ∙ sym (go-no c (rec₀ c) (dec-of c) (fork-not-input f))
     sec-resp _ _ (single {c = c} {b = b} q) =
-        ap (d c) (tuple-of (N .inputs c) (sym q) (rec₀ c) rec-ok)
+        ap (d c) (tuple-of (at₀ b) (N .inputs c) (sym q) (rec₀ c) rec-ok)
       ∙ sym (go-no c (rec₀ c) (dec-of c) (single-not-input q))
       where
         rec-ok
@@ -233,10 +233,101 @@ the recursively built one).
     Build.go-yes g c (Build.rec₀ g c) (Build.dec-of g c) p
 ```
 
-Uniqueness — that `section-of`{.Agda} is inverse to
-`restrict-inputs`{.Agda} on the other side, making global sections of
-the dynamical object *equivalent* to input tuples — is the successor
-milestone: it recurses over depth using the section's own
-compatibilities, with the vertex trichotomy (input, single-input,
-fork) resolved through the input-list equations carried by the site's
-edge constructors.
+## Uniqueness
+
+Any section agrees with the built one: by the same recursion over
+depth, using the section's *own* compatibilities. The vertex
+trichotomy — input, single-input, fork — is resolved by matching the
+input list *together with* the equation relating it to the vertex,
+which is exactly the datum the site's edge constructors carry, so no
+`with`-abstraction over neutral scrutinees is ever needed.
+
+```agda
+  private module Unique (s : NSection) where
+    open Build (restrict-inputs s)
+
+    s-tine
+      : ∀ {c} {fk : is-fork N c} (i : Fin (length (N .inputs c)))
+      → s .fst (star c fk) i ≡ s .fst (orig (N .inputs c ! i))
+    s-tine {c} {fk} i =
+      sym (transport-refl _) ∙ s .snd _ _ (tine {c = c} {f = fk} i refl)
+
+    s-socket
+      : ∀ {c} {fk : is-fork N c}
+      → s .fst (tang c fk) ≡ s .fst (star c fk)
+    s-socket {c} {fk} = s .snd _ _ (socket {c = c} {f = fk} {f' = fk})
+
+    agree
+      : ∀ n c (bnd : N .depth c Nat.< n)
+      → build n c bnd ≡ s .fst (orig c)
+    agree zero    c bnd = absurd (Nat.¬suc≤0 bnd)
+    agree (suc n) c bnd = go-c (N .inputs c) refl
+      where
+        recₙ : ∀ i → ∣ X₀ (N .inputs c ! i) ∣
+        recₙ i = build n (N .inputs c ! i)
+          (Nat.≤-trans (N .depth-< c i) (Nat.≤-peel bnd))
+
+        tip-agree
+          : ∀ {b} i (ieq : N .inputs c ! i ≡ b)
+          → recₙ i ≡ subst (λ m → ∣ X₀ m ∣) (sym ieq) (s .fst (orig b))
+        tip-agree {b} i ieq =
+            agree n (N .inputs c ! i)
+              (Nat.≤-trans (N .depth-< c i) (Nat.≤-peel bnd))
+          ∙ J (λ b' ieq'
+                → s .fst (orig (N .inputs c ! i))
+                ≡ subst (λ m → ∣ X₀ m ∣) (sym ieq') (s .fst (orig b')))
+              (sym (transport-refl _))
+              ieq
+
+        go-c
+          : ∀ (l : List (Fin (N .size))) (q : N .inputs c ≡ l)
+          → go c recₙ (dec-of c) ≡ s .fst (orig c)
+        go-c [] q = go-yes c recₙ (dec-of c) (ap length q)
+        go-c (b ∷ []) q =
+            go-no c recₙ (dec-of c) (single-not-input q)
+          ∙ ap (d c) (sym (tuple-of (s .fst (orig b))
+              (N .inputs c) (sym q) recₙ tip-agree))
+          ∙ s .snd _ _ (single q)
+        go-c (b ∷ b' ∷ bs) q =
+            go-no c recₙ (dec-of c)
+              (λ p → Nat.zero≠suc (sym p ∙ ap length q))
+          ∙ ap (d c) (funext λ i →
+                tip-agree i refl
+              ∙ transport-refl _
+              ∙ sym (s-tine {c} {fk} i)
+              ∙ sym (happly s-socket i))
+          ∙ s .snd _ _ (handle {c = c} {f = fk})
+          where
+            fk : is-fork N c
+            fk = subst (2 Nat.≤_) (sym (ap length q))
+              (Nat.s≤s (Nat.s≤s Nat.0≤x))
+
+    agree-at : ∀ v → sec-at v ≡ s .fst v
+    agree-at (orig c) = agree (suc (N .depth c)) c Nat.≤-refl
+    agree-at (star c fk) = funext λ i →
+        agree (suc (N .depth (N .inputs c ! i))) (N .inputs c ! i)
+          Nat.≤-refl
+      ∙ sym (s-tine {c} {fk} i)
+    agree-at (tang c fk) = funext λ i →
+        agree (suc (N .depth (N .inputs c ! i))) (N .inputs c ! i)
+          Nat.≤-refl
+      ∙ sym (s-tine {c} {fk} i)
+      ∙ sym (happly (s-socket {c} {fk}) i)
+
+  section-unique
+    : ∀ (s : NSection) → section-of (restrict-inputs s) ≡ s
+  section-unique s = Σ-prop-path
+    (λ at → Π-is-hlevel 1 λ v → Π-is-hlevel 1 λ u → Π-is-hlevel 1 λ e →
+      Act-is-set v (αₑ e (at u)) (at v))
+    (funext (Unique.agree-at s))
+```
+
+**The unique-section theorem**: global sections of the dynamical
+object are exactly tuples of input activities — a network computes.
+
+```agda
+  section≃inputs : NSection ≃ Inputs
+  section≃inputs = Iso→Equiv
+    ( restrict-inputs
+    , iso section-of restrict-section section-unique)
+```
