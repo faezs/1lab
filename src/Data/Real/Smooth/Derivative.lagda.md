@@ -565,3 +565,72 @@ truncation.
 ∂ᴿ f i = ∥-∥-rec-set (Π-is-hlevel 2 λ _ → ℝ-is-set)
   (∂-of f i) (∂-unique f i)
 ```
+
+## The derivative is bounded-smooth
+
+Separation does more than make the derivative well defined: it
+glues the *towers*. The depth-$k$ structure of the quotient at
+depth $k+2$ transports, along the separation path, onto the fixed
+depth-two quotient — so that single function carries towers of
+every depth, together with their bounds, and the derivative is
+again a bounded-smooth function. Differential geometry can
+iterate.
+
+```agda
+quot-smooth⁺
+  : ∀ {n} {f : Fun n} (A : Smooth⁺ n f) (i : Fin n)
+  → Smooth⁺ (suc n) (A .fst 2 i .fst)
+quot-smooth⁺ {n} {f} (S , bf , BT) i =
+  Sg , BT 2 i .fst , BTg
+  where
+  g : Fun (suc n)
+  g = S 2 i .fst
+
+  p : ∀ k → S (suc (suc k)) i .fst ≡ g
+  p k = funext λ w →
+      sym (ap (S (suc (suc k)) i .fst) (cons-eta w))
+    ∙ quot-agree f i (S (suc (suc k)) i .fst) g
+        (S (suc (suc k)) i .snd .fst) (S 2 i .snd .fst)
+        (S (suc (suc k)) i .snd .snd fzero .fst)
+        (S 2 i .snd .snd fzero .fst)
+        (S (suc (suc k)) i .snd .snd fzero .snd .fst)
+        (S 2 i .snd .snd fzero .snd .fst)
+        (BT (suc (suc k)) i .snd fzero .fst)
+        (BT 2 i .snd fzero .fst)
+        (w fzero) (λ j → w (fsuc j))
+    ∙ ap g (cons-eta w)
+
+  moved
+    : ∀ k → Σ[ T ∈ TowerTo (suc k) (suc n) g ]
+        (BdTower (suc k) (suc n) g T)
+  moved k = subst
+    (λ h → Σ[ T ∈ TowerTo (suc k) (suc n) h ]
+      (BdTower (suc k) (suc n) h T))
+    (p k)
+    (S (suc (suc k)) i .snd .snd , BT (suc (suc k)) i .snd)
+
+  Sg : Smooth (suc n) g
+  Sg zero    = lift tt
+  Sg (suc k) = moved k .fst
+
+  BTg : ∀ k → BdTower k (suc n) g (Sg k)
+  BTg zero    = lift tt
+  BTg (suc k) = moved k .snd
+
+∂-smooth⁺
+  : ∀ {n} {f : Fun n} (A : Smooth⁺ n f) (i : Fin n)
+  → Smooth⁺ n (∂-of f i A)
+∂-smooth⁺ {n} {f} A i =
+  smooth⁺-comp diag-smooth (quot-smooth⁺ A i)
+  where
+  diag-smooth : ∀ l → Smooth⁺ n (λ x → cons (x i) x l)
+  diag-smooth l with fin-view l
+  ... | zero  = smooth⁺-proj i
+  ... | suc j = smooth⁺-proj j
+
+∂ᴿ-smooth⁺
+  : ∀ {n} (f : Fun n) (i : Fin n) (s : ∥ Smooth⁺ n f ∥)
+  → ∥ Smooth⁺ n (∂ᴿ f i s) ∥
+∂ᴿ-smooth⁺ f i = ∥-∥-elim (λ _ → squash)
+  (λ a → inc (∂-smooth⁺ a i))
+```
