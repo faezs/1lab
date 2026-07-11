@@ -162,8 +162,29 @@ OrbSpc = PSh (lsuc lzero) Snglr
 
 Because `Snglr`{.Agda} has large object- and small hom-sets, the
 [[cohesion|cohesive-topos]] machinery — stated for sites with
-matching universe levels — does not instantiate directly; lifting
-the homomorphism classes one level, or generalising the cohesion
-module's levels, would exhibit orbi-singular cohesion over the
-terminal probe above. We leave this level bookkeeping for future
-work.
+matching universe levels — does not instantiate directly; but
+lifting the homomorphism classes one level is uniform, terminality
+lifts along with them, and cohesion follows over the lifted
+presentation of the same site.
+
+<!--
+```agda
+open import Cat.Instances.Lift
+import Cat.Instances.Presheaf.Cohesive
+```
+-->
+
+```agda
+Snglr↑ : Precategory (lsuc lzero) (lsuc lzero)
+Snglr↑ = Lift-cat lzero (lsuc lzero) Snglr
+
+Snglr↑-terminal : Terminal Snglr↑
+Snglr↑-terminal .top = lift Triv
+Snglr↑-terminal .has⊤ (lift G) .centre =
+  lift (Snglr-terminal .has⊤ G .centre)
+Snglr↑-terminal .has⊤ (lift G) .paths (lift h) =
+  ap lift (Snglr-terminal .has⊤ G .paths h)
+
+module Orb-cohesion =
+  Cat.Instances.Presheaf.Cohesive Snglr↑ Snglr↑-terminal
+```
