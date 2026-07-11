@@ -162,3 +162,189 @@ module _ {j k : Nat} (α : Δ-map j k) where
     coll : α .map (weaken t) ≡ α .map (fsuc t)
     coll = wt-y ∙ fin-ap {n = λ _ → suc k} (sym sandwich)
 ```
+
+## The two rigid cases
+
+An injective monotone map equipped with preimages for every value
+is forced to be the identity, degree included; missing only the
+bottom value forces the bottom coface.
+
+```agda
+module _ {j k : Nat} (α : Δ-map j k)
+         (inj : ∀ x y → α .map x ≡ α .map y → x ≡ y)
+  where
+  private
+    α-strict : ∀ x y → x .lower Nat.< y .lower
+             → α .map x .lower Nat.< α .map y .lower
+    α-strict = mono-inj→strict α inj
+
+    topJ : Fin (suc j)
+    topJ = fin j ⦃ Nat.≤-refl ⦄
+
+    topK : Fin (suc k)
+    topK = fin k ⦃ Nat.≤-refl ⦄
+
+  module _ (pre : ∀ (v : Fin (suc k)) → Σ[ x ∈ Fin (suc j) ] (α .map x ≡ v)) where
+    private
+      p : Fin (suc k) → Fin (suc j)
+      p v = pre v .fst
+
+      p-strict : ∀ v w → v .lower Nat.< w .lower
+               → p v .lower Nat.< p w .lower
+      p-strict v w lt with Nat.≤-split (p v .lower) (p w .lower)
+      ... | inl lt' = lt'
+      ... | inr (inl gt) = absurd (Nat.¬sucx≤x _ (Nat.≤-trans lt
+        (subst₂ (λ a b → a .lower Nat.≤ b .lower)
+          (pre w .snd) (pre v .snd)
+          (α .ascending (p w) (p v) (Nat.<-weaken gt)))))
+      ... | inr (inr eq) = absurd (Nat.¬sucx≤x _
+        (subst (λ z → v .lower Nat.< z .lower)
+          ( sym (pre w .snd)
+          ∙ ap (α .map) (fin-ap {n = λ _ → suc j} (sym eq))
+          ∙ pre v .snd)
+          lt))
+
+      p-section : ∀ x → p (α .map x) ≡ x
+      p-section x = inj _ _ (pre (α .map x) .snd)
+
+    rigid-degree : j ≡ k
+    rigid-degree = Nat.≤-antisym
+      (Nat.≤-trans (strict-grow (α .map) α-strict topJ)
+        (Nat.≤-peel (α .map topJ .Fin.bounded)))
+      (Nat.≤-trans (strict-grow p p-strict topK)
+        (Nat.≤-peel (p topK .Fin.bounded)))
+
+    rigid-id : ∀ x → α .map x .lower ≡ x .lower
+    rigid-id x = Nat.≤-antisym
+      (subst (λ z → α .map x .lower Nat.≤ z .lower) (p-section x)
+        (strict-grow p p-strict (α .map x)))
+      (strict-grow (α .map) α-strict x)
+```
+
+For the coface case we pin the codomain to be positive.
+
+```agda
+module _ {j k' : Nat} (α : Δ-map j (suc k'))
+         (inj : ∀ x y → α .map x ≡ α .map y → x ≡ y)
+         (miss0 : ∀ x → ¬ (α .map x ≡ fzero))
+         (pre₁ : ∀ (v : Fin (suc k')) → Σ[ x ∈ Fin (suc j) ] (α .map x ≡ fsuc v))
+  where
+  private
+    α-strict : ∀ x y → x .lower Nat.< y .lower
+             → α .map x .lower Nat.< α .map y .lower
+    α-strict = mono-inj→strict α inj
+
+    α-pos : ∀ x → 1 Nat.≤ α .map x .lower
+    α-pos x with Nat.≤-split 1 (α .map x .lower)
+    ... | inl lt = Nat.<-weaken lt
+    ... | inr (inr eq) = subst (1 Nat.≤_) eq Nat.≤-refl
+    ... | inr (inl lt) = absurd (miss0 x
+      (fin-ap {n = λ _ → suc (suc k')}
+        (Nat.≤-antisym (Nat.≤-peel lt) Nat.0≤x)))
+
+    p : Fin (suc k') → Fin (suc j)
+    p v = pre₁ v .fst
+
+    p-strict : ∀ v w → v .lower Nat.< w .lower
+             → p v .lower Nat.< p w .lower
+    p-strict v w lt with Nat.≤-split (p v .lower) (p w .lower)
+    ... | inl lt' = lt'
+    ... | inr (inl gt) = absurd (Nat.¬sucx≤x _ (Nat.≤-trans (Nat.s≤s lt)
+      (subst₂ (λ a b → a .lower Nat.≤ b .lower)
+        (pre₁ w .snd) (pre₁ v .snd)
+        (α .ascending (p w) (p v) (Nat.<-weaken gt)))))
+    ... | inr (inr eq) = absurd (Nat.¬sucx≤x _
+      (Nat.s≤s (Nat.≤-peel (subst (λ z → suc (v .lower) Nat.< z .lower)
+        ( sym (pre₁ w .snd)
+        ∙ ap (α .map) (fin-ap {n = λ _ → suc j} (sym eq))
+        ∙ pre₁ v .snd)
+        (Nat.s≤s lt)))))
+
+    topJ : Fin (suc j)
+    topJ = fin j ⦃ Nat.≤-refl ⦄
+
+    topK : Fin (suc k')
+    topK = fin k' ⦃ Nat.≤-refl ⦄
+
+  coface-degree : suc k' ≡ suc j
+  coface-degree = Nat.≤-antisym
+    (Nat.s≤s (Nat.≤-trans (strict-grow p p-strict topK)
+      (Nat.≤-peel (p topK .Fin.bounded))))
+    (Nat.≤-trans (strict-grow-1 (α .map) α-strict α-pos topJ)
+      (Nat.≤-peel (α .map topJ .Fin.bounded)))
+
+  coface-id : ∀ x → α .map x .lower ≡ suc (x .lower)
+  coface-id x = Nat.≤-antisym upper (strict-grow-1 (α .map) α-strict α-pos x)
+    where
+    t : Nat
+    t = Nat.pred (α .map x .lower)
+
+    t-eq : α .map x .lower ≡ suc t
+    t-eq with α .map x .lower | α-pos x
+    ... | zero  | ge = absurd (Nat.¬suc≤0 ge)
+    ... | suc n | ge = refl
+
+    bt : suc t Nat.≤ suc k'
+    bt = Nat.≤-peel (subst (λ z → z Nat.≤ suc (suc k')) (ap suc t-eq)
+      (α .map x .Fin.bounded))
+
+    tf : Fin (suc k')
+    tf = fin t ⦃ bt ⦄
+
+    ptf-x : p tf ≡ x
+    ptf-x = inj _ _ (pre₁ tf .snd ∙ fin-ap {n = λ _ → suc (suc k')} (sym t-eq))
+
+    upper : α .map x .lower Nat.≤ suc (x .lower)
+    upper = subst₂ (λ a b → a Nat.≤ suc b)
+      (sym t-eq)
+      (ap Fin.lower ptf-x)
+      (Nat.s≤s (strict-grow p p-strict tf))
+```
+
+## The classification
+
+Every monotone map into a positive ordinal is of one of four
+shapes, decidably: it misses a positive value, it has an adjacent
+collision, it is the identity, or it is the bottom coface.
+
+```agda
+data Δ-class {j k' : Nat} (α : Δ-map j (suc k')) : Type where
+  cls-miss : (i' : Fin (suc k')) → (∀ x → ¬ (α .map x ≡ fsuc i'))
+           → Δ-class α
+  cls-coll : (t : Fin j) → α .map (weaken t) ≡ α .map (fsuc t)
+           → Δ-class α
+  cls-id   : j ≡ suc k' → (∀ x → α .map x .lower ≡ x .lower)
+           → Δ-class α
+  cls-δ⁰   : suc k' ≡ suc j → (∀ x → α .map x .lower ≡ suc (x .lower))
+           → Δ-class α
+
+classify : ∀ {j k'} (α : Δ-map j (suc k')) → Δ-class α
+classify {j} {k'} α with
+  holds? (Σ[ i' ∈ Fin (suc k') ] (∀ x → ¬ (α .map x ≡ fsuc i')))
+... | yes (i' , m) = cls-miss i' m
+... | no ¬m with
+  holds? (Σ[ t ∈ Fin j ] (α .map (weaken t) ≡ α .map (fsuc t)))
+...   | yes (t , c) = cls-coll t c
+...   | no ¬c = rest
+  where
+  inj : ∀ x y → α .map x ≡ α .map y → x ≡ y
+  inj = no-collision→inj α (λ t c → ¬c (t , c))
+
+  hits-pos : ∀ (v : Fin (suc k')) → Σ[ x ∈ Fin (suc j) ] (α .map x ≡ fsuc v)
+  hits-pos v with holds? (Σ[ x ∈ Fin (suc j) ] (α .map x ≡ fsuc v))
+  ... | yes it = it
+  ... | no ¬p = absurd (¬m (v , λ x e → ¬p (x , e)))
+
+  rest : Δ-class α
+  rest with holds? (Σ[ x ∈ Fin (suc j) ] (α .map x ≡ fzero))
+  ... | yes h0 = cls-id
+      (rigid-degree α inj pre) (rigid-id α inj pre)
+    where
+    pre : ∀ (v : Fin (suc (suc k'))) → Σ[ x ∈ Fin (suc j) ] (α .map x ≡ v)
+    pre v with fin-view v
+    ... | zero = h0
+    ... | suc v' = hits-pos v'
+  ... | no ¬h0 = cls-δ⁰
+      (coface-degree α inj (λ x e → ¬h0 (x , e)) hits-pos)
+      (coface-id α inj (λ x e → ¬h0 (x , e)) hits-pos)
+```
