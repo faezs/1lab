@@ -597,3 +597,91 @@ degeneracy and coface structure.
         ∙ ap Fin.lower coll
         ∙ lsuc (fsuc t)
 ```
+
+The prescription vanishes on every degeneracy image and on every
+pushforward along a positive coface — the closure properties that
+make it a normalized chain map.
+
+```agda
+    private
+      squish-collapse
+        : ∀ {n} (t : Fin (suc n))
+        → squish t (weaken t) ≡ squish t (fsuc t)
+      squish-collapse {zero} t with fin-view t
+      ... | zero = refl
+      ... | suc t' = absurd (Fin-absurd t')
+      squish-collapse {suc n'} t with fin-view t
+      ... | zero = refl
+      ... | suc t' = ap fsuc (squish-collapse t')
+
+    σ-collides
+      : {j' : Nat} (ν : Δ-map j' kk) (t : Fin (suc j'))
+      → (ν ∘Δ σ t) .Δ-map.map (weaken t)
+      ≡ (ν ∘Δ σ t) .Δ-map.map (fsuc t)
+    σ-collides ν t = ap (ν .Δ-map.map) (squish-collapse t)
+
+    w-miss
+      : (j : Nat) (α : Δ-map j kk) (i' : Fin (suc k'))
+      → (∀ x → ¬ (α .Δ-map.map x ≡ fsuc i'))
+      → w j α ≡ Cc.1g j
+    w-miss j α i' m with classify α
+    ... | cls-miss _ _ = refl
+    ... | cls-coll _ _ = refl
+    ... | cls-id jk lid = absurd (m x hit)
+      where
+      bx : suc (suc (i' .lower)) Nat.≤ suc j
+      bx = subst (λ n → suc (suc (i' .lower)) Nat.≤ suc n) (sym jk)
+        (Nat.s≤s (i' .Fin.bounded))
+      x : Fin (suc j)
+      x = fin (suc (i' .lower)) ⦃ bx ⦄
+      hit : α .Δ-map.map x ≡ fsuc i'
+      hit = fin-ap {n = λ _ → suc kk} (lid x)
+    ... | cls-δ⁰ kj lsuc = absurd (m x hit)
+      where
+      bx : suc (i' .lower) Nat.≤ suc j
+      bx = subst (λ n → suc (i' .lower) Nat.≤ n) (ap suc (ap Nat.pred kj))
+        (i' .Fin.bounded)
+      x : Fin (suc j)
+      x = fin (i' .lower) ⦃ bx ⦄
+      hit : α .Δ-map.map x ≡ fsuc i'
+      hit = fin-ap {n = λ _ → suc kk} (lsuc x)
+
+    ψ-s
+      : (j' : Nat) (t : Fin (suc j'))
+      → Ab lzero .Precategory._∘_ (ψ (suc j')) (Gkk .F₁ (σ t))
+      ≡ zero-hom'
+    ψ-s j' t = free-ext (Δ[ kk ] .F₀ j') (C .ob (suc j')) λ ν →
+        ap (ψ (suc j') .∫Hom.fst)
+          (gen-natural (Δ[ kk ] .F₀ j') (Δ[ kk ] .F₀ (suc j'))
+            (Δ[ kk ] .F₁ (σ t)) ν)
+      ∙ ψ-gen (suc j') (ν ∘Δ σ t)
+      ∙ w-coll j' (ν ∘Δ σ t) t (σ-collides ν t)
+
+    ψ-deg
+      : (m j : Nat) (v : ⌞ Gkk .F₀ (suc m) ⌟)
+      → Deg Gkk {m} j v
+      → ψ (suc m) .∫Hom.fst v ≡ Cc.1g (suc m)
+    ψ-deg m zero v (y , p) =
+        ap (ψ (suc m) .∫Hom.fst) p
+      ∙ ap (λ h → h .∫Hom.fst y) (ψ-s m fzero)
+    ψ-deg m (suc j) v (b , y , x' , rep' , p) =
+        ap (ψ (suc m) .∫Hom.fst) p
+      ∙ is-group-hom.pres-⋆ (ψ (suc m) .∫Hom.snd) x' _
+      ∙ ap₂ (Cc._*_ (suc m))
+          (ψ-deg m j x' rep')
+          (ap (λ h → h .∫Hom.fst y) (ψ-s m (fin (suc j) ⦃ b ⦄)))
+      ∙ Cc.idl (suc m)
+
+    ψ-push
+      : (j : Nat) (i : Fin (suc k'))
+      → Ab lzero .Precategory._∘_ (ψ j)
+          ((Free-abelian-functor ▸ Δmap-nt (δ (fsuc i))) .η j)
+      ≡ zero-hom'
+    ψ-push j i = free-ext (Δ[ k' ] .F₀ j) (C .ob j) λ ν →
+        ap (ψ j .∫Hom.fst)
+          (gen-natural (Δ[ k' ] .F₀ j) (Δ[ kk ] .F₀ j)
+            (Δmap-nt (δ (fsuc i)) .η j) ν)
+      ∙ ψ-gen j (δ (fsuc i) ∘Δ ν)
+      ∙ w-miss j (δ (fsuc i) ∘Δ ν) i
+          (λ x e → skip-skips (fsuc i) (ν .Δ-map.map x) e)
+```
