@@ -16,6 +16,7 @@ open import Algebra.Group
 open import Algebra.ChainComplex
 
 import Cat.Instances.FormalSmoothSets
+import Algebra.Ring.Kahler.Exterior
 import Algebra.Ring.Kahler
 import Cat.Reasoning
 
@@ -33,6 +34,7 @@ module Cat.Instances.FormalSmoothSets.Deligne {ℓ} (R : CRing ℓ) where
 <!--
 ```agda
 open Cat.Instances.FormalSmoothSets R
+open Algebra.Ring.Kahler.Exterior R
 open Algebra.Ring.Kahler R
 open ThHom
 
@@ -91,6 +93,18 @@ O-ab U = O U .fst , record
   mk .assoc = +ω-assoc
   mk .invl x = +ω-comm (-ω x) x ∙ +ω-invr x
   mk .comm = +ω-comm
+
+Ω²-ab : ThAff → Abelian-group ℓ
+Ω²-ab U = to-ab mk where
+  mk : make-abelian-group (Ω² (O U) (struct U))
+  mk .ab-is-set = squash²
+  mk .mul = _+²_
+  mk .inv = -²_
+  mk .1g = 0²
+  mk .idl = +²-idl
+  mk .assoc = +²-assoc
+  mk .invl x = +²-comm (-² x) x ∙ +²-invr x
+  mk .comm = +²-comm
 ```
 
 ## The boundaries
@@ -191,6 +205,19 @@ forms: the square with the derivation commutes definitionally, and
 the square with the integers commutes because *both* composites are
 ring homomorphisms out of $\bZ$, of which there is exactly one.
 
+<!--
+```agda
+private
+  ι-natural
+    : {U V : ThAff} (h : ThHom V U) (x : ⌞ Liftℤ-ab ⌟)
+    → h .fun .∫Hom.fst (ιO U .∫Hom.fst x) ≡ ιO V .∫Hom.fst x
+  ι-natural {U} {V} h x = sym
+    (ap (λ h' → h' .∫Hom.fst x)
+      (Int-is-initial (ring-of V) .paths
+        (to-rings (h .fun) Rg.∘ ιO U)))
+```
+-->
+
 ```agda
 Del²-map
   : {U V : ThAff} (h : ThHom V U)
@@ -206,10 +233,7 @@ Del²-map h .map (suc (suc (suc k))) .∫Hom.fst x = x
 Del²-map h .map (suc (suc (suc k))) .∫Hom.snd
   .is-group-hom.pres-⋆ x y = refl
 Del²-map {U} {V} h .comm 0 x = refl
-Del²-map {U} {V} h .comm 1 x = sym
-  (ap (λ h' → h' .∫Hom.fst x)
-    (Int-is-initial (ring-of V) .paths
-      (to-rings (h .fun) Rg.∘ ιO U)))
+Del²-map {U} {V} h .comm 1 x = ι-natural h x
 Del²-map {U} {V} h .comm 2 x = refl
 Del²-map {U} {V} h .comm (suc (suc (suc n))) x = refl
 
@@ -226,4 +250,74 @@ Deligne² .F-∘ f g = Chain-map-path λ where
   1 → ext λ x → refl
   2 → ext λ x → refl
   (suc (suc (suc k))) → ext λ x → refl
+```
+
+## The second stage
+
+With the [[functoriality of the second exterior
+power|kahler-2-forms]] in hand, the complex extends one stage: the
+**degree-$3$ Deligne complex** $[\bZ \to \scO \to \Omega^1 \to
+\Omega^2]$, whose Dold–Kan image is the smooth $2$-groupoid
+$\mathbf{B}^2 U(1)_\mathrm{conn}$ of $B$-fields. Both new squares
+are theorems of the exterior calculus: $\mathrm{d}\circ\mathrm{d} =
+0$ holds definitionally by the paramorphism computing the exterior
+derivative, and the naturality of $\mathrm{d}$ is the lemma
+`d¹-natural`{.Agda}.
+
+```agda
+d¹-hom : (U : ThAff) → Ab ℓ .Precategory.Hom (Ω¹-ab U) (Ω²-ab U)
+d¹-hom U .∫Hom.fst = d¹
+d¹-hom U .∫Hom.snd .is-group-hom.pres-⋆ x y = refl
+
+Del³-at : ThAff → Chain-complex ℓ
+Del³-at U .ob 0 = Ω²-ab U
+Del³-at U .ob 1 = Ω¹-ab U
+Del³-at U .ob 2 = O-ab U
+Del³-at U .ob 3 = Liftℤ-ab
+Del³-at U .ob (suc (suc (suc (suc k)))) = Zero-ab'
+Del³-at U .∂ᶜ 0 = d¹-hom U
+Del³-at U .∂ᶜ 1 = d-hom U
+Del³-at U .∂ᶜ 2 = ι-hom U
+Del³-at U .∂ᶜ (suc (suc (suc n))) = zero-hom
+Del³-at U .∂ᶜ-∂ᶜ 0 x = d¹-d x
+Del³-at U .∂ᶜ-∂ᶜ 1 x = d-kills-ι U x
+Del³-at U .∂ᶜ-∂ᶜ 2 x = is-group-hom.pres-id (ι-hom U .∫Hom.snd)
+Del³-at U .∂ᶜ-∂ᶜ (suc (suc (suc n))) x = refl
+
+Del³-map
+  : {U V : ThAff} (h : ThHom V U)
+  → Chain-map (Del³-at U) (Del³-at V)
+Del³-map h .map 0 .∫Hom.fst = Ω²-map (h .fun) (h .commutes)
+Del³-map h .map 0 .∫Hom.snd .is-group-hom.pres-⋆ x y = refl
+Del³-map h .map 1 .∫Hom.fst = Ω¹-map (h .fun) (h .commutes)
+Del³-map h .map 1 .∫Hom.snd .is-group-hom.pres-⋆ x y = refl
+Del³-map h .map 2 .∫Hom.fst = h .fun .∫Hom.fst
+Del³-map h .map 2 .∫Hom.snd .is-group-hom.pres-⋆ =
+  is-ring-hom.pres-+ (h .fun .∫Hom.snd)
+Del³-map h .map 3 .∫Hom.fst x = x
+Del³-map h .map 3 .∫Hom.snd .is-group-hom.pres-⋆ x y = refl
+Del³-map h .map (suc (suc (suc (suc k)))) .∫Hom.fst x = x
+Del³-map h .map (suc (suc (suc (suc k)))) .∫Hom.snd
+  .is-group-hom.pres-⋆ x y = refl
+Del³-map {U} {V} h .comm 0 x = d¹-natural (h .fun) (h .commutes) x
+Del³-map {U} {V} h .comm 1 x = refl
+Del³-map {U} {V} h .comm 2 x = ι-natural h x
+Del³-map {U} {V} h .comm 3 x = refl
+Del³-map {U} {V} h .comm (suc (suc (suc (suc n)))) x = refl
+
+Deligne³ : Functor (ThCartSp ^op) (Ch ℓ)
+Deligne³ .F₀ = Del³-at
+Deligne³ .F₁ = Del³-map
+Deligne³ .F-id {U} = Chain-map-path λ where
+  0 → ext λ x → Ω²-map-id (CR.idl (struct U)) x
+  1 → ext λ x → Ω¹-map-id (CR.idl (struct U)) x
+  2 → ext λ x → refl
+  3 → ext λ x → refl
+  (suc (suc (suc (suc k)))) → ext λ x → refl
+Deligne³ .F-∘ f g = Chain-map-path λ where
+  0 → ext λ x → Ω²-map-∘ (f .fun) (g .fun) _ _ _ x
+  1 → ext λ x → Ω¹-map-∘ (f .fun) (g .fun) _ _ _ x
+  2 → ext λ x → refl
+  3 → ext λ x → refl
+  (suc (suc (suc (suc k)))) → ext λ x → refl
 ```

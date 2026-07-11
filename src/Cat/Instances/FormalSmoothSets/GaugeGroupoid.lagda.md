@@ -60,3 +60,23 @@ matters for computing with it — every probe-wise horn has a filler.
 BU1-conn-kan : (U : ThAff) → is-kan (BU1-conn-sset .F₀ U)
 BU1-conn-kan U = sab-is-kan (BU1-conn .F₀ U)
 ```
+
+## The B-field
+
+The same composite applied to the [[degree-$3$ Deligne
+complex|deligne-complex]] produces the smooth $2$-groupoid
+$\mathbf{B}^2 U(1)_\mathrm{conn}$ of $B$-fields — the higher gauge
+fields sourced by strings: a $2$-form potential, gauge
+transformations by $1$-forms, gauge-of-gauge transformations by
+functions, and the integral ambiguity at the bottom.
+
+```agda
+B²U1-conn : Functor (ThCartSp ^op) Cat[ Δ ^op , Ab lzero ]
+B²U1-conn = Γ-functor F∘ Deligne³
+
+B²U1-conn-sset : Functor (ThCartSp ^op) Cat[ Δ ^op , Sets lzero ]
+B²U1-conn-sset = postcompose Ab↪Sets F∘ B²U1-conn
+
+B²U1-conn-kan : (U : ThAff) → is-kan (B²U1-conn-sset .F₀ U)
+B²U1-conn-kan U = sab-is-kan (B²U1-conn .F₀ U)
+```
