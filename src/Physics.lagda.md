@@ -84,6 +84,7 @@ import Algebra.ChainComplex.DoldKan.Normalization
 import Algebra.ChainComplex.DoldKan.Boundary
 import Algebra.ChainComplex.DoldKan.Counit
 import Algebra.ChainComplex.DoldKan.Functorial
+import Algebra.ChainComplex.DoldKan.Loop
 import Cat.Instances.SimplicialSets.ActionGroupoid
 import Cat.Instances.SuperSmoothSets
 import Cat.Instances.FormalSmoothSets.DeRham
@@ -849,6 +850,7 @@ _ = Algebra.ChainComplex.DoldKan.Normalization.normalized-degenerate-vanish
 _ = Algebra.ChainComplex.DoldKan.Boundary.∂-fundamental
 _ = Algebra.ChainComplex.DoldKan.Counit.dk-counit
 _ = Algebra.ChainComplex.DoldKan.Functorial.Γ-functor
+_ = Algebra.ChainComplex.DoldKan.Loop.K-loop
 _ = Cat.Site.Sheafification.Lex.Sheafification-pres-⊤
 _ = Cat.Site.Sheafification.Locality.locally-equal→inc-path
 _ = Cat.Site.Sheafification.Locality.sheaf-detects
@@ -1020,9 +1022,14 @@ giving cofibrant resolutions (the projective-cofibrancy claim under
 space (28), which needs a formalized theory of topological spaces
 and real analysis and is genuinely out of the present scope; the
 loop-space property $\mathbf{B}^n A \simeq \Omega\,
-\mathbf{B}^{n+1} A$ of the Eilenberg–MacLane objects (34), a
-concrete target now plausibly within reach of the Dold–Kan
-machinery; cohesion over the orbi-singular site (the site itself now exists,
+\mathbf{B}^{n+1} A$ of the Eilenberg–MacLane objects (34) is now
+formalized with $\Omega$ presented by the chain-level shift under
+Dold–Kan — the shift of the $(n{+}1)$-concentrated complex *is* the
+$n$-concentrated complex, definitionally, and the functorial
+$\Gamma$ transports the isomorphism to simplicial abelian groups
+(identifying the shift with the simplicial loop space of the
+underlying Kan complex is part of the full Dold–Kan equivalence,
+which remains); cohesion over the orbi-singular site (the site itself now exists,
 with terminal probe; the instantiation awaits level-polymorphic
 cohesion); and the stable localisation of presheaves on $\rm{Lin}$
 presenting the tangent topos (41). Each is a well-posed project over
