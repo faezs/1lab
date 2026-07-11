@@ -58,6 +58,7 @@ operators|kahler-differentials]] takes over.
 ```agda
 private
   module MC = Algebra.ChainComplex.Moore
+  module ChC = Cat.Reasoning (Ch lzero)
 ```
 -->
 
@@ -1509,4 +1510,41 @@ linearised point is retracted onto by a degeneracy.
 
     diff-kill : diff ≡ MΓ.1g k
     diff-kill = counit-inj k diff ε-diff
+```
+
+The inverse is automatically a homomorphism and a chain map — both
+by injectivity — so the counit is invertible in the category of
+chain complexes. **The counit of the Dold–Kan correspondence is an
+isomorphism.**
+
+```agda
+  ε-inj
+    : (k : Nat) (u v : ⌞ MC.Moore (Γ C) .ob k ⌟)
+    → dk-counit-level C k .∫Hom.fst u ≡ dk-counit-level C k .∫Hom.fst v
+    → u ≡ v
+  ε-inj k u v e =
+      sym (counit-linv k u)
+    ∙ ap (counit-inverse k) e
+    ∙ counit-linv k v
+
+  dk-counit-inverse : Chain-map C (MC.Moore (Γ C))
+  dk-counit-inverse .map k .∫Hom.fst = counit-inverse k
+  dk-counit-inverse .map k .∫Hom.snd .is-group-hom.pres-⋆ a b =
+      ap₂ (λ u v → counit-inverse k (Cc._*_ k u v))
+        (sym (counit-rinv k a)) (sym (counit-rinv k b))
+    ∙ ap (counit-inverse k)
+        (sym (is-group-hom.pres-⋆ (dk-counit-level C k .∫Hom.snd)
+          (counit-inverse k a) (counit-inverse k b)))
+    ∙ counit-linv k
+        (MΓ._*_ k (counit-inverse k a) (counit-inverse k b))
+  dk-counit-inverse .comm k x = ε-inj k _ _
+    ( counit-rinv k (C .∂ᶜ k .∫Hom.fst x)
+    ∙ sym
+      ( dk-counit C .comm k (counit-inverse (suc k) x)
+      ∙ ap (C .∂ᶜ k .∫Hom.fst) (counit-rinv (suc k) x)))
+
+  dk-counit-invertible : ChC.is-invertible (dk-counit C)
+  dk-counit-invertible = ChC.make-invertible dk-counit-inverse
+    (Chain-map-path λ k → ext λ x → counit-rinv k x)
+    (Chain-map-path λ k → ext λ φ p → counit-linv k (φ , p))
 ```
