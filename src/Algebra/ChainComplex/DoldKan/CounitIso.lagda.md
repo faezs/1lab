@@ -288,6 +288,73 @@ module _ (k' : Nat) where
       ∙ sym (nat-raw (genΔ k' β))
 ```
 
+The difference between an element and its corestricted
+normalization is degenerate, uniformly in the level.
+
+```agda
+module _ (G : Functor (Δ ^op) (Ab lzero)) where
+  open Simplicial-operators G
+
+  private
+    module Gm (n : Nat) = Abelian-group-on (G.₀ n .snd)
+
+    inv-distr' : {n : Nat} (x y : ⌞ G.₀ n ⌟)
+               → Gm._⁻¹ n (Gm._*_ n x y)
+               ≡ Gm._*_ n (Gm._⁻¹ n x) (Gm._⁻¹ n y)
+    inv-distr' {n} x y = sym unique
+      where
+      cancel : Gm._*_ n (Gm._*_ n x y)
+                 (Gm._*_ n (Gm._⁻¹ n x) (Gm._⁻¹ n y)) ≡ Gm.1g n
+      cancel =
+          sym (Gm.associative n)
+        ∙ ap (Gm._*_ n x)
+            ( Gm.associative n
+            ∙ ap (λ z → Gm._*_ n z (Gm._⁻¹ n y)) (Gm.commutes n)
+            ∙ sym (Gm.associative n)
+            ∙ ap (Gm._*_ n (Gm._⁻¹ n x)) (Gm.inverser n)
+            ∙ Gm.idr n)
+        ∙ Gm.inverser n
+      unique : Gm._*_ n (Gm._⁻¹ n x) (Gm._⁻¹ n y)
+             ≡ Gm._⁻¹ n (Gm._*_ n x y)
+      unique =
+          sym (Gm.idl n)
+        ∙ ap (λ z → Gm._*_ n z (Gm._*_ n (Gm._⁻¹ n x) (Gm._⁻¹ n y)))
+            (sym (Gm.inversel n))
+        ∙ sym (Gm.associative n)
+        ∙ ap (Gm._*_ n (Gm._⁻¹ n (Gm._*_ n x y))) cancel
+        ∙ Gm.idr n
+
+    inv-inv' : {n : Nat} (x : ⌞ G.₀ n ⌟)
+             → Gm._⁻¹ n (Gm._⁻¹ n x) ≡ x
+    inv-inv' {n} x =
+        sym (Gm.idr n)
+      ∙ ap (Gm._*_ n (Gm._⁻¹ n (Gm._⁻¹ n x))) (sym (Gm.inversel n))
+      ∙ Gm.associative n
+      ∙ ap (λ z → Gm._*_ n z x) (Gm.inversel n)
+      ∙ Gm.idl n
+
+  Tsub-diff
+    : (m : Nat) (x : ⌞ G.₀ (suc m) ⌟)
+    → Deg G {m} m
+        (Gm._*_ (suc m) x
+          (Gm._⁻¹ (suc m) (Tsub G (suc m) .∫Hom.fst x .fst)))
+  Tsub-diff zero x = subst (Deg G {0} 0) (sym path)
+    (deg-single G 0 (Nat.s≤s Nat.0≤x) (d (fsuc fzero) x))
+    where
+    S : ⌞ G.₀ 1 ⌟
+    S = s fzero (d (fsuc fzero) x)
+
+    path : Gm._*_ 1 x (Gm._⁻¹ 1 (Gm._*_ 1 x (Gm._⁻¹ 1 S))) ≡ S
+    path =
+        ap (Gm._*_ 1 x) (inv-distr' x (Gm._⁻¹ 1 S))
+      ∙ ap (λ z → Gm._*_ 1 x (Gm._*_ 1 (Gm._⁻¹ 1 x) z)) (inv-inv' S)
+      ∙ Gm.associative 1
+      ∙ ap (λ z → Gm._*_ 1 z S) (Gm.inverser 1)
+      ∙ Gm.idl 1
+  Tsub-diff (suc m₀) x =
+    T-diff G (suc (suc m₀)) 1 refl (Nat.s≤s Nat.0≤x) x
+```
+
 The corestriction is natural in the simplicial abelian group, and
 sends the generating simplex to the fundamental class.
 
