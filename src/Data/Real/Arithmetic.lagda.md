@@ -781,3 +781,17 @@ ratℝ-+ p q = ℝ-path
     (λ (v , w , p<v , q<w , vw<s) → ≤-<-trans (<-weaken (<-sum p<v q<w)) vw<s)
 ```
 -->
+
+## Monotonicity
+
+Addition is monotone in both arguments at once: since the order is
+inclusion of lower cuts and the sum's lower cut is built from one
+witness on each side, growing either side grows the sum.
+
+```agda
++ᴿ-mono
+  : ∀ {a b c d} → a ≤ᴿ b → c ≤ᴿ d
+  → (a +ᴿ c) ≤ᴿ (b +ᴿ d)
++ᴿ-mono a≤b c≤d q = □-map λ (r , s , lr , ls , q<rs) →
+  r , s , a≤b r lr , c≤d s ls , q<rs
+```

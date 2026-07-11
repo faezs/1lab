@@ -1751,3 +1751,130 @@ gives the other.
 *ᴿ-assoc : ∀ x y z → (x *ᴿ y) *ᴿ z ≡ x *ᴿ (y *ᴿ z)
 *ᴿ-assoc x y z = ≤ᴿ-antisym (*ᴿ-assoc-≤ x y z) (*ᴿ-assoc-≥ x y z)
 ```
+
+## Sign
+
+The product of two nonnegative reals is nonnegative. Given a rational
+$q < 0$, we must place $q$ under all four corners of some bracket.
+Take any upper endpoints $b, d$ for the factors — necessarily
+nonnegative, since the factors are — and lower endpoints $a = c =
+-\varepsilon$, where $\varepsilon$ divides $-q$ by a bound $B$
+exceeding both $b$ and $d$. The two nonnegative corners dominate $q$
+outright, and the two mixed corners are at least $-\varepsilon B =
+q$-many away from zero only in the safe direction.
+
+```agda
+*ᴿ-nonneg : ∀ x y → 0ᴿ ≤ᴿ x → 0ᴿ ≤ᴿ y → 0ᴿ ≤ᴿ (x *ᴿ y)
+*ᴿ-nonneg x y 0≤x 0≤y q q<0 =
+  ∥-∥-rec prop (λ (b , ub) →
+  ∥-∥-rec prop (λ (d , ud) →
+    bracket q<0 b ub d ud) (cut.upper-inhab y)) (cut.upper-inhab x)
+  where
+  prop : is-prop ∣ (x *ᴿ y) .lower q ∣
+  prop = (x *ᴿ y) .lower q .is-tr
+
+  negneg : ∀ r s → (-ℚ r) *ℚ (-ℚ s) ≡ r *ℚ s
+  negneg r s = rational!
+
+  neg-mull : ∀ r s → -ℚ (r *ℚ s) ≡ (-ℚ r) *ℚ s
+  neg-mull r s = rational!
+
+  neg-swap : ∀ r s → -ℚ (r *ℚ s) ≡ s *ℚ (-ℚ r)
+  neg-swap r s = rational!
+
+  mul-zerol : ∀ r → 0 *ℚ r ≡ 0
+  mul-zerol r = rational!
+
+  bracket
+    : q < 0 → ∀ b → ∣ x .upper b ∣ → ∀ d → ∣ y .upper d ∣
+    → ∣ (x *ᴿ y) .lower q ∣
+  bracket q<0 b ub d ud =
+    inc (-ℚ ε , b , -ℚ ε , d , la , ub , lc , ud , q<min)
+    where
+    nlx : ∀ {t} → t < 0 → ∣ x .lower t ∣
+    nlx t<0 = 0≤x _ t<0
+
+    nly : ∀ {t} → t < 0 → ∣ y .lower t ∣
+    nly t<0 = 0≤y _ t<0
+
+    0≤b : 0 ≤ b
+    0≤b with holds? (b < 0)
+    ... | yes b<0 = absurd (<-irrefl refl (lower<upper x (nlx b<0) ub))
+    ... | no ¬b<0 = ¬<→≥ ¬b<0
+
+    0≤d : 0 ≤ d
+    0≤d with holds? (d < 0)
+    ... | yes d<0 = absurd (<-irrefl refl (lower<upper y (nly d<0) ud))
+    ... | no ¬d<0 = ¬<→≥ ¬d<0
+
+    M B : Ratio
+    M = maxℚ b d
+    B = M +ℚ 1
+
+    0≤M : 0 ≤ M
+    0≤M = ≤-trans 0≤b (maxℚ-≤l {b} {d})
+
+    0<B : 0 < B
+    0<B = <-≤-trans 0<1'
+      (≤-resp (+ℚ-idl 1) refl (+ℚ-preserves-≤ 0≤M (≤-refl {1})))
+
+    B≠0 : Nonzero B
+    B≠0 = inc (positive→nonzero (to-positive 0<B))
+
+    0<-q : 0 < (-ℚ q)
+    0<-q = <-resp refl (+ℚ-idl (-ℚ q)) (<→positive-diff q<0)
+
+    ε : Ratio
+    ε = ((-ℚ q) /ℚ B) ⦃ B≠0 ⦄
+
+    0<ε : 0 < ε
+    0<ε = div-pos (-ℚ q) B ⦃ B≠0 ⦄ 0<-q 0<B
+
+    -ε<0 : (-ℚ ε) < 0
+    -ε<0 = <-resp refl neg-zero (negℚ-anti-< 0<ε)
+
+    la : ∣ x .lower (-ℚ ε) ∣
+    la = nlx -ε<0
+
+    lc : ∣ y .lower (-ℚ ε) ∣
+    lc = nly -ε<0
+
+    εB≡-q : ε *ℚ B ≡ -ℚ q
+    εB≡-q = /ℚ-scaler ⦃ B≠0 ⦄ ∙ /ℚ-factorr ⦃ B≠0 ⦄
+
+    M<B : M < B
+    M<B = <-resp (+ℚ-idr M) refl (+ℚ-preserves-<l M 0<1')
+
+    b<B : b < B
+    b<B = ≤-<-trans (maxℚ-≤l {b} {d}) M<B
+
+    d<B : d < B
+    d<B = ≤-<-trans (maxℚ-≤r {b} {d}) M<B
+
+    0<εε : 0 < (ε *ℚ ε)
+    0<εε = <-resp (mul-zerol ε) refl (*ℚ-preserves-<r ε 0<ε 0<ε)
+
+    q<ac : q < ((-ℚ ε) *ℚ (-ℚ ε))
+    q<ac = <-resp refl (sym (negneg ε ε)) (<-trans q<0 0<εε)
+
+    εd<-q : (ε *ℚ d) < (-ℚ q)
+    εd<-q = <-resp (*ℚ-commutative d ε) (*ℚ-commutative B ε ∙ εB≡-q)
+      (*ℚ-preserves-<r ε d<B 0<ε)
+
+    q<ad : q < ((-ℚ ε) *ℚ d)
+    q<ad = <-resp (negℚ-invol q) (neg-mull ε d) (negℚ-anti-< εd<-q)
+
+    εb<-q : (ε *ℚ b) < (-ℚ q)
+    εb<-q = <-resp (*ℚ-commutative b ε) (*ℚ-commutative B ε ∙ εB≡-q)
+      (*ℚ-preserves-<r ε b<B 0<ε)
+
+    q<bc : q < (b *ℚ (-ℚ ε))
+    q<bc = <-resp (negℚ-invol q) (neg-swap ε b) (negℚ-anti-< εb<-q)
+
+    q<bd : q < (b *ℚ d)
+    q<bd = <-≤-trans q<0 (*ℚ-nonnegative 0≤b 0≤d)
+
+    q<min : q < min₄ ((-ℚ ε) *ℚ (-ℚ ε)) ((-ℚ ε) *ℚ d)
+                     (b *ℚ (-ℚ ε)) (b *ℚ d)
+    q<min = min₄-univ-< q<ac q<ad q<bc q<bd
+```
