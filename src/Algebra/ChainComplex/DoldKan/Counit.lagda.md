@@ -75,57 +75,56 @@ module _ (C : Chain-complex lzero) where
     module Cc (n : Nat) = Abelian-group-on (C .ob n .snd)
     module ΓC = Functor (Γ C)
 
-  private
-    kill
-      : (n : Nat) (φ : ⌞ MC.Moore (Γ C) .ob (suc n) ⌟)
-        (fuel j : Nat) (eq : j Nat.+ fuel ≡ suc (suc n))
-      → 1 Nat.≤ j
-      → φ .fst .map n .∫Hom.fst (Σalt n fuel j eq , Σnorm n fuel j eq)
-      ≡ Cc.1g n
-    kill n φ fuel zero eq le = absurd (Nat.¬suc≤0 le)
-    kill n φ zero (suc j₁) eq le =
-        ap (φ .fst .map n .∫Hom.fst)
-          (Σ-prop-path (MC.norm-is-prop ℤ⟨ Δ[ suc n ] ⟩ n) refl)
-      ∙ is-group-hom.pres-id (φ .fst .map n .∫Hom.snd)
-    kill n φ (suc fuel) (suc j₁) eq le =
-        ap (φ .fst .map n .∫Hom.fst)
-          (Σ-prop-path (MC.norm-is-prop ℤ⟨ Δ[ suc n ] ⟩ n) refl)
-      ∙ is-group-hom.pres-⋆ (φ .fst .map n .∫Hom.snd) push-elem inv-tail-elem
-      ∙ ap₂ (Cc._*_ n)
-          push-dies
-          ( is-group-hom.pres-inv (φ .fst .map n .∫Hom.snd) {x = tail-elem}
-          ∙ ap (Cc._⁻¹ n)
-              (kill n φ fuel (suc (suc j₁))
-                (sym (Nat.+-sucr (suc j₁) fuel) ∙ eq) (Nat.s≤s Nat.0≤x))
-          ∙ abl-inv-1g)
-      ∙ Cc.idr n
-      where
-      bj : suc j₁ Nat.< suc (suc n)
-      bj = subst (suc (suc j₁) Nat.≤_) (sym (Nat.+-sucr (suc j₁) fuel) ∙ eq)
-             (Nat.s≤s (le-plus (suc j₁) fuel))
+  kill
+    : (n : Nat) (φ : ⌞ MC.Moore (Γ C) .ob (suc n) ⌟)
+      (fuel j : Nat) (eq : j Nat.+ fuel ≡ suc (suc n))
+    → 1 Nat.≤ j
+    → φ .fst .map n .∫Hom.fst (Σalt n fuel j eq , Σnorm n fuel j eq)
+    ≡ Cc.1g n
+  kill n φ fuel zero eq le = absurd (Nat.¬suc≤0 le)
+  kill n φ zero (suc j₁) eq le =
+      ap (φ .fst .map n .∫Hom.fst)
+        (Σ-prop-path (MC.norm-is-prop ℤ⟨ Δ[ suc n ] ⟩ n) refl)
+    ∙ is-group-hom.pres-id (φ .fst .map n .∫Hom.snd)
+  kill n φ (suc fuel) (suc j₁) eq le =
+      ap (φ .fst .map n .∫Hom.fst)
+        (Σ-prop-path (MC.norm-is-prop ℤ⟨ Δ[ suc n ] ⟩ n) refl)
+    ∙ is-group-hom.pres-⋆ (φ .fst .map n .∫Hom.snd) push-elem inv-tail-elem
+    ∙ ap₂ (Cc._*_ n)
+        push-dies
+        ( is-group-hom.pres-inv (φ .fst .map n .∫Hom.snd) {x = tail-elem}
+        ∙ ap (Cc._⁻¹ n)
+            (kill n φ fuel (suc (suc j₁))
+              (sym (Nat.+-sucr (suc j₁) fuel) ∙ eq) (Nat.s≤s Nat.0≤x))
+        ∙ abl-inv-1g)
+    ∙ Cc.idr n
+    where
+    bj : suc j₁ Nat.< suc (suc n)
+    bj = subst (suc (suc j₁) Nat.≤_) (sym (Nat.+-sucr (suc j₁) fuel) ∙ eq)
+           (Nat.s≤s (le-plus (suc j₁) fuel))
 
-      push-elem : ⌞ NΔ (suc n) .ob n ⌟
-      push-elem = NΔ-map (δ (fin (suc j₁) ⦃ bj ⦄)) .map n .∫Hom.fst
+    push-elem : ⌞ NΔ (suc n) .ob n ⌟
+    push-elem = NΔ-map (δ (fin (suc j₁) ⦃ bj ⦄)) .map n .∫Hom.fst
+      (fundamental n)
+
+    tail-elem : ⌞ NΔ (suc n) .ob n ⌟
+    tail-elem =
+        Σalt n fuel (suc (suc j₁)) (sym (Nat.+-sucr (suc j₁) fuel) ∙ eq)
+      , Σnorm n fuel (suc (suc j₁)) (sym (Nat.+-sucr (suc j₁) fuel) ∙ eq)
+
+    inv-tail-elem : ⌞ NΔ (suc n) .ob n ⌟
+    inv-tail-elem = Abelian-group-on._⁻¹ (NΔ (suc n) .ob n .snd) tail-elem
+
+    abl-inv-1g : Cc._⁻¹ n (Cc.1g n) ≡ Cc.1g n
+    abl-inv-1g = sym (Cc.idl n) ∙ Cc.inverser n
+
+    bj' : j₁ Nat.< suc n
+    bj' = Nat.≤-peel bj
+
+    push-dies : φ .fst .map n .∫Hom.fst push-elem ≡ Cc.1g n
+    push-dies =
+      happly (ap (λ w → w .map n .∫Hom.fst) (φ .snd (fin j₁ ⦃ bj' ⦄)))
         (fundamental n)
-
-      tail-elem : ⌞ NΔ (suc n) .ob n ⌟
-      tail-elem =
-          Σalt n fuel (suc (suc j₁)) (sym (Nat.+-sucr (suc j₁) fuel) ∙ eq)
-        , Σnorm n fuel (suc (suc j₁)) (sym (Nat.+-sucr (suc j₁) fuel) ∙ eq)
-
-      inv-tail-elem : ⌞ NΔ (suc n) .ob n ⌟
-      inv-tail-elem = Abelian-group-on._⁻¹ (NΔ (suc n) .ob n .snd) tail-elem
-
-      abl-inv-1g : Cc._⁻¹ n (Cc.1g n) ≡ Cc.1g n
-      abl-inv-1g = sym (Cc.idl n) ∙ Cc.inverser n
-
-      bj' : j₁ Nat.< suc n
-      bj' = Nat.≤-peel bj
-
-      push-dies : φ .fst .map n .∫Hom.fst push-elem ≡ Cc.1g n
-      push-dies =
-        happly (ap (λ w → w .map n .∫Hom.fst) (φ .snd (fin j₁ ⦃ bj' ⦄)))
-          (fundamental n)
 ```
 
 The chain square, and with it the counit.
