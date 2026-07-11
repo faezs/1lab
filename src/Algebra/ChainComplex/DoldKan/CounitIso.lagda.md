@@ -1102,3 +1102,244 @@ composites always miss a positive value.
       ≡ Cc.1g j
     head-dies = ap (λ h → h .∫Hom.fst (fundamental j .fst)) comp-vanish
 ```
+
+## The chain square
+
+On generators, the prescription commutes with the boundaries. The
+classification drives the argument: collisions die on both sides,
+missed positive values die through naturality of the pushforward,
+the identity generator reproduces the boundary formula against the
+chosen element, and the bottom coface closes with
+$\partial \circ \partial = 0$.
+
+```agda
+  square
+    : (k' : Nat) (c : ⌞ C .ob (suc k') ⌟)
+      (j : Nat) (α : Δ-map (suc j) (suc k'))
+    → Surj.ψ k' c j .∫Hom.fst
+        (ℤ⟨ Δ[ suc k' ] ⟩ .F₁ (δ fzero) .∫Hom.fst
+          (Tsub ℤ⟨ Δ[ suc k' ] ⟩ (suc j) .∫Hom.fst
+            (genΔ (suc k') α) .fst))
+    ≡ C .∂ᶜ j .∫Hom.fst
+        (Surj.ψ k' c (suc j) .∫Hom.fst
+          (Tsub ℤ⟨ Δ[ suc k' ] ⟩ (suc j) .∫Hom.fst
+            (genΔ (suc k') α) .fst))
+  square k' c j α with classify α
+  ... | cls-coll t coll =
+      ap (λ v → Surj.ψ k' c j .∫Hom.fst
+            (Gkk .F₁ (δ fzero) .∫Hom.fst v)) rawkill
+    ∙ ap (Surj.ψ k' c j .∫Hom.fst)
+        (is-group-hom.pres-id (Gkk .F₁ (δ fzero) .∫Hom.snd))
+    ∙ is-group-hom.pres-id (Surj.ψ k' c j .∫Hom.snd)
+    ∙ sym
+      ( ap (λ v → C .∂ᶜ j .∫Hom.fst (Surj.ψ k' c (suc j) .∫Hom.fst v))
+          rawkill
+      ∙ ap (C .∂ᶜ j .∫Hom.fst)
+          (is-group-hom.pres-id (Surj.ψ k' c (suc j) .∫Hom.snd))
+      ∙ is-group-hom.pres-id (C .∂ᶜ j .∫Hom.snd))
+    where
+    Gkk : Functor (Δ ^op) (Ab lzero)
+    Gkk = ℤ⟨ Δ[ suc k' ] ⟩
+
+    rawkill
+      : Tsub Gkk (suc j) .∫Hom.fst (genΔ (suc k') α) .fst
+      ≡ Abelian-group-on.1g (Gkk .F₀ (suc j) .snd)
+    rawkill = ap fst (collision-kill (suc k') α t coll)
+  ... | cls-miss i' m =
+      ap (λ v → Surj.ψ k' c j .∫Hom.fst
+            (Gkk .F₁ (δ fzero) .∫Hom.fst v)) rawpush
+    ∙ ap (Surj.ψ k' c j .∫Hom.fst)
+        (sym (happly
+          (ap ∫Hom.fst (pushα .is-natural (suc j) j (δ fzero)))
+          TB))
+    ∙ ap (λ h → h .∫Hom.fst (G' .F₁ (δ fzero) .∫Hom.fst TB))
+        (Surj.ψ-push k' c j i')
+    ∙ sym
+      ( ap (λ v → C .∂ᶜ j .∫Hom.fst (Surj.ψ k' c (suc j) .∫Hom.fst v))
+          rawpush
+      ∙ ap (C .∂ᶜ j .∫Hom.fst)
+          (ap (λ h → h .∫Hom.fst TB) (Surj.ψ-push k' c (suc j) i'))
+      ∙ is-group-hom.pres-id (C .∂ᶜ j .∫Hom.snd))
+    where
+    Gkk : Functor (Δ ^op) (Ab lzero)
+    Gkk = ℤ⟨ Δ[ suc k' ] ⟩
+
+    G' : Functor (Δ ^op) (Ab lzero)
+    G' = ℤ⟨ Δ[ k' ] ⟩
+
+    pushα : G' => Gkk
+    pushα = Free-abelian-functor ▸ Δmap-nt (δ (fsuc i'))
+
+    TB : ⌞ G' .F₀ (suc j) ⌟
+    TB = Tsub G' (suc j) .∫Hom.fst
+      (genΔ k' (miss-factor α (fsuc i') m .fst)) .fst
+
+    rawpush
+      : Tsub Gkk (suc j) .∫Hom.fst (genΔ (suc k') α) .fst
+      ≡ pushα .η (suc j) .∫Hom.fst TB
+    rawpush = ap fst (push-Tsub k' α i' m)
+  ... | cls-id jk lid = subst
+      (λ n → (β : Δ-map (suc n) (suc k'))
+           → (∀ x → β .Δ-map.map x .lower ≡ x .lower)
+           → Surj.ψ k' c n .∫Hom.fst
+               (ℤ⟨ Δ[ suc k' ] ⟩ .F₁ (δ fzero) .∫Hom.fst
+                 (Tsub ℤ⟨ Δ[ suc k' ] ⟩ (suc n) .∫Hom.fst
+                   (genΔ (suc k') β) .fst))
+           ≡ C .∂ᶜ n .∫Hom.fst
+               (Surj.ψ k' c (suc n) .∫Hom.fst
+                 (Tsub ℤ⟨ Δ[ suc k' ] ⟩ (suc n) .∫Hom.fst
+                   (genΔ (suc k') β) .fst)))
+      (sym (ap Nat.pred jk)) top α lid
+    where
+    Gkk : Functor (Δ ^op) (Ab lzero)
+    Gkk = ℤ⟨ Δ[ suc k' ] ⟩
+
+    module Gsk = Abelian-group-on (Gkk .F₀ k' .snd)
+
+    eq₁ : 1 Nat.+ suc k' ≡ suc (suc k')
+    eq₁ = sym (Nat.+-sucr 0 (suc k')) ∙ refl
+
+    top : (β : Δ-map (suc k') (suc k'))
+        → (∀ x → β .Δ-map.map x .lower ≡ x .lower)
+        → Surj.ψ k' c k' .∫Hom.fst
+            (Gkk .F₁ (δ fzero) .∫Hom.fst
+              (Tsub Gkk (suc k') .∫Hom.fst (genΔ (suc k') β) .fst))
+        ≡ C .∂ᶜ k' .∫Hom.fst
+            (Surj.ψ k' c (suc k') .∫Hom.fst
+              (Tsub Gkk (suc k') .∫Hom.fst (genΔ (suc k') β) .fst))
+    top β lidβ =
+        ap (λ w → Surj.ψ k' c k' .∫Hom.fst
+              (Gkk .F₁ (δ fzero) .∫Hom.fst
+                (Tsub Gkk (suc k') .∫Hom.fst (genΔ (suc k') w) .fst)))
+          β≡id
+      ∙ ap (λ v → Surj.ψ k' c k' .∫Hom.fst
+              (Gkk .F₁ (δ fzero) .∫Hom.fst v))
+          (ap fst (Tsub-id (suc k')))
+      ∙ ap (Surj.ψ k' c k' .∫Hom.fst) (∂-fundamental k')
+      ∙ is-group-hom.pres-⋆ (Surj.ψ k' c k' .∫Hom.snd) head-t tail-inv
+      ∙ ap₂ (Cc._*_ k')
+          head-val
+          ( is-group-hom.pres-inv (Surj.ψ k' c k' .∫Hom.snd)
+              {x = tail-t}
+          ∙ ap (Cc._⁻¹ k')
+              (Surj.ψ-Σalt k' c (suc k') 1 eq₁ (Nat.s≤s Nat.0≤x))
+          ∙ (sym (Cc.idl k') ∙ Cc.inverser k'))
+      ∙ Cc.idr k'
+      ∙ sym
+        ( ap (λ w → C .∂ᶜ k' .∫Hom.fst
+                (Surj.ψ k' c (suc k') .∫Hom.fst
+                  (Tsub Gkk (suc k') .∫Hom.fst (genΔ (suc k') w) .fst)))
+            β≡id
+        ∙ ap (C .∂ᶜ k' .∫Hom.fst) (Surj.ev-comp k' c))
+      where
+      β≡id : β ≡ Δ .Precategory.id
+      β≡id = Δ-map-path λ x →
+        fin-ap {n = λ _ → suc (suc k')} (lidβ x)
+
+      bj : 0 Nat.< suc (suc k')
+      bj = Nat.s≤s Nat.0≤x
+
+      head-t : ⌞ Gkk .F₀ k' ⌟
+      head-t = push-nt k' (fin 0 ⦃ bj ⦄) .η k' .∫Hom.fst
+        (fundamental k' .fst)
+
+      tail-t : ⌞ Gkk .F₀ k' ⌟
+      tail-t = Σalt k' (suc k') 1 eq₁
+
+      tail-inv : ⌞ Gkk .F₀ k' ⌟
+      tail-inv = Gsk._⁻¹ tail-t
+
+      head-val
+        : Surj.ψ k' c k' .∫Hom.fst head-t ≡ C .∂ᶜ k' .∫Hom.fst c
+      head-val =
+          ap (Surj.ψ k' c k' .∫Hom.fst)
+            ( ap (push-nt k' (fin 0 ⦃ bj ⦄) .η k' .∫Hom.fst)
+                (ap fst (sym (Tsub-id k')))
+            ∙ Tsub-natural (push-nt k' (fin 0 ⦃ bj ⦄)) k'
+                (genΔ k' (Δ .Precategory.id))
+            ∙ ap (λ v → Tsub Gkk k' .∫Hom.fst v .fst)
+                ( gen-natural (Δ[ k' ] .F₀ k') (Δ[ suc k' ] .F₀ k')
+                    (Δmap-nt (δ (fin 0 ⦃ bj ⦄)) .η k')
+                    (Δ .Precategory.id)
+                ∙ ap (gen {Δ[ suc k' ] .F₀ k'})
+                    (Δ-map-path (λ x → refl))))
+        ∙ ev-δ⁰ k' c
+  ... | cls-δ⁰ kj lsuc = subst
+      (λ m → (c' : ⌞ C .ob (suc m) ⌟)
+           → (β : Δ-map (suc j) (suc m))
+           → (∀ x → β .Δ-map.map x .lower ≡ suc (x .lower))
+           → Surj.ψ m c' j .∫Hom.fst
+               (ℤ⟨ Δ[ suc m ] ⟩ .F₁ (δ fzero) .∫Hom.fst
+                 (Tsub ℤ⟨ Δ[ suc m ] ⟩ (suc j) .∫Hom.fst
+                   (genΔ (suc m) β) .fst))
+           ≡ C .∂ᶜ j .∫Hom.fst
+               (Surj.ψ m c' (suc j) .∫Hom.fst
+                 (Tsub ℤ⟨ Δ[ suc m ] ⟩ (suc j) .∫Hom.fst
+                   (genΔ (suc m) β) .fst)))
+      (sym (ap Nat.pred kj)) top c α lsuc
+    where
+    top : (c' : ⌞ C .ob (suc (suc j)) ⌟)
+          (β : Δ-map (suc j) (suc (suc j)))
+        → (∀ x → β .Δ-map.map x .lower ≡ suc (x .lower))
+        → Surj.ψ (suc j) c' j .∫Hom.fst
+            (ℤ⟨ Δ[ suc (suc j) ] ⟩ .F₁ (δ fzero) .∫Hom.fst
+              (Tsub ℤ⟨ Δ[ suc (suc j) ] ⟩ (suc j) .∫Hom.fst
+                (genΔ (suc (suc j)) β) .fst))
+        ≡ C .∂ᶜ j .∫Hom.fst
+            (Surj.ψ (suc j) c' (suc j) .∫Hom.fst
+              (Tsub ℤ⟨ Δ[ suc (suc j) ] ⟩ (suc j) .∫Hom.fst
+                (genΔ (suc (suc j)) β) .fst))
+    top c' β lsucβ =
+        ap (λ v → Surj.ψ (suc j) c' j .∫Hom.fst
+              (Gj2 .F₁ (δ fzero) .∫Hom.fst v)) traw-push
+      ∙ ap (Surj.ψ (suc j) c' j .∫Hom.fst)
+          (sym (happly
+            (ap ∫Hom.fst (pushδ₀ .is-natural (suc j) j (δ fzero)))
+            (fundamental (suc j) .fst)))
+      ∙ ap (λ v → Surj.ψ (suc j) c' j .∫Hom.fst
+              (pushδ₀ .η j .∫Hom.fst v))
+          (∂-fundamental j)
+      ∙ ψδ₀-Σalt j c' (suc (suc j)) 0 refl
+      ∙ sym
+        ( ap (λ v → C .∂ᶜ j .∫Hom.fst
+                (Surj.ψ (suc j) c' (suc j) .∫Hom.fst v)) traw-δ₀
+        ∙ ap (C .∂ᶜ j .∫Hom.fst) (ev-δ⁰ (suc j) c')
+        ∙ C .∂ᶜ-∂ᶜ j c')
+      where
+      Gj2 : Functor (Δ ^op) (Ab lzero)
+      Gj2 = ℤ⟨ Δ[ suc (suc j) ] ⟩
+
+      Gj1 : Functor (Δ ^op) (Ab lzero)
+      Gj1 = ℤ⟨ Δ[ suc j ] ⟩
+
+      pushδ₀ : Gj1 => Gj2
+      pushδ₀ = Free-abelian-functor ▸ Δmap-nt (δ fzero)
+
+      β≡δ₀ : β ≡ δ fzero
+      β≡δ₀ = Δ-map-path λ x →
+        fin-ap {n = λ _ → suc (suc (suc j))} (lsucβ x)
+
+      traw-δ₀
+        : Tsub Gj2 (suc j) .∫Hom.fst (genΔ (suc (suc j)) β) .fst
+        ≡ Tsub Gj2 (suc j) .∫Hom.fst
+            (genΔ (suc (suc j)) (δ fzero)) .fst
+      traw-δ₀ = ap (λ w → Tsub Gj2 (suc j) .∫Hom.fst
+          (genΔ (suc (suc j)) w) .fst) β≡δ₀
+
+      traw-push
+        : Tsub Gj2 (suc j) .∫Hom.fst (genΔ (suc (suc j)) β) .fst
+        ≡ pushδ₀ .η (suc j) .∫Hom.fst (fundamental (suc j) .fst)
+      traw-push =
+          traw-δ₀
+        ∙ ap (λ v → Tsub Gj2 (suc j) .∫Hom.fst v .fst)
+            ( sym ( gen-natural (Δ[ suc j ] .F₀ (suc j))
+                      (Δ[ suc (suc j) ] .F₀ (suc j))
+                      (Δmap-nt (δ fzero) .η (suc j))
+                      (Δ .Precategory.id)
+                  ∙ ap (gen {Δ[ suc (suc j) ] .F₀ (suc j)})
+                      (Δ-map-path (λ x → refl))))
+        ∙ sym (Tsub-natural pushδ₀ (suc j)
+            (genΔ (suc j) (Δ .Precategory.id)))
+        ∙ ap (pushδ₀ .η (suc j) .∫Hom.fst)
+            (ap fst (Tsub-id (suc j)))
+```
