@@ -38,6 +38,7 @@ import Neural.Stack.Grothendieck
 import Neural.Stack.Equivalence
 import Neural.Stack.Presentation
 import Neural.Stack.Adjunction
+import Neural.Stack.Boolean
 import Neural.Stack.Omega
 import Neural.Stack.Restriction
 import Neural.Stack.Presheaves
@@ -372,6 +373,17 @@ the forcing module's sieve quantifiers.
 
 ```agda
 _ = Neural.Stack.Adjunction.Ω⊣τ'
+```
+
+**Lemma 2.1, repaired.** The paper's claim that groupoid-stack logic
+is Boolean is not constructive; the honest core is that a
+*complemented* element's complement is its negation, complements are
+unique, and total complementedness forces double negation to be the
+identity.
+
+```agda
+_ = Neural.Stack.Boolean.complement→¬
+_ = Neural.Stack.Boolean.complemented→boolean
 ```
 
 ## What is missing
