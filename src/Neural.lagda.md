@@ -25,6 +25,9 @@ open import Neural.Sheaf.Explicit
 open import Neural.Poset.NoLoops
 open import Neural.Poset.Reduced
 open import Neural.Poset.Thin
+open import Neural.Sheaf.StarValue
+open import Neural.Topos.Extension
+open import Neural.Topos.Equivalence
 ```
 -->
 
@@ -207,6 +210,29 @@ _ = no-loop
 _ = Neural.Poset.Thin.fork-hom-is-prop
 _ = Neural.Poset.Thin.fork-poset
 _ = Neural.Poset.Thin.reduced-poset
+```
+
+**The topos of a DNN** (the corollary of Proposition 1.1, the
+headline of chapter 1). A sheaf has no information at a star beyond
+the tuple of its tip values — restriction along the tines is an
+equivalence (`star-restrict-is-equiv`{.Agda}); presheaves on the
+reduced category extend to sheaves (`Ext`{.Agda},
+`Ext-is-sheaf`{.Agda}, Proposition 1.1(iii)); and restriction to the
+reduced category is fully faithful and split essentially surjective,
+hence
+
+$$
+\mathrm{Sh}(C, J) \simeq \mathrm{PSh}(C_{\mathbf X})\text{:}
+$$
+
+the sheaf topos of a network *is* the presheaf topos on its poset of
+layers and joints, with no comparison-lemma machinery — the finite
+free structure of the site computes everything.
+
+```agda
+_ = star-restrict-is-equiv
+_ = Extend.Ext-is-sheaf
+_ = Res-is-equivalence
 ```
 
 ## What is missing
