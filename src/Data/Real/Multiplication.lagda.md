@@ -103,7 +103,7 @@ point — gives the two-variable bracketing lemma announced above.
 
 <!--
 ```agda
-private abstract
+abstract
   convex-lower
     : ∀ p q t → 0 ≤ t → t ≤ 1
     → minℚ p q ≤ ((t *ℚ p) +ℚ ((1 +ℚ (-ℚ t)) *ℚ q))

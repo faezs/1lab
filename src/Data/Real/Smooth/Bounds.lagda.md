@@ -121,16 +121,15 @@ extracted with [[finite choice|finite-choice]].
 
 <!--
 ```agda
-private
-  maxFin : ∀ {m} → (Fin m → Ratio) → Ratio
-  maxFin {zero}  h = 0
-  maxFin {suc m} h = maxℚ (h fzero) (maxFin (λ j → h (fsuc j)))
+maxFin : ∀ {m} → (Fin m → Ratio) → Ratio
+maxFin {zero}  h = 0
+maxFin {suc m} h = maxℚ (h fzero) (maxFin (λ j → h (fsuc j)))
 
-  maxFin-≥ : ∀ {m} (h : Fin m → Ratio) (l : Fin m) → h l ≤ maxFin h
-  maxFin-≥ {suc m} h l with fin-view l
-  ... | zero   = maxℚ-≤l {h fzero} {maxFin (λ j → h (fsuc j))}
-  ... | suc l' = ≤-trans (maxFin-≥ (λ j → h (fsuc j)) l')
-    (maxℚ-≤r {h fzero} {maxFin (λ j → h (fsuc j))})
+maxFin-≥ : ∀ {m} (h : Fin m → Ratio) (l : Fin m) → h l ≤ maxFin h
+maxFin-≥ {suc m} h l with fin-view l
+... | zero   = maxℚ-≤l {h fzero} {maxFin (λ j → h (fsuc j))}
+... | suc l' = ≤-trans (maxFin-≥ (λ j → h (fsuc j)) l')
+  (maxℚ-≤r {h fzero} {maxFin (λ j → h (fsuc j))})
 ```
 -->
 
