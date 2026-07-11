@@ -14,6 +14,7 @@ open import Algebra.Group.Ab.Hom
 open import Algebra.Group.Ab
 open import Algebra.Group
 
+open import Cat.Functor.Naturality
 open import Cat.Functor.Adjoint
 open import Cat.Functor.Compose
 
@@ -1611,3 +1612,4 @@ module _ (A : Functor (Δ ^op) (Ab lzero)) where
       ∙ ap (ChC._∘_ εinv) triangle-ε-path
       ∙ ChC.idr εinv
 ```
+
