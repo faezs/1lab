@@ -311,3 +311,83 @@ element, and *annihilates* every degenerate one.
         (deg-pad-≤ G j (suc m₀)
           (Nat.≤-peel (deg-bound j dx)) Nat.≤-refl dx))
 ```
+
+## The low levels
+
+Level zero has no conditions to arrange, and level one exactly one
+correction; packaging them in the same style lets the rest of the
+normalization theorem treat all levels uniformly.
+
+```agda
+  T₁ : Ab'.Hom (G.₀ 1) (G.₀ 1)
+  T₁ = Hsm._*_ Ab'.id
+    (Hsm._⁻¹ (Ab'._∘_ (G.₁ (σ fzero)) (G.₁ (δ (fsuc fzero)))))
+    where
+    module Hsm = Abelian-group-on (Abelian-group-on-hom (G.₀ 1) (G.₀ 1))
+
+  T₁-normalized
+    : (x : ⌞ G.₀ 1 ⌟) (i : Fin 1)
+    → d (fsuc i) (T₁ .∫Hom.fst x) ≡ Gr.1g 0
+  T₁-normalized x i =
+      d-⋆ (fsuc i) x (Gr._⁻¹ 1 (s fzero (d (fsuc fzero) x)))
+    ∙ ap (Gr._*_ 0 (d (fsuc i) x))
+        (d-inv (fsuc i) (s fzero (d (fsuc fzero) x)))
+    ∙ ap (λ w → Gr._*_ 0 (d (fsuc i) x) (Gr._⁻¹ 0 w))
+        ( d-s-id (fsuc i) fzero (inr (ap suc (lower0 i)))
+            (d (fsuc fzero) x)
+        ∙ ap (λ w → d w x)
+            (fin-path' {x = fsuc fzero} {y = fsuc i}
+              (ap suc (sym (lower0 i)))))
+    ∙ Gr.inverser 0 {x = d (fsuc i) x}
+    where
+    lower0 : (i : Fin 1) → i .lower ≡ 0
+    lower0 i with i .lower | i .Fin.bounded
+    ... | zero  | _  = refl
+    ... | suc l | bd = absurd (Nat.¬suc≤0 (Nat.≤-peel bd))
+
+    fin-path' : ∀ {n} {x y : Fin n} → x .lower ≡ y .lower → x ≡ y
+    fin-path' {n} = fin-ap {n = λ _ → n}
+
+  T₁-fix
+    : (x : ⌞ G.₀ 1 ⌟)
+    → ((i : Fin 1) → d (fsuc i) x ≡ Gr.1g 0)
+    → T₁ .∫Hom.fst x ≡ x
+  T₁-fix x nx =
+      ap (λ w → Gr._*_ 1 x (Gr._⁻¹ 1 (s fzero w))) (nx fzero)
+    ∙ ap (λ w → Gr._*_ 1 x (Gr._⁻¹ 1 w))
+        (is-group-hom.pres-id (G.₁ (σ fzero) .snd))
+    ∙ ap (Gr._*_ 1 x) inv-1g
+    ∙ Gr.idr 1
+    where
+    inv-1g : Gr._⁻¹ 1 (Gr.1g 1) ≡ Gr.1g 1
+    inv-1g = sym (Gr.idl 1) ∙ Gr.inverser 1
+
+  T₁-kill
+    : (x : ⌞ G.₀ 1 ⌟) (j : Nat)
+    → Deg G {0} j x
+    → T₁ .∫Hom.fst x ≡ Gr.1g 1
+  T₁-kill x j dx = normalized-degenerate-vanish G {m = 0} tx
+    (λ i ge → nrm' i ge) 0 tx-deg
+    where
+    tx : ⌞ G.₀ 1 ⌟
+    tx = T₁ .∫Hom.fst x
+
+    nrm' : ∀ i → 1 Nat.≤ i .lower → d i tx ≡ Gr.1g 0
+    nrm' i ge =
+        ap (λ w → d w tx)
+          (fin-ap {n = λ _ → 2}
+            (Nat.≤-antisym (Nat.≤-peel (i .Fin.bounded)) ge))
+      ∙ T₁-normalized x fzero
+
+    dx0 : Deg G {0} 0 x
+    dx0 = lower-rep j dx where
+      lower-rep : (j : Nat) → Deg G {0} j x → Deg G {0} 0 x
+      lower-rep zero d' = d'
+      lower-rep (suc j') (b , _) =
+        absurd (Nat.¬suc≤0 (Nat.≤-peel b))
+
+    tx-deg : Deg G {0} 0 tx
+    tx-deg = deg-sum G 0 dx0
+      (deg-inv G 0
+        (deg-single G 0 (Nat.s≤s Nat.0≤x) (d (fsuc fzero) x)))
+```
