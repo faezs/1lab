@@ -174,3 +174,95 @@ through a star, one tine–socket pair) at a time.
   Res-is-split-eso : is-split-eso Res
   Res-is-split-eso F = (Extend.Ext N F , Extend.Ext-is-sheaf N F) , Res-Ext≅ F
 ```
+
+## Full faithfulness
+
+A morphism of sheaves is determined by its components at the plain
+vertices: at a star, the [[star-value]] equivalence forces the
+component to be the conjugate of the tuple of plain components. This
+gives the inverse to the action of `Res`{.Agda} on morphisms;
+naturality of the reconstruction is a per-edge check, with the tine
+and socket squares closing by the unit and counit of the star-value
+equivalence.
+
+```agda
+  module _ {AS BS : ⌞ SheafCat ⌟} where
+    private
+      A = AS .fst
+      B = BS .fst
+      module A = Psh (AS .fst)
+      module B = Psh (BS .fst)
+
+      rB : ∀ {c} {f : is-fork N c}
+         → (B ʻ star c f) ≃ (∀ i → B ʻ orig (N .inputs c ! i))
+      rB {c} {f} = star-restrict N B (BS .snd) {c} {f} ,
+        star-restrict-is-equiv N B (BS .snd) {c} {f}
+
+    private module _ (φ : Res₀ A => Res₀ B) where
+      ψ₀ : ∀ v → A ʻ v → B ʻ v
+      ψ₀ (orig c)   = φ .η (orig c , tt)
+      ψ₀ (tang c f) = φ .η (tang c f , tt)
+      ψ₀ (star c f) x = Equiv.from rB λ i →
+        φ .η (orig (N .inputs c ! i) , tt)
+          (A.₁ (cons (tine i refl) nil) x)
+
+      ψ-edge
+        : ∀ {u v} (e : F-edge N u v) (x : A ʻ v)
+        → ψ₀ u (A.₁ (cons e nil) x) ≡ B.₁ (cons e nil) (ψ₀ v x)
+      ψ-edge (single q) x = happly (φ .is-natural _ _ (cons (single q) nil)) x
+      ψ-edge handle     x = happly (φ .is-natural _ _ (cons handle nil)) x
+      ψ-edge (tine {b = b} {c = c} {f = fk} i q) x =
+        J (λ b q
+            → ψ₀ (orig b) (A.₁ (cons (tine {b = b} {c = c} {f = fk} i q) nil) x)
+            ≡ B.₁ (cons (tine {b = b} {c = c} {f = fk} i q) nil) (ψ₀ (star c fk) x))
+          (sym (happly (Equiv.ε rB _) i))
+          q
+      ψ-edge (socket {c = c} {f = fs} {f' = fs'}) x =
+        Equiv.injective rB $ funext λ i →
+            happly (Equiv.ε rB _) i
+          ∙ ap (φ .η _) (sym (A.F-∘ (cons (tine i refl) nil) (cons socket nil)))
+          ∙ happly (φ .is-natural _ _
+              (cons (tine i refl) (cons (socket {f = fs} {f' = fs'}) nil))) x
+          ∙ B.F-∘ (cons (tine i refl) nil) (cons socket nil)
+
+      ψ-nat
+        : ∀ {u v} (p : Path-in Γ u v) (x : A ʻ v)
+        → ψ₀ u (A.₁ p x) ≡ B.₁ p (ψ₀ v x)
+      ψ-nat {u} nil x = ap (ψ₀ u) A.F-id ∙ sym B.F-id
+      ψ-nat (cons e p) x =
+          ap (ψ₀ _) (A.F-∘ (cons e nil) p)
+        ∙ ψ-edge e (A.₁ p x)
+        ∙ ap (B.₁ (cons e nil)) (ψ-nat p x)
+        ∙ sym (B.F-∘ (cons e nil) p)
+
+      ψ : A => B
+      ψ ._=>_.η = ψ₀
+      ψ ._=>_.is-natural u v p = funext (ψ-nat p)
+
+    Res-is-ff : is-equiv (Res .F₁ {AS} {BS})
+    Res-is-ff = is-iso→is-equiv isom where
+      isom : is-iso (Res .F₁ {AS} {BS})
+      isom .is-iso.from = ψ
+      isom .is-iso.rinv φ = ext λ where
+        (orig c   , pl) x → refl
+        (tang c f , pl) x → refl
+        (star c f , pl) x → absurd pl
+      isom .is-iso.linv h = ext λ where
+        (orig c)   x → refl
+        (tang c f) x → refl
+        (star c f) x →
+            ap (Equiv.from rB) (funext λ i →
+              happly (h .is-natural _ _ (cons (tine i refl) nil)) x)
+          ∙ Equiv.η rB (h .η (star c f) x)
+```
+
+Assembling, we obtain the corollary of Proposition 1.1: **the topos
+of a deep neural network is the presheaf topos on its poset of
+layers and joints**.
+
+```agda
+  Res-is-equivalence : is-equivalence Res
+  Res-is-equivalence = ff+split-eso→is-equivalence
+    (λ {AS} {BS} → Res-is-ff {AS} {BS})
+    Res-is-split-eso
+```
