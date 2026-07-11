@@ -87,18 +87,18 @@ module _ (A : Functor (Δ ^op) (Ab lzero)) where
     module A = Functor A
     module An (n : Nat) = Abelian-group-on (A.₀ n .snd)
 
-    χ : ∀ {n} → ⌞ A.₀ n ⌟ → Δ[ n ] => (Ab↪Sets F∘ A)
-    χ a .η m h = A.₁ h .fst a
-    χ a .is-natural m m' g = funext λ h →
-      happly (ap ∫Hom.fst (A.F-∘ g h)) a
+  χ : ∀ {n} → ⌞ A.₀ n ⌟ → Δ[ n ] => (Ab↪Sets F∘ A)
+  χ a .η m h = A.₁ h .fst a
+  χ a .is-natural m m' g = funext λ h →
+    happly (ap ∫Hom.fst (A.F-∘ g h)) a
 
-    â : ∀ {n} → ⌞ A.₀ n ⌟ → ℤ⟨ Δ[ n ] ⟩ => A
-    â {n} a .η m = R-adjunct adj {a = Δ[ n ] .F₀ m} {b = A.₀ m} (χ a .η m)
-    â {n} a .is-natural m m' g = free-ext (Δ[ n ] .F₀ m) (A.₀ m') λ h →
-        ap (â a .η m' .fst) (gen-natural (Δ[ n ] .F₀ m) (Δ[ n ] .F₀ m') (Δ[ n ] .F₁ g) h)
-      ∙ ev-gen (Δ[ n ] .F₀ m') (A.₀ m') (χ a .η m') (h ∘Δ g)
-      ∙ happly (ap ∫Hom.fst (A.F-∘ g h)) a
-      ∙ ap (A.₁ g .fst) (sym (ev-gen (Δ[ n ] .F₀ m) (A.₀ m) (χ a .η m) h))
+  â : ∀ {n} → ⌞ A.₀ n ⌟ → ℤ⟨ Δ[ n ] ⟩ => A
+  â {n} a .η m = R-adjunct adj {a = Δ[ n ] .F₀ m} {b = A.₀ m} (χ a .η m)
+  â {n} a .is-natural m m' g = free-ext (Δ[ n ] .F₀ m) (A.₀ m') λ h →
+      ap (â a .η m' .fst) (gen-natural (Δ[ n ] .F₀ m) (Δ[ n ] .F₀ m') (Δ[ n ] .F₁ g) h)
+    ∙ ev-gen (Δ[ n ] .F₀ m') (A.₀ m') (χ a .η m') (h ∘Δ g)
+    ∙ happly (ap ∫Hom.fst (A.F-∘ g h)) a
+    ∙ ap (A.₁ g .fst) (sym (ev-gen (Δ[ n ] .F₀ m) (A.₀ m) (χ a .η m) h))
 ```
 
 ## The unit
