@@ -992,8 +992,10 @@ fundamental $1$-class exhibits the two vertices of an edge as
 differing by an exact form, which gauge invariance kills;
 the differential is now also packaged as an honest
 morphism of smooth sets $\Omega^1 \to \Omega^2$ between the de Rham
-classifiers ($\Omega^{\ge 3}$ and the Bianchi identity in degree
-two remain); the unit and counit of the
+classifiers; and the story closes with the **third exterior power**
+and the **Bianchi identity**: $\mathrm{d}F = 0$ for every field
+strength $F = \mathrm{d}A$ — half of Maxwell's equations, proven
+for every probe and every potential at once); the unit and counit of the
 Dold–Kan correspondence (30) — both functors now exist, the Moore
 complex $N$ and its inverse $\Gamma$, with $K(A,n)$ and ordinary
 cohomology defined, and $K(A,n)$ now proven Kan, along with the
