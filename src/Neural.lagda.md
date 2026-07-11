@@ -22,6 +22,9 @@ open import Neural.Chain.Omega
 open import Neural.Graph.Fork
 open import Neural.Site.Topology
 open import Neural.Sheaf.Explicit
+open import Neural.Poset.NoLoops
+open import Neural.Poset.Reduced
+open import Neural.Poset.Thin
 ```
 -->
 
@@ -180,6 +183,30 @@ universal property of the product.
 ```agda
 _ = X⋆
 _ = X⋆-is-sheaf
+_ = Neural.Sheaf.Explicit.unit
+```
+
+**Proposition 1.1(i), refuted, repaired, and strengthened.** As
+literally stated — the reduced category $C_{\mathbf X}$ on non-star
+vertices is a poset — the proposition is *false*: in the diamond
+network there are two distinct parallel arrows from a tip to the tang
+of the fork it feeds, exhibited by `Reduced-not-thin`{.Agda}. The
+repair is the paper's own spacelike picture: distinct tips of one
+fork must be incomparable in the network. Under `is-spacelike`{.Agda}
+we prove more than the paper claims: the *whole* forked site is thin
+(every edge type becomes a proposition, and the sixteen-way analysis
+of parallel first edges closes using the route classification
+`reach`{.Agda} and loop-freeness `no-loop`{.Agda}), antisymmetric by
+loop-freeness, hence a poset — with the paper's $\mathbf X$ as the
+full subposet on plain vertices.
+
+```agda
+_ = Reduced-not-thin
+_ = is-spacelike
+_ = no-loop
+_ = Neural.Poset.Thin.fork-hom-is-prop
+_ = Neural.Poset.Thin.fork-poset
+_ = Neural.Poset.Thin.reduced-poset
 ```
 
 ## What is missing
