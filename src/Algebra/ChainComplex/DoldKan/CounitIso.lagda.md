@@ -1343,3 +1343,61 @@ $\partial \circ \partial = 0$.
         ∙ ap (pushδ₀ .η (suc j) .∫Hom.fst)
             (ap fst (Tsub-id (suc j)))
 ```
+
+## The preimage
+
+The prescription assembles into a normalized chain map evaluating
+to the chosen element.
+
+```agda
+  φ-of
+    : (k' : Nat) (c : ⌞ C .ob (suc k') ⌟)
+    → ⌞ MC.Moore (Γ C) .ob (suc k') ⌟
+  φ-of k' c = chain , nrm
+    where
+    Gkk : Functor (Δ ^op) (Ab lzero)
+    Gkk = ℤ⟨ Δ[ suc k' ] ⟩
+
+    Tsub-raw : (j : Nat) → Ab lzero .Precategory.Hom (Gkk .F₀ j) (Gkk .F₀ j)
+    Tsub-raw j .∫Hom.fst x = Tsub Gkk j .∫Hom.fst x .fst
+    Tsub-raw j .∫Hom.snd .is-group-hom.pres-⋆ x y =
+      ap fst (is-group-hom.pres-⋆ (Tsub Gkk j .∫Hom.snd) x y)
+
+    incl : (j : Nat)
+         → Ab lzero .Precategory.Hom (NΔ (suc k') .ob j) (Gkk .F₀ j)
+    incl j .∫Hom.fst = fst
+    incl j .∫Hom.snd .is-group-hom.pres-⋆ x y = refl
+
+    chain : Chain-map (NΔ (suc k')) C
+    chain .map j =
+      Ab lzero .Precategory._∘_ (Surj.ψ k' c j) (incl j)
+    chain .comm j (x , p) =
+        ap (λ v → Surj.ψ k' c j .∫Hom.fst
+              (Gkk .F₁ (δ fzero) .∫Hom.fst v))
+          (sym (ap fst (Tsub-fix Gkk (suc j) (x , p))))
+      ∙ ap (λ h → h .∫Hom.fst x) LR
+      ∙ ap (λ v → C .∂ᶜ j .∫Hom.fst (Surj.ψ k' c (suc j) .∫Hom.fst v))
+          (ap fst (Tsub-fix Gkk (suc j) (x , p)))
+      where
+      L R : Ab lzero .Precategory.Hom (Gkk .F₀ (suc j)) (C .ob j)
+      L = Ab lzero .Precategory._∘_ (Surj.ψ k' c j)
+        (Ab lzero .Precategory._∘_ (Gkk .F₁ (δ fzero)) (Tsub-raw (suc j)))
+      R = Ab lzero .Precategory._∘_ (C .∂ᶜ j)
+        (Ab lzero .Precategory._∘_ (Surj.ψ k' c (suc j)) (Tsub-raw (suc j)))
+
+      LR : L ≡ R
+      LR = free-ext (Δ[ suc k' ] .F₀ (suc j)) (C .ob j)
+        (λ α → square k' c j α)
+
+    nrm : MC.norm (Γ C) (suc k') chain
+    nrm i = Chain-map-path λ j → ext λ y q →
+      ap (λ h → h .∫Hom.fst y) (Surj.ψ-push k' c j i)
+
+  counit-surj
+    : (k' : Nat) (c : ⌞ C .ob (suc k') ⌟)
+    → dk-counit-level C (suc k') .∫Hom.fst (φ-of k' c) ≡ c
+  counit-surj k' c =
+      ap (Surj.ψ k' c (suc k') .∫Hom.fst)
+        (ap fst (sym (Tsub-id (suc k'))))
+    ∙ Surj.ev-comp k' c
+```
