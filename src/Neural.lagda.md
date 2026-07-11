@@ -34,6 +34,9 @@ open import Neural.Sheaf.Spontaneous
 
 import Neural.Topos.Quantifiers
 import Neural.Topos.Predicates
+import Neural.Stack.Thin
+
+open import Neural.Logic.Hyperdoctrine
 ```
 -->
 
@@ -274,6 +277,31 @@ pullback-stability lemmas (including stability of implication).
 _ = Neural.Topos.Predicates.Pred-heyting
 _ = Neural.Topos.Quantifiers.∃ᴾ-adj-from
 _ = Neural.Topos.Quantifiers.∀ᴾ-adj-to
+```
+
+**The hyperdoctrine.** The full first-order signature packaged as a
+record — fibred Heyting algebras, substitution as a logical morphism
+(the paper's silent hypotheses made fields), and both quantifier
+adjoints — inhabited by the Ω-valued predicates over any presheaf
+category, with every substitution law holding on the nose.
+
+```agda
+_ = Heyting-hyperdoctrine
+_ = Pred-hyperdoctrine
+```
+
+## Phase 3: stacks over the network
+
+**The thin Grothendieck construction.** The fibrations chapter 3
+actually transports logic along have *poset* fibers — propositions
+and theories layerwise. For a poset-valued presheaf on any base, the
+Grothendieck construction is thinly displayed (a morphism over
+$\alpha$ is the inequality $x \le \alpha^\star y$, all coherence
+propositional), and reindexing itself provides the cartesian lifts.
+
+```agda
+_ = Neural.Stack.Thin.Thin-stack
+_ = Neural.Stack.Thin.Thin-stack-fibration
 ```
 
 ## What is missing
