@@ -6,7 +6,7 @@ open import Cat.Functor.Hom
 open import Cat.Diagram.Terminal
 open import Cat.Prelude
 
-open import Data.Real.Smooth
+open import Data.Real.Smooth hiding (C∞)
 open import Data.Real.Base
 
 open import Data.Fin using (Fin ; Fin-absurd ; fzero ; fsuc)
