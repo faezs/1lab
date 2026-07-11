@@ -1401,3 +1401,112 @@ to the chosen element.
         (ap fst (sym (Tsub-id (suc k'))))
     ∙ Surj.ev-comp k' c
 ```
+
+In degree zero there is nothing to normalize: the preimage sends
+the generating vertex to the element, everything above to zero, and
+the only chain condition follows because the level-one part of the
+linearised point is retracted onto by a degeneracy.
+
+```agda
+  φ-of₀ : (c : ⌞ C .ob 0 ⌟) → ⌞ MC.Moore (Γ C) .ob 0 ⌟
+  φ-of₀ c = chain , lift tt
+    where
+    G0 : Functor (Δ ^op) (Ab lzero)
+    G0 = ℤ⟨ Δ[ 0 ] ⟩
+
+    s₀d₁-id
+      : Ab lzero .Precategory._∘_ (G0 .F₁ (σ fzero))
+          (G0 .F₁ (δ (fsuc fzero)))
+      ≡ Ab lzero .Precategory.id
+    s₀d₁-id = free-ext (Δ[ 0 ] .F₀ 1) (G0 .F₀ 1) λ u →
+        ap (G0 .F₁ (σ fzero) .∫Hom.fst)
+          (gen-natural (Δ[ 0 ] .F₀ 1) (Δ[ 0 ] .F₀ 0)
+            (Δ[ 0 ] .F₁ (δ (fsuc fzero))) u)
+      ∙ gen-natural (Δ[ 0 ] .F₀ 0) (Δ[ 0 ] .F₀ 1)
+          (Δ[ 0 ] .F₁ (σ fzero)) (u ∘Δ δ (fsuc fzero))
+      ∙ ap (gen {Δ[ 0 ] .F₀ 1})
+          (Δ-map-path λ x → Fin1-path _ _)
+
+    lvl1-trivial
+      : (x : ⌞ G0 .F₀ 1 ⌟)
+      → ((i : Fin 1) → G0 .F₁ (δ (fsuc i)) .∫Hom.fst x
+          ≡ Abelian-group-on.1g (G0 .F₀ 0 .snd))
+      → x ≡ Abelian-group-on.1g (G0 .F₀ 1 .snd)
+    lvl1-trivial x p =
+        sym (ap (λ h → h .∫Hom.fst x) s₀d₁-id)
+      ∙ ap (G0 .F₁ (σ fzero) .∫Hom.fst) (p fzero)
+      ∙ is-group-hom.pres-id (G0 .F₁ (σ fzero) .∫Hom.snd)
+
+    chain : Chain-map (NΔ 0) C
+    chain .map zero = Ab lzero .Precategory._∘_
+      (R-adjunct adj {a = Δ[ 0 ] .F₀ 0} {b = C .ob 0} (λ _ → c))
+      incl0
+      where
+      incl0 : Ab lzero .Precategory.Hom (NΔ 0 .ob 0) (G0 .F₀ 0)
+      incl0 .∫Hom.fst = fst
+      incl0 .∫Hom.snd .is-group-hom.pres-⋆ x y = refl
+    chain .map (suc j) = zero-hom'
+    chain .comm zero (x , p) =
+        ap (λ v → R-adjunct adj {a = Δ[ 0 ] .F₀ 0} {b = C .ob 0}
+              (λ _ → c) .∫Hom.fst
+              (G0 .F₁ (δ fzero) .∫Hom.fst v))
+          (lvl1-trivial x p)
+      ∙ ap (R-adjunct adj {a = Δ[ 0 ] .F₀ 0} {b = C .ob 0}
+              (λ _ → c) .∫Hom.fst)
+          (is-group-hom.pres-id (G0 .F₁ (δ fzero) .∫Hom.snd))
+      ∙ is-group-hom.pres-id
+          (R-adjunct adj {a = Δ[ 0 ] .F₀ 0} {b = C .ob 0}
+            (λ _ → c) .∫Hom.snd)
+      ∙ sym (is-group-hom.pres-id (C .∂ᶜ 0 .∫Hom.snd))
+    chain .comm (suc j) (x , p) =
+      sym (is-group-hom.pres-id (C .∂ᶜ (suc j) .∫Hom.snd))
+
+  counit-surj₀
+    : (c : ⌞ C .ob 0 ⌟)
+    → dk-counit-level C 0 .∫Hom.fst (φ-of₀ c) ≡ c
+  counit-surj₀ c = ev-gen (Δ[ 0 ] .F₀ 0) (C .ob 0) (λ _ → c)
+    (Δ .Precategory.id)
+```
+
+## The counit is an isomorphism, levelwise
+
+```agda
+  counit-inverse : (k : Nat) → ⌞ C .ob k ⌟ → ⌞ MC.Moore (Γ C) .ob k ⌟
+  counit-inverse zero c = φ-of₀ c
+  counit-inverse (suc k') c = φ-of k' c
+
+  counit-rinv
+    : (k : Nat) (c : ⌞ C .ob k ⌟)
+    → dk-counit-level C k .∫Hom.fst (counit-inverse k c) ≡ c
+  counit-rinv zero c = counit-surj₀ c
+  counit-rinv (suc k') c = counit-surj k' c
+
+  counit-linv
+    : (k : Nat) (φn : ⌞ MC.Moore (Γ C) .ob k ⌟)
+    → counit-inverse k (dk-counit-level C k .∫Hom.fst φn) ≡ φn
+  counit-linv k φn =
+      sym (MΓ.idr k {x = iv})
+    ∙ ap (MΓ._*_ k iv) (sym (MΓ.inversel k {x = φn}))
+    ∙ MΓ.associative k {x = iv} {y = MΓ._⁻¹ k φn} {z = φn}
+    ∙ ap (λ z → MΓ._*_ k z φn) diff-kill
+    ∙ MΓ.idl k {x = φn}
+    where
+    iv : ⌞ MC.Moore (Γ C) .ob k ⌟
+    iv = counit-inverse k (dk-counit-level C k .∫Hom.fst φn)
+
+    diff : ⌞ MC.Moore (Γ C) .ob k ⌟
+    diff = MΓ._*_ k iv (MΓ._⁻¹ k φn)
+
+    ε-diff : dk-counit-level C k .∫Hom.fst diff ≡ Cc.1g k
+    ε-diff =
+        is-group-hom.pres-⋆ (dk-counit-level C k .∫Hom.snd) iv
+          (MΓ._⁻¹ k φn)
+      ∙ ap₂ (Cc._*_ k)
+          (counit-rinv k (dk-counit-level C k .∫Hom.fst φn))
+          (is-group-hom.pres-inv (dk-counit-level C k .∫Hom.snd)
+            {x = φn})
+      ∙ Cc.inverser k
+
+    diff-kill : diff ≡ MΓ.1g k
+    diff-kill = counit-inj k diff ε-diff
+```
