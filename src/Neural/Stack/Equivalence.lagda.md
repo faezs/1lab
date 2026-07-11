@@ -105,9 +105,39 @@ counit X .is-natural (V , ζ) (U , ξ) (∫hom α u) = funext λ x →
       ∙  sub-set (Fib U) (Fib-set U) ((Q ∙ S) ∙ ap (_·₀ ζ) (B.idr α)) u
 ```
 
-Both comparison maps have identity components, so each is invertible
-fibrewise by inspection; what is *not* yet here is the packaging of
-`Tot`{.Agda ident=Tot} and `Res`{.Agda ident=Res} as an equivalence
-of categories (naturality of the comparisons in their argument, the
-triangle identities, and the invertibility record) — mechanical from
-this module's content, and deferred to its first consumer.
+Both comparison maps are invertible outright — the inverses have
+the same identity components, with the naturality squares read
+backwards.
+
+```agda
+unit⁻¹ : (A : Family) → Family-hom (Res₀ (Tot₀ A)) A
+unit⁻¹ A .map U .η ξ x = x
+unit⁻¹ A .map U .is-natural ξ ζ u =
+  sym (unit A .map U .is-natural ξ ζ u)
+unit⁻¹ A .com {U} {V} α {ξ} x = sym (Psh.F-id (A .fam U))
+
+unit-invl : (A : Family)
+  → Families ._∘_ (unit⁻¹ A) (unit A) ≡ Families .id
+unit-invl A = Family-hom-path λ U → Nat-path λ ξ → refl
+
+unit-invr : (A : Family)
+  → Families ._∘_ (unit A) (unit⁻¹ A) ≡ Families .id
+unit-invr A = Family-hom-path λ U → Nat-path λ ξ → refl
+
+counit⁻¹ : (X : Functor ((∫F) ^op) (Sets κ)) → X => Tot₀ (Res₀ X)
+counit⁻¹ X .η (U , ξ) x = x
+counit⁻¹ X .is-natural a b f = sym (counit X .is-natural a b f)
+
+counit-invl : (X : Functor ((∫F) ^op) (Sets κ))
+  → counit X ∘nt counit⁻¹ X ≡ idnt
+counit-invl X = Nat-path λ _ → refl
+
+counit-invr : (X : Functor ((∫F) ^op) (Sets κ))
+  → counit⁻¹ X ∘nt counit X ≡ idnt
+counit-invr X = Nat-path λ _ → refl
+```
+
+What is *not* yet here is the packaging of `Tot`{.Agda ident=Tot}
+as an equivalence of categories — full faithfulness and split
+essential surjectivity, both mechanical from this module's content
+— which lives in the successor `Presentation` module.

@@ -349,7 +349,7 @@ are classified by fibrewise sieve data.
 ```agda
 _ = Neural.Stack.Omega.Ω-family
 _ = Neural.Stack.Omega.Ω-comparison
-_ = Neural.Stack.Omega.counit-invl
+_ = Neural.Stack.Equivalence.counit-invl
 ```
 
 **Transporting theories** (Lemma 2.4). At every cartesian arrow, the

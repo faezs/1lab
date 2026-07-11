@@ -88,20 +88,11 @@ classifier of $\psh(\int F)$, and subobjects in the stack topos are
 classified by fibrewise sieve data.
 
 ```agda
-counit⁻¹ : (X : Functor ((∫F) ^op) (Sets ℓ)) → X => Tot₀ (Res₀ X)
-counit⁻¹ X .η (U , ξ) x = x
-counit⁻¹ X .is-natural a b f = sym (counit X .is-natural a b f)
-
-counit-invl : (X : Functor ((∫F) ^op) (Sets ℓ))
-  → counit X ∘nt counit⁻¹ X ≡ idnt
-counit-invl X = Nat-path λ _ → refl
-
-counit-invr : (X : Functor ((∫F) ^op) (Sets ℓ))
-  → counit⁻¹ X ∘nt counit X ≡ idnt
-counit-invr X = Nat-path λ _ → refl
-
 Ω-comparison : Tot₀ Ω-family => (Sieves {C = ∫F})
 Ω-comparison = counit ((Sieves {C = ∫F}))
+
+Ω-comparison⁻¹ : (Sieves {C = ∫F}) => Tot₀ Ω-family
+Ω-comparison⁻¹ = counit⁻¹ ((Sieves {C = ∫F}))
 ```
 
 What is honestly *not* here: the fibrewise characterisation of the
