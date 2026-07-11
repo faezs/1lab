@@ -156,6 +156,12 @@ private
   free-ext T B p = Equiv.injective
     (_ , L-adjunct-is-equiv adj {a = T} {b = B}) (funext p)
 
+  ev-gen
+    : (T : Set lzero) (B : Abelian-group lzero)
+      (f : ⌞ T ⌟ → ⌞ B ⌟) (x : ⌞ T ⌟)
+    → R-adjunct adj {a = T} {b = B} f .∫Hom.fst (gen {T} x) ≡ f x
+  ev-gen T B f x = happly (L-R-adjunct adj {a = T} {b = B} f) x
+
   T₁-natural
     : {G G' : Functor (Δ ^op) (Ab lzero)} (nt : G => G')
     → (x : ⌞ G .F₀ 1 ⌟)
@@ -325,6 +331,11 @@ whose chain square the hypothesis closes.
 <!--
 ```agda
 private
+  weaken-lower : ∀ {n} (x : Fin n) → weaken x .lower ≡ x .lower
+  weaken-lower x with fin-view x
+  ... | zero  = refl
+  ... | suc i = ap suc (weaken-lower i)
+
   Fin1-path : (a b : Fin 1) → a ≡ b
   Fin1-path a b = fin-ap {n = λ _ → 1}
     ( Nat.≤-antisym (Nat.≤-peel (a .Fin.bounded)) Nat.0≤x
@@ -526,4 +537,63 @@ The theorem.
 
     vanish : (j : Nat) → Φ j ≡ zero-hom'
     vanish j = free-ext (Δ[ k ] .F₀ j) (C .ob j) (gen-case j)
+```
+
+## The prescription
+
+For surjectivity we build, from a chain element, the normalized
+simplicial map evaluating to it: on generators, the identity gets
+the element, the bottom coface its boundary, and everything else
+dies. Determinacy of the classification makes the prescription
+well-defined, and the vanishing cases are closed under the
+degeneracy and coface structure.
+
+```agda
+  module Surj (k' : Nat) (c : ⌞ C .ob (suc k') ⌟) where
+    private
+      kk : Nat
+      kk = suc k'
+
+      Gkk : Functor (Δ ^op) (Ab lzero)
+      Gkk = ℤ⟨ Δ[ kk ] ⟩
+
+    w : (j : Nat) → Δ-map j kk → ⌞ C .ob j ⌟
+    w j α with classify α
+    ... | cls-miss _ _ = Cc.1g j
+    ... | cls-coll _ _ = Cc.1g j
+    ... | cls-id jk lid = subst (λ n → ⌞ C .ob n ⌟) (sym jk) c
+    ... | cls-δ⁰ kj lsuc =
+      subst (λ n → ⌞ C .ob n ⌟) (ap Nat.pred kj)
+        (C .∂ᶜ k' .∫Hom.fst c)
+
+    ψ : (j : Nat) → Ab lzero .Precategory.Hom (Gkk .F₀ j) (C .ob j)
+    ψ j = R-adjunct adj {a = Δ[ kk ] .F₀ j} {b = C .ob j} (w j)
+
+    ψ-gen : (j : Nat) (α : Δ-map j kk)
+          → ψ j .∫Hom.fst (genΔ kk α) ≡ w j α
+    ψ-gen j α = ev-gen (Δ[ kk ] .F₀ j) (C .ob j) (w j) α
+
+    w-coll
+      : (j' : Nat) (α : Δ-map (suc j') kk) (t : Fin (suc j'))
+      → α .Δ-map.map (weaken t) ≡ α .Δ-map.map (fsuc t)
+      → w (suc j') α ≡ Cc.1g (suc j')
+    w-coll j' α t coll with classify α
+    ... | cls-miss _ _ = refl
+    ... | cls-coll _ _ = refl
+    ... | cls-id jk lid = absurd (Nat.¬sucx≤x (t .lower)
+      (subst (λ z → suc (t .lower) Nat.≤ z) (sym e) Nat.≤-refl))
+      where
+      e : t .lower ≡ suc (t .lower)
+      e = sym (weaken-lower t)
+        ∙ sym (lid (weaken t))
+        ∙ ap Fin.lower coll
+        ∙ lid (fsuc t)
+    ... | cls-δ⁰ kj lsuc = absurd (Nat.¬sucx≤x (suc (t .lower))
+      (subst (λ z → suc (suc (t .lower)) Nat.≤ z) (sym e) Nat.≤-refl))
+      where
+      e : suc (t .lower) ≡ suc (suc (t .lower))
+      e = sym (ap suc (weaken-lower t))
+        ∙ sym (lsuc (weaken t))
+        ∙ ap Fin.lower coll
+        ∙ lsuc (fsuc t)
 ```
