@@ -314,3 +314,109 @@ smooth-rename
   → Smooth m (λ y → f (λ j → y (ρ j)))
 smooth-rename ρ inj S k = tower-rename k ρ inj _ (S k)
 ```
+
+## The Leibniz rule
+
+The quotient of a product telescopes: evaluate the first factor at
+the unmoved point and the second at the moved one, and each summand
+picks up one factor's quotient.
+
+<!--
+```agda
+private
+  tele : ∀ a b c → a −ᴿ c ≡ (a −ᴿ b) +ᴿ (b −ᴿ c)
+  tele a b c = sym
+    ( sym (+ᴿ-assoc a (-ᴿ b) (b −ᴿ c))
+    ∙ ap (a +ᴿ_)
+        ( +ᴿ-assoc (-ᴿ b) b (-ᴿ c)
+        ∙ ap (_+ᴿ (-ᴿ c)) (+ᴿ-invl b)
+        ∙ +ᴿ-idl (-ᴿ c)))
+
+  factor-l : ∀ a b c → (a *ᴿ b) −ᴿ (a *ᴿ c) ≡ a *ᴿ (b −ᴿ c)
+  factor-l a b c =
+      ap ((a *ᴿ b) +ᴿ_) (sym (*ᴿ-negr a c))
+    ∙ sym (*ᴿ-distribˡ a b (-ᴿ c))
+
+  factor-r : ∀ a b c → (a *ᴿ c) −ᴿ (b *ᴿ c) ≡ (a −ᴿ b) *ᴿ c
+  factor-r a b c =
+      ap₂ _−ᴿ_ (*ᴿ-comm a c) (*ᴿ-comm b c)
+    ∙ factor-l c a b
+    ∙ *ᴿ-comm c (a −ᴿ b)
+
+  pull : ∀ s a b → a *ᴿ (s *ᴿ b) ≡ s *ᴿ (a *ᴿ b)
+  pull s a b =
+      sym (*ᴿ-assoc a s b)
+    ∙ ap (_*ᴿ b) (*ᴿ-comm a s)
+    ∙ *ᴿ-assoc s a b
+
+  σᵢ : ∀ {n} → Fin n → Fin n → Fin (suc n)
+  σᵢ i j with Discrete-Fin .decide i j
+  ... | yes _ = fzero
+  ... | no  _ = fsuc j
+
+  σᵢ-inj
+    : ∀ {n} (i : Fin n) (a b : Fin n) → σᵢ i a ≡ σᵢ i b → a ≡ b
+  σᵢ-inj i a b e with Discrete-Fin .decide i a | Discrete-Fin .decide i b
+  ... | yes p | yes q = sym p ∙ q
+  ... | yes p | no  _ = absurd (fzero≠fsuc e)
+  ... | no  _ | yes q = absurd (fsuc≠fzero e)
+  ... | no  _ | no  _ = fsuc-inj e
+
+  σᵢ-set
+    : ∀ {n} (i : Fin n) (x : Fin n → ℝ) (t : ℝ)
+    → (λ j → cons t x (σᵢ i j)) ≡ set x i t
+  σᵢ-set i x t = funext λ j → go j where
+    go : ∀ j → cons t x (σᵢ i j) ≡ set x i t j
+    go j with Discrete-Fin .decide i j
+    ... | yes _ = refl
+    ... | no  _ = refl
+```
+-->
+
+```agda
+tower-trunc
+  : ∀ k {n} {f : Fun n} → TowerTo (suc k) n f → TowerTo k n f
+tower-trunc zero _ = lift tt
+tower-trunc (suc k) T i =
+  let (g , q , T') = T i in g , q , tower-trunc k T'
+
+tower-mul
+  : ∀ k n (f g : Fun n)
+  → TowerTo k n f → TowerTo k n g
+  → TowerTo k n (λ x → f x *ᴿ g x)
+tower-mul zero n f g _ _ = lift tt
+tower-mul (suc k) n f g T S i =
+  let (fq , qf , T') = T i
+      (gq , qg , S') = S i
+  in
+    (λ y → (f (λ j → y (fsuc j)) *ᴿ gq y)
+       +ᴿ (g (λ j → y (σᵢ i j)) *ᴿ fq y))
+  , (λ x t →
+        tele (f x *ᴿ g x) (f x *ᴿ g (set x i t))
+          (f (set x i t) *ᴿ g (set x i t))
+      ∙ ap₂ _+ᴿ_
+          ( factor-l (f x) (g x) (g (set x i t))
+          ∙ ap (f x *ᴿ_) (qg x t)
+          ∙ pull (x i −ᴿ t) (f x) (gq (cons t x)))
+          ( factor-r (f x) (f (set x i t)) (g (set x i t))
+          ∙ ap (_*ᴿ g (set x i t)) (qf x t)
+          ∙ *ᴿ-assoc (x i −ᴿ t) (fq (cons t x)) (g (set x i t))
+          ∙ ap ((x i −ᴿ t) *ᴿ_)
+              ( *ᴿ-comm (fq (cons t x)) (g (set x i t))
+              ∙ ap (λ w → g w *ᴿ fq (cons t x)) (sym (σᵢ-set i x t))))
+      ∙ sym (*ᴿ-distribˡ (x i −ᴿ t)
+          (f x *ᴿ gq (cons t x))
+          (g (λ j → cons t x (σᵢ i j)) *ᴿ fq (cons t x))))
+  , tower-add k (suc n)
+      (λ y → f (λ j → y (fsuc j)) *ᴿ gq y)
+      (λ y → g (λ j → y (σᵢ i j)) *ᴿ fq y)
+      (tower-mul k (suc n) _ gq
+        (tower-rename k fsuc (λ a b → fsuc-inj) f (tower-trunc k T)) S')
+      (tower-mul k (suc n) _ fq
+        (tower-rename k (σᵢ i) (σᵢ-inj i) g (tower-trunc k S)) T')
+
+smooth-mul
+  : ∀ {n} {f g : Fun n}
+  → Smooth n f → Smooth n g → Smooth n (λ x → f x *ᴿ g x)
+smooth-mul S T k = tower-mul k _ _ _ (S k) (T k)
+```
