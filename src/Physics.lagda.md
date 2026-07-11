@@ -988,9 +988,10 @@ strength** of (40) is formalized in its physically meaningful form:
 well-defined on gauge classes because the boundary formula for the
 fundamental $1$-class exhibits the two vertices of an edge as
 differing by an exact form, which gauge invariance kills;
-$\Omega^{\ge 3}$, the Bianchi identity in
-degree two, and the differential as a map of smooth sets
-remain); the unit and counit of the
+the differential is now also packaged as an honest
+morphism of smooth sets $\Omega^1 \to \Omega^2$ between the de Rham
+classifiers ($\Omega^{\ge 3}$ and the Bianchi identity in degree
+two remain); the unit and counit of the
 Dold–Kan correspondence (30) — both functors now exist, the Moore
 complex $N$ and its inverse $\Gamma$, with $K(A,n)$ and ordinary
 cohomology defined, and $K(A,n)$ now proven Kan, along with the
