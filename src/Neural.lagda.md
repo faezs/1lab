@@ -32,6 +32,7 @@ open import Neural.Network.Activities
 open import Neural.Network.Sections
 open import Neural.Sheaf.Spontaneous
 
+import Neural.Poset.TreeStructure
 import Neural.Semantics.InputOutput
 import Neural.Topos.Quantifiers
 import Neural.Topos.Predicates
@@ -280,6 +281,20 @@ object *is* the input–output relation.
 _ = Neural.Semantics.InputOutput.Network-H⁰.H⁰≃inputs
 ```
 
+**Theorem 1.2: the tree structure.** The classification of extremal
+points proved edge by edge from the arrow inventory — tangs are
+sinks, stars have a unique exit, an ordinary vertex is minimal iff
+nothing chain-consumes it and maximal iff it is an input feeding no
+fork — and the forest content: away from tine edges every vertex has
+out-degree at most one, so branching happens only where a tip joins
+the forks it feeds, which is the theorem's "trees rooted in the
+maximal points and joined in the minimal points".
+
+```agda
+_ = Neural.Poset.TreeStructure.theorem-1·2
+_ = Neural.Poset.TreeStructure.chain-out-unique
+```
+
 **Spontaneous activity** (§1.5's remark, made concrete): a sheaf on
 the diamond network whose tang value admits no equivalence with the
 joint input state — the topos contains dynamics that are not
@@ -454,8 +469,9 @@ _ = Neural.Stack.ContractedProduct.pull-push
 Phase 1 leaves: the universal property of the explicit
 sheafification and its agreement with the HIT `Sheafify`; Alexandrov
 duality for arbitrary posets (Proposition 1.2, generalized); the
-tree-structure theorem 1.2; and the discrete backpropagation flow
-(Theorem 1.1, reformulated). The
+global forest assembly of Theorem 1.2 (the edge-level content is
+done); and the discrete backpropagation flow (Theorem 1.1,
+reformulated). The
 threshold description of decidable chain sieves is stated in prose
 only. Phase 3 remainder: the groupoid extension of Lemma 2.2 (tier
 2 of the risk register — reduction of component-sum groupoids to
