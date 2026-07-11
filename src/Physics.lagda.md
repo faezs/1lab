@@ -83,9 +83,12 @@ import Algebra.ChainComplex.DoldKan.Fundamental
 import Algebra.ChainComplex.DoldKan.Normalization
 import Algebra.ChainComplex.DoldKan.Boundary
 import Algebra.ChainComplex.DoldKan.Counit
+import Algebra.ChainComplex.DoldKan.Functorial
 import Cat.Instances.SimplicialSets.ActionGroupoid
 import Cat.Instances.SuperSmoothSets
 import Cat.Instances.FormalSmoothSets.DeRham
+import Cat.Instances.FormalSmoothSets.Deligne
+import Cat.Instances.FormalSmoothSets.GaugeGroupoid
 import Cat.Instances.Presheaf.Germs
 import Cat.Instances.SimplicialPresheaves
 import Cat.Site.Instances.Trivial
@@ -845,6 +848,7 @@ _ = Algebra.ChainComplex.DoldKan.Fundamental.dk-counit-level
 _ = Algebra.ChainComplex.DoldKan.Normalization.normalized-degenerate-vanish
 _ = Algebra.ChainComplex.DoldKan.Boundary.∂-fundamental
 _ = Algebra.ChainComplex.DoldKan.Counit.dk-counit
+_ = Algebra.ChainComplex.DoldKan.Functorial.Γ-functor
 _ = Cat.Site.Sheafification.Lex.Sheafification-pres-⊤
 _ = Cat.Site.Sheafification.Locality.locally-equal→inc-path
 _ = Cat.Site.Sheafification.Locality.sheaf-detects
@@ -969,9 +973,16 @@ description of spinor fields (21) and super-thickenings combining
 the fermionic and infinitesimal sites; de Rham forms beyond degree two (Kähler 2-forms, the exterior
 derivative with $d \circ d = 0$, gauge invariance of the field
 strength, and electromagnetism in Landau gauge now exist — see
-`Physics.Maxwell`{.Agda}; $\Omega^{\ge 3}$, the Bianchi identity in
-degree two, the differential as a map of smooth sets, and
-Deligne/connection refinements ((39), (40)) remain); the unit and counit of the
+`Physics.Maxwell`{.Agda}; and the **Deligne complex** $[\bZ \to
+\scO \to \Omega^1]$ now exists as a presheaf of chain complexes on
+the thickened site, with $\mathbf{B}U(1)_\mathrm{conn}$ — the
+smooth groupoid of gauge fields of (39) — obtained by applying the
+now-functorial $\Gamma$ probe-wise, Kan probe-wise by Moore's
+theorem; $\Omega^{\ge 3}$, the Bianchi identity in
+degree two, the differential as a map of smooth sets, and the
+*higher* Deligne stages $\mathbf{B}^{\ge 2}U(1)_\mathrm{conn}$
+(needing the functoriality $\Omega^2\text{-map}$ of the second
+exterior power) remain); the unit and counit of the
 Dold–Kan correspondence (30) — both functors now exist, the Moore
 complex $N$ and its inverse $\Gamma$, with $K(A,n)$ and ordinary
 cohomology defined, and $K(A,n)$ now proven Kan, along with the
