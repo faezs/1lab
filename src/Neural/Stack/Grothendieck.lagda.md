@@ -58,29 +58,31 @@ open Functor
 ```
 -->
 
+The reindexing dictionary below is exported: every later stack
+module speaks it.
+
 ```agda
-private
-  Fib : B.Ob → Precategory o' ℓ'
-  Fib U = F.₀ U .fst
+Fib : B.Ob → Precategory o' ℓ'
+Fib U = F.₀ U .fst
 
-  Fib-set : ∀ U → is-set (Fib U .Ob)
-  Fib-set U = F.₀ U .snd
+Fib-set : ∀ U → is-set (Fib U .Ob)
+Fib-set U = F.₀ U .snd
 
-  _·₀_ : ∀ {U V} (α : B.Hom U V) → Fib V .Ob → Fib U .Ob
-  α ·₀ x = F.₁ α .F₀ x
+_·₀_ : ∀ {U V} (α : B.Hom U V) → Fib V .Ob → Fib U .Ob
+α ·₀ x = F.₁ α .F₀ x
 
-  _·₁_
-    : ∀ {U V} (α : B.Hom U V) {x y : Fib V .Ob}
-    → Fib V .Hom x y → Fib U .Hom (α ·₀ x) (α ·₀ y)
-  α ·₁ h = F.₁ α .F₁ h
+_·₁_
+  : ∀ {U V} (α : B.Hom U V) {x y : Fib V .Ob}
+  → Fib V .Hom x y → Fib U .Hom (α ·₀ x) (α ·₀ y)
+α ·₁ h = F.₁ α .F₁ h
 
-  ·₀-id : ∀ {U} (x : Fib U .Ob) → B.id ·₀ x ≡ x
-  ·₀-id x = ap (λ K → K .F₀ x) F.F-id
+·₀-id : ∀ {U} (x : Fib U .Ob) → B.id ·₀ x ≡ x
+·₀-id x = ap (λ K → K .F₀ x) F.F-id
 
-  ·₀-∘
-    : ∀ {U V W} (f : B.Hom V W) (g : B.Hom U V) (x : Fib W .Ob)
-    → (f B.∘ g) ·₀ x ≡ g ·₀ (f ·₀ x)
-  ·₀-∘ f g x = ap (λ K → K .F₀ x) (F.F-∘ g f)
+·₀-∘
+  : ∀ {U V W} (f : B.Hom V W) (g : B.Hom U V) (x : Fib W .Ob)
+  → (f B.∘ g) ·₀ x ≡ g ·₀ (f ·₀ x)
+·₀-∘ f g x = ap (λ K → K .F₀ x) (F.F-∘ g f)
 ```
 
 ## The transport toolkit
