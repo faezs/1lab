@@ -752,3 +752,109 @@ make it a normalized chain map.
       ∙ w-miss j (δ (fsuc i) ∘Δ ν) i
           (λ x e → skip-skips (fsuc i) (ν .Δ-map.map x) e)
 ```
+
+Evaluating the prescription at the fundamental class returns the
+chosen element: the operator's correction is degenerate, so only
+the generating simplex contributes, and on it the classification is
+forced into its identity case.
+
+```agda
+    private
+      module Gkm (n : Nat) = Abelian-group-on (Gkk .F₀ n .snd)
+
+      ginv-distr : (x y : ⌞ Gkk .F₀ kk ⌟)
+                 → Gkm._⁻¹ kk (Gkm._*_ kk x y)
+                 ≡ Gkm._*_ kk (Gkm._⁻¹ kk x) (Gkm._⁻¹ kk y)
+      ginv-distr x y = sym unique
+        where
+        cancel : Gkm._*_ kk (Gkm._*_ kk x y)
+                   (Gkm._*_ kk (Gkm._⁻¹ kk x) (Gkm._⁻¹ kk y)) ≡ Gkm.1g kk
+        cancel =
+            sym (Gkm.associative kk
+              {x = x} {y = y}
+              {z = Gkm._*_ kk (Gkm._⁻¹ kk x) (Gkm._⁻¹ kk y)})
+          ∙ ap (Gkm._*_ kk x)
+              ( Gkm.associative kk
+                  {x = y} {y = Gkm._⁻¹ kk x} {z = Gkm._⁻¹ kk y}
+              ∙ ap (λ z → Gkm._*_ kk z (Gkm._⁻¹ kk y))
+                  (Gkm.commutes kk {x = y} {y = Gkm._⁻¹ kk x})
+              ∙ sym (Gkm.associative kk
+                  {x = Gkm._⁻¹ kk x} {y = y} {z = Gkm._⁻¹ kk y})
+              ∙ ap (Gkm._*_ kk (Gkm._⁻¹ kk x)) (Gkm.inverser kk {x = y})
+              ∙ Gkm.idr kk {x = Gkm._⁻¹ kk x})
+          ∙ Gkm.inverser kk {x = x}
+        unique : Gkm._*_ kk (Gkm._⁻¹ kk x) (Gkm._⁻¹ kk y)
+               ≡ Gkm._⁻¹ kk (Gkm._*_ kk x y)
+        unique =
+            sym (Gkm.idl kk)
+          ∙ ap (λ z → Gkm._*_ kk z (Gkm._*_ kk (Gkm._⁻¹ kk x) (Gkm._⁻¹ kk y)))
+              (sym (Gkm.inversel kk {x = Gkm._*_ kk x y}))
+          ∙ sym (Gkm.associative kk
+              {x = Gkm._⁻¹ kk (Gkm._*_ kk x y)}
+              {y = Gkm._*_ kk x y}
+              {z = Gkm._*_ kk (Gkm._⁻¹ kk x) (Gkm._⁻¹ kk y)})
+          ∙ ap (Gkm._*_ kk (Gkm._⁻¹ kk (Gkm._*_ kk x y))) cancel
+          ∙ Gkm.idr kk
+
+      ginv-inv : (x : ⌞ Gkk .F₀ kk ⌟)
+               → Gkm._⁻¹ kk (Gkm._⁻¹ kk x) ≡ x
+      ginv-inv x =
+          sym (Gkm.idr kk)
+        ∙ ap (Gkm._*_ kk (Gkm._⁻¹ kk (Gkm._⁻¹ kk x)))
+            (sym (Gkm.inversel kk {x = x}))
+        ∙ Gkm.associative kk
+            {x = Gkm._⁻¹ kk (Gkm._⁻¹ kk x)} {y = Gkm._⁻¹ kk x} {z = x}
+        ∙ ap (λ z → Gkm._*_ kk z x) (Gkm.inversel kk {x = Gkm._⁻¹ kk x})
+        ∙ Gkm.idl kk
+
+    w-id : w kk (Δ .Precategory.id) ≡ c
+    w-id with classify (Δ .Precategory.id {kk})
+    ... | cls-miss i' m = absurd (m (fsuc i') refl)
+    ... | cls-coll t coll = absurd (Nat.¬sucx≤x (t .lower)
+      (subst (λ z → suc (t .lower) Nat.≤ z) (sym e') Nat.≤-refl))
+      where
+      e' : t .lower ≡ suc (t .lower)
+      e' = sym (weaken-lower t) ∙ ap Fin.lower coll
+    ... | cls-id jk lid =
+        ap (λ e' → subst (λ n → ⌞ C .ob n ⌟) (sym e') c)
+          (Nat.Nat-is-set kk kk jk refl)
+      ∙ transport-refl c
+    ... | cls-δ⁰ kj lsuc = absurd (Nat.¬sucx≤x kk
+      (subst (λ z → suc kk Nat.≤ z) (sym kj) Nat.≤-refl))
+
+    ev-comp
+      : ψ kk .∫Hom.fst
+          (Tsub Gkk kk .∫Hom.fst (genΔ kk (Δ .Precategory.id)) .fst)
+      ≡ c
+    ev-comp =
+        ap (ψ kk .∫Hom.fst) traw-path
+      ∙ is-group-hom.pres-⋆ (ψ kk .∫Hom.snd) (Gkm._⁻¹ kk D∆) e₀
+      ∙ ap₂ (Cc._*_ kk)
+          ( is-group-hom.pres-inv (ψ kk .∫Hom.snd) {x = D∆}
+          ∙ ap (Cc._⁻¹ kk) (ψ-deg k' k' D∆ (Tsub-diff Gkk k' e₀))
+          ∙ (sym (Cc.idl kk) ∙ Cc.inverser kk))
+          (ψ-gen kk (Δ .Precategory.id))
+      ∙ Cc.idl kk
+      ∙ w-id
+      where
+      e₀ : ⌞ Gkk .F₀ kk ⌟
+      e₀ = genΔ kk (Δ .Precategory.id)
+
+      Traw : ⌞ Gkk .F₀ kk ⌟
+      Traw = Tsub Gkk kk .∫Hom.fst e₀ .fst
+
+      D∆ : ⌞ Gkk .F₀ kk ⌟
+      D∆ = Gkm._*_ kk e₀ (Gkm._⁻¹ kk Traw)
+
+      traw-path : Traw ≡ Gkm._*_ kk (Gkm._⁻¹ kk D∆) e₀
+      traw-path = sym
+        ( ap (λ z → Gkm._*_ kk z e₀) (ginv-distr e₀ (Gkm._⁻¹ kk Traw))
+        ∙ ap (λ z → Gkm._*_ kk (Gkm._*_ kk (Gkm._⁻¹ kk e₀) z) e₀)
+            (ginv-inv Traw)
+        ∙ ap (λ z → Gkm._*_ kk z e₀)
+            (Gkm.commutes kk {x = Gkm._⁻¹ kk e₀} {y = Traw})
+        ∙ sym (Gkm.associative kk
+            {x = Traw} {y = Gkm._⁻¹ kk e₀} {z = e₀})
+        ∙ ap (Gkm._*_ kk Traw) (Gkm.inversel kk {x = e₀})
+        ∙ Gkm.idr kk {x = Traw})
+```
