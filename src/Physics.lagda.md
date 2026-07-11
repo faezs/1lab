@@ -978,11 +978,19 @@ strength, and electromagnetism in Landau gauge now exist — see
 the thickened site, with $\mathbf{B}U(1)_\mathrm{conn}$ — the
 smooth groupoid of gauge fields of (39) — obtained by applying the
 now-functorial $\Gamma$ probe-wise, Kan probe-wise by Moore's
-theorem; $\Omega^{\ge 3}$, the Bianchi identity in
-degree two, the differential as a map of smooth sets, and the
-*higher* Deligne stages $\mathbf{B}^{\ge 2}U(1)_\mathrm{conn}$
-(needing the functoriality $\Omega^2\text{-map}$ of the second
-exterior power) remain); the unit and counit of the
+theorem; the second exterior power is now functorial
+($\Omega^2$-map, with naturality of the wedge and of the exterior
+derivative), so the complex extends a stage to $[\bZ \to \scO \to
+\Omega^1 \to \Omega^2]$ and $\mathbf{B}^2U(1)_\mathrm{conn}$ — the
+$2$-groupoid of $B$-fields — exists as well; and the **field
+strength** of (40) is formalized in its physically meaningful form:
+`curvature`{.Agda} maps $\pi_0$ of the gauge groupoid to $2$-forms,
+well-defined on gauge classes because the boundary formula for the
+fundamental $1$-class exhibits the two vertices of an edge as
+differing by an exact form, which gauge invariance kills;
+$\Omega^{\ge 3}$, the Bianchi identity in
+degree two, and the differential as a map of smooth sets
+remain); the unit and counit of the
 Dold–Kan correspondence (30) — both functors now exist, the Moore
 complex $N$ and its inverse $\Gamma$, with $K(A,n)$ and ordinary
 cohomology defined, and $K(A,n)$ now proven Kan, along with the
