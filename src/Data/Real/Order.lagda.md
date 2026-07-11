@@ -355,3 +355,38 @@ max-min-absorb x y = ≤ᴿ-antisym p (maxᴿ-≤l x (minᴿ x y))
   p : maxᴿ x (minᴿ x y) ≤ᴿ x
   p = maxᴿ-universal {x = x} {y = minᴿ x y} {z = x} (≤ᴿ-refl {x = x}) (minᴿ-≥l x y)
 ```
+
+## The Archimedean squeeze
+
+A real bounded in absolute value by every positive rational is
+zero. This is the principle that extracts *equalities* from the
+bound data carried by [[Hadamard towers|hadamard-tower]]: the
+locatedness and roundedness of the cuts do all the work.
+
+```agda
+squeeze
+  : (x : ℝ)
+  → (∀ (ε : Ratio) → 0 < ε → (x ≤ᴿ ratℝ ε) × (ratℝ (-ℚ ε) ≤ᴿ x))
+  → x ≡ ratℝ 0
+squeeze x bound = ≤ᴿ-antisym below above
+  where
+  below : x ≤ᴿ ratℝ 0
+  below q lq with holds? (q < 0)
+  ... | yes p = p
+  ... | no ¬p = ∥-∥-rec ((ratℝ 0 .lower q) .is-tr)
+    (λ (r , q<r , lr) → absurd
+      (<-irrefl refl
+        (bound r (≤-<-trans (¬<→≥ ¬p) q<r) .fst r lr)))
+    (cut.lower-round x q lq)
+
+  above : ratℝ 0 ≤ᴿ x
+  above q lq = ∥-∥-rec ((x .lower q) .is-tr)
+    (λ (m , q<m , m<0) →
+      bound (-ℚ m) (neg-flip m<0) .snd q
+        (subst (q <_) (sym (negℚ-invol m)) q<m))
+    (cut.lower-round (ratℝ 0) q lq)
+    where
+    neg-flip : ∀ {m} → m < 0 → 0 < -ℚ m
+    neg-flip {m} m<0 = subst (0 <_) (+ℚ-idl (-ℚ m))
+      (<→positive-diff m<0)
+```
