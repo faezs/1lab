@@ -281,3 +281,33 @@ module _ (k' : Nat) where
         ap (λ w → Tsub Gk j .∫Hom.fst w .fst) (sym gen-push)
       ∙ sym (nat-raw (genΔ k' β))
 ```
+
+The corestriction is natural in the simplicial abelian group, and
+sends the generating simplex to the fundamental class.
+
+```agda
+Tsub-natural
+  : {G G' : Functor (Δ ^op) (Ab lzero)} (nt : G => G')
+  → (j : Nat) (v : ⌞ G .F₀ j ⌟)
+  → nt .η j .∫Hom.fst (Tsub G j .∫Hom.fst v .fst)
+  ≡ Tsub G' j .∫Hom.fst (nt .η j .∫Hom.fst v) .fst
+Tsub-natural nt zero v = refl
+Tsub-natural nt (suc zero) v = T₁-natural nt v
+Tsub-natural {G} {G'} nt (suc (suc m₀)) v =
+    ap (nt .η (suc (suc m₀)) .∫Hom.fst)
+      (T-desc-agree G (suc (suc m₀)) 1 refl (Nat.s≤s Nat.0≤x) v)
+  ∙ normalize-desc-natural nt (suc (suc m₀)) 1 refl (Nat.s≤s Nat.0≤x) v
+  ∙ sym (T-desc-agree G' (suc (suc m₀)) 1 refl (Nat.s≤s Nat.0≤x)
+      (nt .η (suc (suc m₀)) .∫Hom.fst v))
+
+Tsub-id
+  : (k : Nat)
+  → Tsub ℤ⟨ Δ[ k ] ⟩ k .∫Hom.fst (genΔ k (Δ .Precategory.id))
+  ≡ fundamental k
+Tsub-id zero = Σ-prop-path (MC.norm-is-prop ℤ⟨ Δ[ 0 ] ⟩ 0) refl
+Tsub-id (suc zero) = Σ-prop-path (MC.norm-is-prop ℤ⟨ Δ[ 1 ] ⟩ 1) refl
+Tsub-id (suc (suc m₀)) =
+  Σ-prop-path (MC.norm-is-prop ℤ⟨ Δ[ suc (suc m₀) ] ⟩ (suc (suc m₀)))
+    (T-desc-agree ℤ⟨ Δ[ suc (suc m₀) ] ⟩ (suc (suc m₀)) 1 refl
+      (Nat.s≤s Nat.0≤x) (genΔ (suc (suc m₀)) (Δ .Precategory.id)))
+```
