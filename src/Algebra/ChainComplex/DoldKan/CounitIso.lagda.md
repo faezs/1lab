@@ -9,9 +9,12 @@ open import Cat.Displayed.Total
 open import Cat.Prelude
 
 open import Algebra.Group.Cat.Base
+open import Algebra.Group.Ab.Free
 open import Algebra.Group.Ab.Hom
 open import Algebra.Group.Ab
 open import Algebra.Group
+
+open import Cat.Functor.Adjoint
 
 open import Algebra.ChainComplex.DoldKan.Normalization
 open import Algebra.ChainComplex.DoldKan.Fundamental
@@ -32,6 +35,7 @@ open Chain-complex
 open Chain-map
 open Functor
 open _=>_
+open _⊣_
 ```
 -->
 
@@ -119,4 +123,97 @@ Moore subgroup itself — the corestriction is the identity.
         go (suc l) p ge' bd =
             fin l ⦃ Nat.≤-peel (subst (λ z → suc z Nat.≤ suc (suc (suc m₀))) (sym p) bd) ⦄
           , sym p
+```
+
+## Generators under the operator
+
+Over the linearised standard simplices the classification bites: a
+generator with an adjacent collision is degenerate, so the operator
+kills it, and a generator missing a positive value is a pushforward
+along the corresponding coface, with which the operator commutes.
+
+<!--
+```agda
+private
+  adj : Free-abelian-functor {lzero} ⊣ Ab↪Sets
+  adj = Free-abelian⊣Forget
+
+  gen : {T : Set lzero} → ⌞ T ⌟ → ⌞ Free-abelian-functor .F₀ T ⌟
+  gen {T} = adj .unit .η T
+
+  gen-natural
+    : (T T' : Set lzero) (f : ⌞ T ⌟ → ⌞ T' ⌟) (x : ⌞ T ⌟)
+    → Free-abelian-functor .F₁ {T} {T'} f .fst (gen {T} x)
+    ≡ gen {T'} (f x)
+  gen-natural T T' f x = sym (happly (adj .unit .is-natural T T' f) x)
+
+  free-ext
+    : (T : Set lzero) (B : Abelian-group lzero)
+      {f g : Ab lzero .Precategory.Hom (Free-abelian-functor .F₀ T) B}
+    → (∀ x → f .∫Hom.fst (gen {T} x) ≡ g .∫Hom.fst (gen {T} x))
+    → f ≡ g
+  free-ext T B p = Equiv.injective
+    (_ , L-adjunct-is-equiv adj {a = T} {b = B}) (funext p)
+
+  T₁-natural
+    : {G G' : Functor (Δ ^op) (Ab lzero)} (nt : G => G')
+    → (x : ⌞ G .F₀ 1 ⌟)
+    → nt .η 1 .∫Hom.fst (T₁ G .∫Hom.fst x)
+    ≡ T₁ G' .∫Hom.fst (nt .η 1 .∫Hom.fst x)
+  T₁-natural {G} {G'} nt x =
+      is-group-hom.pres-⋆ (nt .η 1 .∫Hom.snd) x _
+    ∙ ap (G1'._*_ (nt .η 1 .∫Hom.fst x))
+        ( is-group-hom.pres-inv (nt .η 1 .∫Hom.snd)
+        ∙ ap G1'._⁻¹
+            ( happly (ap ∫Hom.fst (nt .is-natural 0 1 (σ fzero)))
+                (G .F₁ (δ (fsuc fzero)) .∫Hom.fst x)
+            ∙ ap (G' .F₁ (σ fzero) .∫Hom.fst)
+                (happly (ap ∫Hom.fst (nt .is-natural 1 0 (δ (fsuc fzero)))) x)))
+    where
+    module G1' = Abelian-group-on (G' .F₀ 1 .snd)
+```
+-->
+
+```agda
+module _ (k : Nat) where
+  private
+    Gk : Functor (Δ ^op) (Ab lzero)
+    Gk = ℤ⟨ Δ[ k ] ⟩
+
+    module Nk (n : Nat) =
+      Abelian-group-on (MC.Moore Gk .ob n .snd)
+
+  open Simplicial-operators Gk
+
+  genΔ : {j : Nat} → Δ-map j k → ⌞ Gk .F₀ j ⌟
+  genΔ {j} α = gen {Δ[ k ] .F₀ j} α
+
+  private
+    module CK {j' : Nat} (α : Δ-map (suc j') k) (t : Fin (suc j'))
+              (coll : α .Δ-map.map (weaken t) ≡ α .Δ-map.map (fsuc t))
+      where
+      γ : Δ-map j' k
+      γ = collision-factor α t coll .fst
+
+      path1 : s t (genΔ γ) ≡ genΔ α
+      path1 =
+          gen-natural (Δ[ k ] .F₀ j') (Δ[ k ] .F₀ (suc j'))
+            (Δ[ k ] .F₁ (σ t)) γ
+        ∙ ap (gen {Δ[ k ] .F₀ (suc j')})
+            (collision-factor α t coll .snd)
+
+      rep : Deg Gk {j'} (t .lower) (genΔ α)
+      rep = subst (Deg Gk {j'} (t .lower)) path1
+        (deg-single Gk (t .lower) (t .Fin.bounded) (genΔ γ))
+
+  collision-kill
+    : {j' : Nat} (α : Δ-map (suc j') k) (t : Fin (suc j'))
+    → (coll : α .Δ-map.map (weaken t) ≡ α .Δ-map.map (fsuc t))
+    → Tsub Gk (suc j') .∫Hom.fst (genΔ α) ≡ Nk.1g (suc j')
+  collision-kill {zero} α t coll =
+    Σ-prop-path (MC.norm-is-prop Gk 1)
+      (T₁-kill Gk (genΔ α) (t .lower) (CK.rep α t coll))
+  collision-kill {suc m₀} α t coll =
+    Σ-prop-path (MC.norm-is-prop Gk (suc (suc m₀)))
+      (T-kill Gk (genΔ α) (t .lower) (CK.rep α t coll))
 ```
