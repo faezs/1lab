@@ -22,6 +22,7 @@ open import Algebra.ChainComplex.DoldKan.Fundamental
 open import Algebra.ChainComplex.DoldKan.Operator
 open import Algebra.ChainComplex.DoldKan.Boundary
 open import Algebra.ChainComplex.DoldKan.Counit
+open import Algebra.ChainComplex.DoldKan.Unit
 open import Algebra.ChainComplex.DoldKan
 open import Algebra.ChainComplex
 
@@ -1547,4 +1548,66 @@ isomorphism.**
   dk-counit-invertible = ChC.make-invertible dk-counit-inverse
     (Chain-map-path λ k → ext λ x → counit-rinv k x)
     (Chain-map-path λ k → ext λ φ p → counit-linv k (φ , p))
+```
+
+## The triangle identity
+
+One triangle of the correspondence: the counit after the Moore
+image of the unit is the identity — because the transposed
+character sends the generating simplex back to the element, and the
+corestriction commutes with everything in sight.
+
+```agda
+module _ (A : Functor (Δ ^op) (Ab lzero)) where
+  private
+    module A' = Functor A
+
+  triangle-ε
+    : (n : Nat) (xp : ⌞ MC.Moore A .ob n ⌟)
+    → dk-counit-level (MC.Moore A) n .∫Hom.fst
+        (moore-map (dk-unit A) .map n .∫Hom.fst xp)
+    ≡ xp
+  triangle-ε n (x , p) = Σ-prop-path (MC.norm-is-prop A n) raw
+    where
+    raw : â A x .η n .∫Hom.fst (fundamental n .fst) ≡ x
+    raw =
+        ap (â A x .η n .∫Hom.fst) (ap fst (sym (Tsub-id n)))
+      ∙ Tsub-natural (â A x) n (genΔ n (Δ .Precategory.id))
+      ∙ ap (λ v → Tsub A n .∫Hom.fst v .fst)
+          ( ev-gen (Δ[ n ] .F₀ n) (A'.₀ n) (χ A x .η n)
+              (Δ .Precategory.id)
+          ∙ happly (ap ∫Hom.fst A'.F-id) x)
+      ∙ ap fst (Tsub-fix A n (x , p))
+
+  triangle-ε-path
+    : ChC._∘_ (dk-counit (MC.Moore A)) (moore-map (dk-unit A))
+    ≡ ChC.id
+  triangle-ε-path = Chain-map-path λ n → ext λ x p →
+    triangle-ε n (x , p)
+
+  Nη-invertible : ChC.is-invertible (moore-map (dk-unit A))
+  Nη-invertible = subst ChC.is-invertible (sym Nη≡εinv) εinv-invertible
+    where
+    εA : Chain-map (MC.Moore (Γ (MC.Moore A))) (MC.Moore A)
+    εA = dk-counit (MC.Moore A)
+
+    εA-inv : ChC.is-invertible εA
+    εA-inv = dk-counit-invertible (MC.Moore A)
+
+    εinv-invertible : ChC.is-invertible (εA-inv .ChC.is-invertible.inv)
+    εinv-invertible = ChC.make-invertible εA
+      (εA-inv .ChC.is-invertible.inverses .ChC.Inverses.invr)
+      (εA-inv .ChC.is-invertible.inverses .ChC.Inverses.invl)
+
+    εinv : Chain-map (MC.Moore A) (MC.Moore (Γ (MC.Moore A)))
+    εinv = εA-inv .ChC.is-invertible.inv
+
+    Nη≡εinv : moore-map (dk-unit A) ≡ εinv
+    Nη≡εinv =
+        sym (ChC.idl (moore-map (dk-unit A)))
+      ∙ ap (λ z → ChC._∘_ z (moore-map (dk-unit A)))
+          (sym (εA-inv .ChC.is-invertible.inverses .ChC.Inverses.invr))
+      ∙ sym (ChC.assoc εinv εA (moore-map (dk-unit A)))
+      ∙ ap (ChC._∘_ εinv) triangle-ε-path
+      ∙ ChC.idr εinv
 ```
