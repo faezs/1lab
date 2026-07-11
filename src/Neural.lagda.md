@@ -28,6 +28,8 @@ open import Neural.Poset.Thin
 open import Neural.Sheaf.StarValue
 open import Neural.Topos.Extension
 open import Neural.Topos.Equivalence
+open import Neural.Network.Activities
+open import Neural.Network.Sections
 ```
 -->
 
@@ -233,6 +235,18 @@ free structure of the site computes everything.
 _ = star-restrict-is-equiv
 _ = Extend.Ext-is-sheaf
 _ = Res-is-equivalence
+```
+
+**The dynamical object, and the unique-section theorem.** The
+presheaf of activities of a general network — transmission along
+handles and single-input edges, projections along tines — and the
+theorem that gives "computation" its topos-theoretic meaning: global
+sections of the dynamical object are exactly tuples of input-layer
+activities.
+
+```agda
+_ = Network-dynamics.X^
+_ = Network-sections.section≃inputs
 ```
 
 ## What is missing
