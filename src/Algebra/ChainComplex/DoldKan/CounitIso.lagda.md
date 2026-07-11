@@ -419,6 +419,60 @@ private
 ```
 -->
 
+<!--
+```agda
+private
+  module AbL (A : Abelian-group lzero) where
+    private module M = Abelian-group-on (A .snd)
+
+    ab-inv-distr
+      : (x y : ⌞ A ⌟) → M._⁻¹ (M._*_ x y) ≡ M._*_ (M._⁻¹ x) (M._⁻¹ y)
+    ab-inv-distr x y = sym unique
+      where
+      cancel : M._*_ (M._*_ x y) (M._*_ (M._⁻¹ x) (M._⁻¹ y)) ≡ M.1g
+      cancel =
+          sym (M.associative
+            {x = x} {y = y} {z = M._*_ (M._⁻¹ x) (M._⁻¹ y)})
+        ∙ ap (M._*_ x)
+            ( M.associative {x = y} {y = M._⁻¹ x} {z = M._⁻¹ y}
+            ∙ ap (λ z → M._*_ z (M._⁻¹ y))
+                (M.commutes {x = y} {y = M._⁻¹ x})
+            ∙ sym (M.associative {x = M._⁻¹ x} {y = y} {z = M._⁻¹ y})
+            ∙ ap (M._*_ (M._⁻¹ x)) (M.inverser {x = y})
+            ∙ M.idr {x = M._⁻¹ x})
+        ∙ M.inverser {x = x}
+      unique : M._*_ (M._⁻¹ x) (M._⁻¹ y) ≡ M._⁻¹ (M._*_ x y)
+      unique =
+          sym (M.idl {x = M._*_ (M._⁻¹ x) (M._⁻¹ y)})
+        ∙ ap (λ z → M._*_ z (M._*_ (M._⁻¹ x) (M._⁻¹ y)))
+            (sym (M.inversel {x = M._*_ x y}))
+        ∙ sym (M.associative
+            {x = M._⁻¹ (M._*_ x y)} {y = M._*_ x y}
+            {z = M._*_ (M._⁻¹ x) (M._⁻¹ y)})
+        ∙ ap (M._*_ (M._⁻¹ (M._*_ x y))) cancel
+        ∙ M.idr {x = M._⁻¹ (M._*_ x y)}
+
+    ab-inv-inv : (x : ⌞ A ⌟) → M._⁻¹ (M._⁻¹ x) ≡ x
+    ab-inv-inv x =
+        sym (M.idr {x = M._⁻¹ (M._⁻¹ x)})
+      ∙ ap (M._*_ (M._⁻¹ (M._⁻¹ x))) (sym (M.inversel {x = x}))
+      ∙ M.associative {x = M._⁻¹ (M._⁻¹ x)} {y = M._⁻¹ x} {z = x}
+      ∙ ap (λ z → M._*_ z x) (M.inversel {x = M._⁻¹ x})
+      ∙ M.idl {x = x}
+
+    ab-decomp
+      : (x t : ⌞ A ⌟)
+      → t ≡ M._*_ (M._⁻¹ (M._*_ x (M._⁻¹ t))) x
+    ab-decomp x t = sym
+      ( ap (λ z → M._*_ z x) (ab-inv-distr x (M._⁻¹ t))
+      ∙ ap (λ z → M._*_ (M._*_ (M._⁻¹ x) z) x) (ab-inv-inv t)
+      ∙ ap (λ z → M._*_ z x) (M.commutes {x = M._⁻¹ x} {y = t})
+      ∙ sym (M.associative {x = t} {y = M._⁻¹ x} {z = x})
+      ∙ ap (M._*_ t) (M.inversel {x = x})
+      ∙ M.idr {x = t})
+```
+-->
+
 ```agda
 module _ (C : Chain-complex lzero) where
   private
@@ -920,4 +974,131 @@ still miss a positive value.
 
       tail-inv : ⌞ Gkk .F₀ k' ⌟
       tail-inv = Gkm._⁻¹ k' tail-t
+```
+
+Evaluating the prescription on the bottom coface generator returns
+the boundary of the chosen element; and through the bottom
+pushforward the whole alternating sum dies, because double-coface
+composites always miss a positive value.
+
+```agda
+  ev-δ⁰
+    : (k₀ : Nat) (c₀ : ⌞ C .ob (suc k₀) ⌟)
+    → Surj.ψ k₀ c₀ k₀ .∫Hom.fst
+        (Tsub ℤ⟨ Δ[ suc k₀ ] ⟩ k₀ .∫Hom.fst
+          (genΔ (suc k₀) (δ fzero)) .fst)
+    ≡ C .∂ᶜ k₀ .∫Hom.fst c₀
+  ev-δ⁰ zero c₀ =
+      Surj.ψ-gen 0 c₀ 0 (δ fzero)
+    ∙ Surj.w-δ⁰ 0 c₀
+  ev-δ⁰ (suc m) c₀ =
+      ap (Surj.ψ (suc m) c₀ (suc m) .∫Hom.fst)
+        (ab-decomp e₀ Traw)
+    ∙ is-group-hom.pres-⋆ (Surj.ψ (suc m) c₀ (suc m) .∫Hom.snd)
+        (Gm._⁻¹ D∆) e₀
+    ∙ ap₂ (Cc._*_ (suc m))
+        ( is-group-hom.pres-inv (Surj.ψ (suc m) c₀ (suc m) .∫Hom.snd)
+            {x = D∆}
+        ∙ ap (Cc._⁻¹ (suc m))
+            (Surj.ψ-deg (suc m) c₀ m m D∆ (Tsub-diff Gm' m e₀))
+        ∙ (sym (Cc.idl (suc m)) ∙ Cc.inverser (suc m)))
+        ( Surj.ψ-gen (suc m) c₀ (suc m) (δ fzero)
+        ∙ Surj.w-δ⁰ (suc m) c₀)
+    ∙ Cc.idl (suc m)
+    where
+    Gm' : Functor (Δ ^op) (Ab lzero)
+    Gm' = ℤ⟨ Δ[ suc (suc m) ] ⟩
+
+    module Gm = Abelian-group-on (Gm' .F₀ (suc m) .snd)
+    open AbL (Gm' .F₀ (suc m)) using (ab-decomp)
+
+    e₀ : ⌞ Gm' .F₀ (suc m) ⌟
+    e₀ = genΔ (suc (suc m)) (δ fzero)
+
+    Traw : ⌞ Gm' .F₀ (suc m) ⌟
+    Traw = Tsub Gm' (suc m) .∫Hom.fst e₀ .fst
+
+    D∆ : ⌞ Gm' .F₀ (suc m) ⌟
+    D∆ = Gm._*_ e₀ (Gm._⁻¹ Traw)
+
+  ψδ₀-Σalt
+    : (j : Nat) (c' : ⌞ C .ob (suc (suc j)) ⌟)
+      (fuel jv : Nat) (eq : jv Nat.+ fuel ≡ suc (suc j))
+    → Surj.ψ (suc j) c' j .∫Hom.fst
+        ((Free-abelian-functor ▸ Δmap-nt (δ fzero)) .η j .∫Hom.fst
+          (Σalt j fuel jv eq))
+    ≡ Cc.1g j
+  ψδ₀-Σalt j c' zero jv eq =
+      ap (Surj.ψ (suc j) c' j .∫Hom.fst)
+        (is-group-hom.pres-id (pushδ₀ .η j .∫Hom.snd))
+    ∙ is-group-hom.pres-id (Surj.ψ (suc j) c' j .∫Hom.snd)
+    where
+    pushδ₀ : ℤ⟨ Δ[ suc j ] ⟩ => ℤ⟨ Δ[ suc (suc j) ] ⟩
+    pushδ₀ = Free-abelian-functor ▸ Δmap-nt (δ fzero)
+  ψδ₀-Σalt j c' (suc fuel) jv eq =
+      ap (Surj.ψ (suc j) c' j .∫Hom.fst)
+        (is-group-hom.pres-⋆ (pushδ₀ .η j .∫Hom.snd) head-t tail-inv)
+    ∙ is-group-hom.pres-⋆ (Surj.ψ (suc j) c' j .∫Hom.snd)
+        (pushδ₀ .η j .∫Hom.fst head-t)
+        (pushδ₀ .η j .∫Hom.fst tail-inv)
+    ∙ ap₂ (Cc._*_ j)
+        head-dies
+        ( ap (Surj.ψ (suc j) c' j .∫Hom.fst)
+            (is-group-hom.pres-inv (pushδ₀ .η j .∫Hom.snd) {x = tail-t})
+        ∙ is-group-hom.pres-inv (Surj.ψ (suc j) c' j .∫Hom.snd)
+            {x = pushδ₀ .η j .∫Hom.fst tail-t}
+        ∙ ap (Cc._⁻¹ j)
+            (ψδ₀-Σalt j c' fuel (suc jv)
+              (sym (Nat.+-sucr jv fuel) ∙ eq))
+        ∙ (sym (Cc.idl j) ∙ Cc.inverser j))
+    ∙ Cc.idl j
+    where
+    pushδ₀ : ℤ⟨ Δ[ suc j ] ⟩ => ℤ⟨ Δ[ suc (suc j) ] ⟩
+    pushδ₀ = Free-abelian-functor ▸ Δmap-nt (δ fzero)
+
+    module Gj = Abelian-group-on (ℤ⟨ Δ[ suc j ] ⟩ .F₀ j .snd)
+
+    bj : jv Nat.< suc (suc j)
+    bj = subst (suc jv Nat.≤_)
+           (sym (Nat.+-sucr jv fuel) ∙ eq)
+           (Nat.s≤s (le-plus jv fuel))
+
+    head-t : ⌞ ℤ⟨ Δ[ suc j ] ⟩ .F₀ j ⌟
+    head-t = push-nt j (fin jv ⦃ bj ⦄) .η j .∫Hom.fst
+      (fundamental j .fst)
+
+    tail-t : ⌞ ℤ⟨ Δ[ suc j ] ⟩ .F₀ j ⌟
+    tail-t = Σalt j fuel (suc jv)
+      (sym (Nat.+-sucr jv fuel) ∙ eq)
+
+    tail-inv : ⌞ ℤ⟨ Δ[ suc j ] ⟩ .F₀ j ⌟
+    tail-inv = Gj._⁻¹ tail-t
+
+    comp-vanish
+      : Ab lzero .Precategory._∘_
+          (Ab lzero .Precategory._∘_ (Surj.ψ (suc j) c' j)
+            (pushδ₀ .η j))
+          (push-nt j (fin jv ⦃ bj ⦄) .η j)
+      ≡ zero-hom'
+    comp-vanish = free-ext (Δ[ j ] .F₀ j) (C .ob j) λ ν →
+        ap (λ v → Surj.ψ (suc j) c' j .∫Hom.fst
+              (pushδ₀ .η j .∫Hom.fst v))
+          (gen-natural (Δ[ j ] .F₀ j) (Δ[ suc j ] .F₀ j)
+            (Δmap-nt (δ (fin jv ⦃ bj ⦄)) .η j) ν)
+      ∙ ap (Surj.ψ (suc j) c' j .∫Hom.fst)
+          (gen-natural (Δ[ suc j ] .F₀ j) (Δ[ suc (suc j) ] .F₀ j)
+            (Δmap-nt (δ fzero) .η j) (δ (fin jv ⦃ bj ⦄) ∘Δ ν))
+      ∙ Surj.ψ-gen (suc j) c' j
+          (δ fzero ∘Δ (δ (fin jv ⦃ bj ⦄) ∘Δ ν))
+      ∙ Surj.w-miss (suc j) c' j
+          (δ fzero ∘Δ (δ (fin jv ⦃ bj ⦄) ∘Δ ν))
+          (fin jv ⦃ bj ⦄)
+          (λ x e → skip-skips (fin jv ⦃ bj ⦄)
+            (ν .Δ-map.map x) (fsuc-inj e))
+
+    head-dies
+      : Surj.ψ (suc j) c' j .∫Hom.fst
+          (pushδ₀ .η j .∫Hom.fst head-t)
+      ≡ Cc.1g j
+    head-dies = ap (λ h → h .∫Hom.fst (fundamental j .fst)) comp-vanish
 ```
