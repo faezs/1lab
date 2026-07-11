@@ -1,6 +1,8 @@
 <!--
 ```agda
 open import Cat.Instances.Functor
+open import Cat.Diagram.Product
+open import Cat.Functor.Hom
 open import Cat.Diagram.Terminal
 open import Cat.Prelude
 
@@ -9,7 +11,9 @@ open import Data.Real.Base
 
 open import Data.Fin using (Fin ; Fin-absurd ; fzero ; fsuc)
 
+import Cat.Instances.Presheaf.Exponentials
 import Cat.Instances.Presheaf.Cohesive
+import Cat.Instances.Presheaf.Limits
 
 open Precategory
 open Terminal
@@ -69,4 +73,36 @@ SmoothSet = PSh lzero CartSp
 
 module SmoothSet-cohesion =
   Cat.Instances.Presheaf.Cohesive CartSp pt-terminal
+```
+
+## Field spaces
+
+Smooth sets are cartesian closed, so the paper's (9)–(10) instantiate
+at once: the space of field histories $\mathrm{Fields} =
+\mathrm{Maps}(X, F)$ is a smooth set whose $U$-plots are, *by
+definition*, the $U$-parameterized families — maps out of the
+product $U \times X$.
+
+<!--
+```agda
+private
+  module PC = Cat.Instances.Presheaf.Exponentials CartSp
+
+open Cat.Instances.Presheaf.Limits lzero CartSp
+open Binary-products (PSh lzero CartSp) PSh-products
+```
+-->
+
+```agda
+Maps : ⌞ SmoothSet ⌟ → ⌞ SmoothSet ⌟ → ⌞ SmoothSet ⌟
+Maps X F = PC.PSh[ X , F ]
+
+Fields : ⌞ SmoothSet ⌟ → ⌞ SmoothSet ⌟ → ⌞ SmoothSet ⌟
+Fields = Maps
+
+Maps-plots
+  : ∀ (X F : ⌞ SmoothSet ⌟) (n : Nat)
+  → ⌞ Maps X F .Functor.F₀ n ⌟
+  ≡ ((よ₀ CartSp n ⊗₀ X) => F)
+Maps-plots X F n = refl
 ```
