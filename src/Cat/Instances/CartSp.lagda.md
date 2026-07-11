@@ -6,6 +6,7 @@ open import Cat.Functor.Hom
 open import Cat.Diagram.Terminal
 open import Cat.Prelude
 
+open import Data.Real.Smooth.Bounds
 open import Data.Real.Smooth hiding (C∞)
 open import Data.Real.Base
 
@@ -30,15 +31,20 @@ The paper's site: objects are the Cartesian spaces $\bR^n$ — so the
 object part is a natural number, recording the dimension — and
 morphisms are the [[smooth maps|smooth-function]] between them,
 carried by honest functions of [[Dedekind reals|dedekind-reals]].
-Smoothness is a property (the truncation of the Hadamard tower
-structure), so the category laws are exactly those of function
+Smoothness here is [[*bounded* smoothness|bounded-smooth-function]]
+— Hadamard towers of every depth together with rational box bounds
+at every level — because that, and not the bare towers, is what
+supports [[derivative extraction|real-derivative]], and hence the
+differential geometry the site must carry. It is still merely a
+property: the whole structure sits under a propositional
+truncation, so the category laws are exactly those of function
 composition.
 
 ```agda
 C∞ : Nat → Nat → Type
 C∞ n m =
   Σ[ f ∈ ((Fin n → ℝ) → (Fin m → ℝ)) ]
-    ∥ ((j : Fin m) → Smooth n (λ x → f x j)) ∥
+    ∥ ((j : Fin m) → Smooth⁺ n (λ x → f x j)) ∥
 
 CartSp : Precategory lzero lzero
 CartSp .Ob = Nat
@@ -46,10 +52,10 @@ CartSp .Hom = C∞
 CartSp .Hom-set n m = Σ-is-hlevel 2
   (Π-is-hlevel 2 λ _ → Π-is-hlevel 2 λ _ → ℝ-is-set)
   (λ _ → is-prop→is-set squash)
-CartSp .id = (λ x → x) , inc (λ j → smooth-proj j)
+CartSp .id = (λ x → x) , inc (λ j → smooth⁺-proj j)
 CartSp ._∘_ (f , sf) (g , sg) =
     (λ x → f (g x))
-  , ∥-∥-map₂ (λ Sf Sg j → smooth-comp Sg (Sf j)) sf sg
+  , ∥-∥-map₂ (λ Sf Sg j → smooth⁺-comp Sg (Sf j)) sf sg
 CartSp .idr f = Σ-prop-path (λ _ → squash) refl
 CartSp .idl f = Σ-prop-path (λ _ → squash) refl
 CartSp .assoc f g h = Σ-prop-path (λ _ → squash) refl
