@@ -230,53 +230,52 @@ under the fresh variable.
 
 <!--
 ```agda
-private
-  lift-ρ : ∀ {n m} → (Fin n → Fin m) → Fin (suc n) → Fin (suc m)
-  lift-ρ ρ j with fin-view j
-  ... | zero   = fzero
-  ... | suc j' = fsuc (ρ j')
+lift-ρ : ∀ {n m} → (Fin n → Fin m) → Fin (suc n) → Fin (suc m)
+lift-ρ ρ j with fin-view j
+... | zero   = fzero
+... | suc j' = fsuc (ρ j')
 
-  lift-ρ-inj
-    : ∀ {n m} (ρ : Fin n → Fin m)
-    → (∀ a b → ρ a ≡ ρ b → a ≡ b)
-    → ∀ a b → lift-ρ ρ a ≡ lift-ρ ρ b → a ≡ b
-  lift-ρ-inj ρ inj a b e with fin-view a | fin-view b
-  ... | zero   | zero   = refl
-  ... | zero   | suc b' = absurd (fzero≠fsuc e)
-  ... | suc a' | zero   = absurd (fsuc≠fzero e)
-  ... | suc a' | suc b' = ap fsuc (inj a' b' (fsuc-inj e))
+lift-ρ-inj
+  : ∀ {n m} (ρ : Fin n → Fin m)
+  → (∀ a b → ρ a ≡ ρ b → a ≡ b)
+  → ∀ a b → lift-ρ ρ a ≡ lift-ρ ρ b → a ≡ b
+lift-ρ-inj ρ inj a b e with fin-view a | fin-view b
+... | zero   | zero   = refl
+... | zero   | suc b' = absurd (fzero≠fsuc e)
+... | suc a' | zero   = absurd (fsuc≠fzero e)
+... | suc a' | suc b' = ap fsuc (inj a' b' (fsuc-inj e))
 
-  cons-rename
-    : ∀ {n m} (ρ : Fin n → Fin m) (t : ℝ) (y : Fin m → ℝ)
-    → (λ j → cons t y (lift-ρ ρ j)) ≡ cons t (λ j → y (ρ j))
-  cons-rename ρ t y = funext λ j → go j where
-    go : ∀ j → cons t y (lift-ρ ρ j) ≡ cons t (λ l → y (ρ l)) j
-    go j with fin-view j
-    ... | zero   = refl
-    ... | suc j' = refl
+cons-rename
+  : ∀ {n m} (ρ : Fin n → Fin m) (t : ℝ) (y : Fin m → ℝ)
+  → (λ j → cons t y (lift-ρ ρ j)) ≡ cons t (λ j → y (ρ j))
+cons-rename ρ t y = funext λ j → go j where
+  go : ∀ j → cons t y (lift-ρ ρ j) ≡ cons t (λ l → y (ρ l)) j
+  go j with fin-view j
+  ... | zero   = refl
+  ... | suc j' = refl
 
-  set-miss
-    : ∀ {n m} (ρ : Fin n → Fin m) (d : Fin m)
-    → (∀ j → ¬ (ρ j ≡ d))
-    → (y : Fin m → ℝ) (t : ℝ)
-    → (λ j → set y d t (ρ j)) ≡ (λ j → y (ρ j))
-  set-miss ρ d miss y t = funext λ j →
-    set-other y d (ρ j) t (λ e → miss j (sym e))
+set-miss
+  : ∀ {n m} (ρ : Fin n → Fin m) (d : Fin m)
+  → (∀ j → ¬ (ρ j ≡ d))
+  → (y : Fin m → ℝ) (t : ℝ)
+  → (λ j → set y d t (ρ j)) ≡ (λ j → y (ρ j))
+set-miss ρ d miss y t = funext λ j →
+  set-other y d (ρ j) t (λ e → miss j (sym e))
 
-  set-hit
-    : ∀ {n m} (ρ : Fin n → Fin m)
-    → (∀ a b → ρ a ≡ ρ b → a ≡ b)
-    → (d : Fin m) (j₀ : Fin n) → ρ j₀ ≡ d
-    → (y : Fin m → ℝ) (t : ℝ)
-    → (λ j → set y d t (ρ j)) ≡ set (λ j → y (ρ j)) j₀ t
-  set-hit ρ inj d j₀ hit y t = funext λ j → go j where
-    go : ∀ j → set y d t (ρ j) ≡ set (λ l → y (ρ l)) j₀ t j
-    go j with Discrete-Fin .decide j₀ j
-    ... | yes p =
-        ap (set y d t) (ap ρ (sym p) ∙ hit)
-      ∙ set-same y d t
-    ... | no ¬p = set-other y d (ρ j) t
-        (λ e → ¬p (inj j₀ j (hit ∙ e)))
+set-hit
+  : ∀ {n m} (ρ : Fin n → Fin m)
+  → (∀ a b → ρ a ≡ ρ b → a ≡ b)
+  → (d : Fin m) (j₀ : Fin n) → ρ j₀ ≡ d
+  → (y : Fin m → ℝ) (t : ℝ)
+  → (λ j → set y d t (ρ j)) ≡ set (λ j → y (ρ j)) j₀ t
+set-hit ρ inj d j₀ hit y t = funext λ j → go j where
+  go : ∀ j → set y d t (ρ j) ≡ set (λ l → y (ρ l)) j₀ t j
+  go j with Discrete-Fin .decide j₀ j
+  ... | yes p =
+      ap (set y d t) (ap ρ (sym p) ∙ hit)
+    ∙ set-same y d t
+  ... | no ¬p = set-other y d (ρ j) t
+      (λ e → ¬p (inj j₀ j (hit ∙ e)))
 ```
 -->
 
@@ -350,27 +349,27 @@ private
     ∙ ap (_*ᴿ b) (*ᴿ-comm a s)
     ∙ *ᴿ-assoc s a b
 
-  σᵢ : ∀ {n} → Fin n → Fin n → Fin (suc n)
-  σᵢ i j with Discrete-Fin .decide i j
-  ... | yes _ = fzero
-  ... | no  _ = fsuc j
+σᵢ : ∀ {n} → Fin n → Fin n → Fin (suc n)
+σᵢ i j with Discrete-Fin .decide i j
+... | yes _ = fzero
+... | no  _ = fsuc j
 
-  σᵢ-inj
-    : ∀ {n} (i : Fin n) (a b : Fin n) → σᵢ i a ≡ σᵢ i b → a ≡ b
-  σᵢ-inj i a b e with Discrete-Fin .decide i a | Discrete-Fin .decide i b
-  ... | yes p | yes q = sym p ∙ q
-  ... | yes p | no  _ = absurd (fzero≠fsuc e)
-  ... | no  _ | yes q = absurd (fsuc≠fzero e)
-  ... | no  _ | no  _ = fsuc-inj e
+σᵢ-inj
+  : ∀ {n} (i : Fin n) (a b : Fin n) → σᵢ i a ≡ σᵢ i b → a ≡ b
+σᵢ-inj i a b e with Discrete-Fin .decide i a | Discrete-Fin .decide i b
+... | yes p | yes q = sym p ∙ q
+... | yes p | no  _ = absurd (fzero≠fsuc e)
+... | no  _ | yes q = absurd (fsuc≠fzero e)
+... | no  _ | no  _ = fsuc-inj e
 
-  σᵢ-set
-    : ∀ {n} (i : Fin n) (x : Fin n → ℝ) (t : ℝ)
-    → (λ j → cons t x (σᵢ i j)) ≡ set x i t
-  σᵢ-set i x t = funext λ j → go j where
-    go : ∀ j → cons t x (σᵢ i j) ≡ set x i t j
-    go j with Discrete-Fin .decide i j
-    ... | yes _ = refl
-    ... | no  _ = refl
+σᵢ-set
+  : ∀ {n} (i : Fin n) (x : Fin n → ℝ) (t : ℝ)
+  → (λ j → cons t x (σᵢ i j)) ≡ set x i t
+σᵢ-set i x t = funext λ j → go j where
+  go : ∀ j → cons t x (σᵢ i j) ≡ set x i t j
+  go j with Discrete-Fin .decide i j
+  ... | yes _ = refl
+  ... | no  _ = refl
 ```
 -->
 
@@ -432,53 +431,52 @@ frame.
 
 <!--
 ```agda
-private
-  le-plus : ∀ x y → x Nat.≤ x Nat.+ y
-  le-plus zero    y = Nat.0≤x
-  le-plus (suc x) y = Nat.s≤s (le-plus x y)
+le-plus : ∀ x y → x Nat.≤ x Nat.+ y
+le-plus zero    y = Nat.0≤x
+le-plus (suc x) y = Nat.s≤s (le-plus x y)
 
-  switch : ∀ {m} → (Fin m → ℝ) → (Fin m → ℝ) → Nat → Fin m → ℝ
-  switch u v c j with holds? (suc (j .lower) Nat.≤ c)
-  ... | yes _ = v j
-  ... | no  _ = u j
+switch : ∀ {m} → (Fin m → ℝ) → (Fin m → ℝ) → Nat → Fin m → ℝ
+switch u v c j with holds? (suc (j .lower) Nat.≤ c)
+... | yes _ = v j
+... | no  _ = u j
 
-  switch-hi
-    : ∀ {m} (u v : Fin m → ℝ) (c : Nat) (j : Fin m)
-    → ¬ (suc (j .lower) Nat.≤ c) → switch u v c j ≡ u j
-  switch-hi u v c j hi with holds? (suc (j .lower) Nat.≤ c)
-  ... | yes p = absurd (hi p)
-  ... | no  _ = refl
+switch-hi
+  : ∀ {m} (u v : Fin m → ℝ) (c : Nat) (j : Fin m)
+  → ¬ (suc (j .lower) Nat.≤ c) → switch u v c j ≡ u j
+switch-hi u v c j hi with holds? (suc (j .lower) Nat.≤ c)
+... | yes p = absurd (hi p)
+... | no  _ = refl
 
-  switch-lo
-    : ∀ {m} (u v : Fin m → ℝ) (c : Nat) (j : Fin m)
-    → suc (j .lower) Nat.≤ c → switch u v c j ≡ v j
-  switch-lo u v c j lo with holds? (suc (j .lower) Nat.≤ c)
-  ... | yes _ = refl
-  ... | no ¬p = absurd (¬p lo)
+switch-lo
+  : ∀ {m} (u v : Fin m → ℝ) (c : Nat) (j : Fin m)
+  → suc (j .lower) Nat.≤ c → switch u v c j ≡ v j
+switch-lo u v c j lo with holds? (suc (j .lower) Nat.≤ c)
+... | yes _ = refl
+... | no ¬p = absurd (¬p lo)
 
-  switch-step
-    : ∀ {m} (u v : Fin m → ℝ) (c : Nat) (cf : Fin m)
-    → cf .lower ≡ c
-    → set (switch u v c) cf (v cf) ≡ switch u v (suc c)
-  switch-step u v c cf ce = funext λ j → go j where
-    go : ∀ j → set (switch u v c) cf (v cf) j ≡ switch u v (suc c) j
-    go j with Discrete-Fin .decide cf j
-    ... | yes p =
-        ap v p
-      ∙ sym (switch-lo u v (suc c) j
-          (Nat.s≤s (subst (λ z → j .lower Nat.≤ z) ce
-            (subst (λ z → j .lower Nat.≤ z .lower) (sym p) Nat.≤-refl))))
-    ... | no ¬p with holds? (suc (j .lower) Nat.≤ c)
-    ...   | yes lo = sym (switch-lo u v (suc c) j (Nat.≤-sucr lo))
-    ...   | no hi = sym (switch-hi u v (suc c) j no-suc)
-      where
-      no-suc : ¬ (suc (j .lower) Nat.≤ suc c)
-      no-suc le with Nat.≤-split (j .lower) c
-      ... | inl lt = hi lt
-      ... | inr (inl gt) =
-        Nat.¬sucx≤x _ (Nat.≤-trans gt (Nat.≤-peel le))
-      ... | inr (inr e) =
-        ¬p (fin-ap {n = λ _ → _} (ce ∙ sym e))
+switch-step
+  : ∀ {m} (u v : Fin m → ℝ) (c : Nat) (cf : Fin m)
+  → cf .lower ≡ c
+  → set (switch u v c) cf (v cf) ≡ switch u v (suc c)
+switch-step u v c cf ce = funext λ j → go j where
+  go : ∀ j → set (switch u v c) cf (v cf) j ≡ switch u v (suc c) j
+  go j with Discrete-Fin .decide cf j
+  ... | yes p =
+      ap v p
+    ∙ sym (switch-lo u v (suc c) j
+        (Nat.s≤s (subst (λ z → j .lower Nat.≤ z) ce
+          (subst (λ z → j .lower Nat.≤ z .lower) (sym p) Nat.≤-refl))))
+  ... | no ¬p with holds? (suc (j .lower) Nat.≤ c)
+  ...   | yes lo = sym (switch-lo u v (suc c) j (Nat.≤-sucr lo))
+  ...   | no hi = sym (switch-hi u v (suc c) j no-suc)
+    where
+    no-suc : ¬ (suc (j .lower) Nat.≤ suc c)
+    no-suc le with Nat.≤-split (j .lower) c
+    ... | inl lt = hi lt
+    ... | inr (inl gt) =
+      Nat.¬sucx≤x _ (Nat.≤-trans gt (Nat.≤-peel le))
+    ... | inr (inr e) =
+      ¬p (fin-ap {n = λ _ → _} (ce ∙ sym e))
 ```
 -->
 
