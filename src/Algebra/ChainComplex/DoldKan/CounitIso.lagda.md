@@ -398,6 +398,10 @@ whose chain square the hypothesis closes.
 <!--
 ```agda
 private
+  le-plus : ∀ x y → x Nat.≤ x Nat.+ y
+  le-plus zero    y = Nat.0≤x
+  le-plus (suc x) y = Nat.s≤s (le-plus x y)
+
   weaken-lower : ∀ {n} (x : Fin n) → weaken x .lower ≡ x .lower
   weaken-lower x with fin-view x
   ... | zero  = refl
@@ -857,4 +861,63 @@ forced into its identity case.
             {x = Traw} {y = Gkm._⁻¹ kk e₀} {z = e₀})
         ∙ ap (Gkm._*_ kk Traw) (Gkm.inversel kk {x = e₀})
         ∙ Gkm.idr kk {x = Traw})
+```
+
+The bottom coface receives the boundary of the chosen element, and
+the alternating tails die: directly for positive cofaces, and
+through the bottom pushforward because double-coface composites
+still miss a positive value.
+
+```agda
+    w-δ⁰ : w k' (δ fzero) ≡ C .∂ᶜ k' .∫Hom.fst c
+    w-δ⁰ with classify {k'} {k'} (δ fzero)
+    ... | cls-miss i' m = absurd (m i' refl)
+    ... | cls-coll t coll = absurd (Nat.¬sucx≤x (t .lower)
+      (subst (λ z → suc (t .lower) Nat.≤ z) (sym e') Nat.≤-refl))
+      where
+      e' : t .lower ≡ suc (t .lower)
+      e' = sym (weaken-lower t)
+         ∙ ap Fin.lower (skip-injective fzero (weaken t) (fsuc t) coll)
+    ... | cls-id jk lid = absurd (Nat.¬sucx≤x k'
+      (subst (λ z → suc k' Nat.≤ z) (sym jk) Nat.≤-refl))
+    ... | cls-δ⁰ kj lsuc =
+        ap (λ e' → subst (λ n → ⌞ C .ob n ⌟) (ap Nat.pred e')
+              (C .∂ᶜ k' .∫Hom.fst c))
+          (Nat.Nat-is-set kk kk kj refl)
+      ∙ transport-refl (C .∂ᶜ k' .∫Hom.fst c)
+
+    ψ-Σalt
+      : (fuel j : Nat) (eq : j Nat.+ fuel ≡ suc (suc k'))
+      → 1 Nat.≤ j
+      → ψ k' .∫Hom.fst (Σalt k' fuel j eq) ≡ Cc.1g k'
+    ψ-Σalt zero j eq ge =
+      is-group-hom.pres-id (ψ k' .∫Hom.snd)
+    ψ-Σalt (suc fuel) zero eq ge = absurd (Nat.¬suc≤0 ge)
+    ψ-Σalt (suc fuel) (suc j₁) eq ge =
+        is-group-hom.pres-⋆ (ψ k' .∫Hom.snd) head-t tail-inv
+      ∙ ap₂ (Cc._*_ k')
+          (ap (λ h → h .∫Hom.fst (fundamental k' .fst))
+            (ψ-push k' (fin j₁ ⦃ Nat.≤-peel bj ⦄)))
+          ( is-group-hom.pres-inv (ψ k' .∫Hom.snd) {x = tail-t}
+          ∙ ap (Cc._⁻¹ k')
+              (ψ-Σalt fuel (suc (suc j₁))
+                (sym (Nat.+-sucr (suc j₁) fuel) ∙ eq) (Nat.s≤s Nat.0≤x))
+          ∙ (sym (Cc.idl k') ∙ Cc.inverser k'))
+      ∙ Cc.idl k'
+      where
+      bj : suc j₁ Nat.< suc (suc k')
+      bj = subst (suc (suc j₁) Nat.≤_)
+             (sym (Nat.+-sucr (suc j₁) fuel) ∙ eq)
+             (Nat.s≤s (le-plus (suc j₁) fuel))
+
+      head-t : ⌞ Gkk .F₀ k' ⌟
+      head-t = push-nt k' (fin (suc j₁) ⦃ bj ⦄) .η k' .∫Hom.fst
+        (fundamental k' .fst)
+
+      tail-t : ⌞ Gkk .F₀ k' ⌟
+      tail-t = Σalt k' fuel (suc (suc j₁))
+        (sym (Nat.+-sucr (suc j₁) fuel) ∙ eq)
+
+      tail-inv : ⌞ Gkk .F₀ k' ⌟
+      tail-inv = Gkm._⁻¹ k' tail-t
 ```
