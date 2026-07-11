@@ -491,3 +491,168 @@ strength does not see the choice of gauge.
   gauge ω χ = d¹-+ ω (dₖ χ) ∙ ap (d¹ ω +²_) (d¹-d χ) ∙ +²-idr (d¹ ω)
 ```
 
+
+## Functoriality
+
+Pushforward along a ring homomorphism over $R$, exactly as for
+[[$\Omega^1$|kahler-differentials]]: generators to generators and
+the module action through the map, with each law transported along
+preservation of the ring operations, and vanishing on constants
+along the commuting triangle over $R$.
+
+```agda
+module _ {A B : CRing ℓ} {φA : CR.Hom R A} {φB : CR.Hom R B}
+         (f : CR.Hom A B) (comm : f CR.∘ φA ≡ φB)
+  where
+  private
+    module f = is-ring-hom (f .∫Hom.snd)
+
+    f₀ : ⌞ A ⌟ → ⌞ B ⌟
+    f₀ = f .∫Hom.fst
+
+  Ω²-map : Ω² A φA → Ω² B φB
+  Ω²-map (a d∧d b) = f₀ a d∧d f₀ b
+  Ω²-map (a ·² x) = f₀ a ·² Ω²-map x
+  Ω²-map (x +² y) = Ω²-map x +² Ω²-map y
+  Ω²-map 0² = 0²
+  Ω²-map (-² x) = -² Ω²-map x
+```
+
+<!--
+```agda
+  Ω²-map (+²-idl x i) = +²-idl (Ω²-map x) i
+  Ω²-map (+²-invr x i) = +²-invr (Ω²-map x) i
+  Ω²-map (+²-assoc x y z i) =
+    +²-assoc (Ω²-map x) (Ω²-map y) (Ω²-map z) i
+  Ω²-map (+²-comm x y i) = +²-comm (Ω²-map x) (Ω²-map y) i
+  Ω²-map (·²-distl a x y i) = ·²-distl (f₀ a) (Ω²-map x) (Ω²-map y) i
+  Ω²-map (·²-distr a b x i) =
+    ( ap (_·² Ω²-map x) (f.pres-+ a b)
+    ∙ ·²-distr (f₀ a) (f₀ b) (Ω²-map x)) i
+  Ω²-map (·²-assoc a b x i) =
+    ( ·²-assoc (f₀ a) (f₀ b) (Ω²-map x)
+    ∙ ap (_·² Ω²-map x) (sym (f.pres-* a b))) i
+  Ω²-map (·²-idl x i) =
+    (ap (_·² Ω²-map x) f.pres-id ∙ ·²-idl (Ω²-map x)) i
+  Ω²-map (d∧d-+l a b c i) =
+    (ap (_d∧d f₀ c) (f.pres-+ a b) ∙ d∧d-+l (f₀ a) (f₀ b) (f₀ c)) i
+  Ω²-map (d∧d-+r a b c i) =
+    (ap (f₀ a d∧d_) (f.pres-+ b c) ∙ d∧d-+r (f₀ a) (f₀ b) (f₀ c)) i
+  Ω²-map (d∧d-leibl a b c i) =
+    (ap (_d∧d f₀ c) (f.pres-* a b) ∙ d∧d-leibl (f₀ a) (f₀ b) (f₀ c)) i
+  Ω²-map (d∧d-leibr a b c i) =
+    (ap (f₀ a d∧d_) (f.pres-* b c) ∙ d∧d-leibr (f₀ a) (f₀ b) (f₀ c)) i
+  Ω²-map (d∧d-constl r b i) =
+    ( ap (_d∧d f₀ b) (ap (λ e → e .∫Hom.fst r) comm)
+    ∙ d∧d-constl r (f₀ b)) i
+  Ω²-map (d∧d-constr a r i) =
+    ( ap (f₀ a d∧d_) (ap (λ e → e .∫Hom.fst r) comm)
+    ∙ d∧d-constr (f₀ a) r) i
+  Ω²-map (d∧d-antisym a b i) = d∧d-antisym (f₀ a) (f₀ b) i
+  Ω²-map (d∧d-sq a i) = d∧d-sq (f₀ a) i
+  Ω²-map (squash² x y p q i j) = squash²
+    (Ω²-map x) (Ω²-map y) (λ i → Ω²-map (p i)) (λ i → Ω²-map (q i)) i j
+```
+-->
+
+The pushforward commutes with the wedge, and — the fact that makes
+the [[Deligne complex|deligne-complex]] extend one more stage — with
+the exterior derivative itself. For the latter we first record that
+the reconstruction component of the paramorphism is the identity.
+
+```agda
+  wedge-natural
+    : ∀ a ω → Ω²-map (wedge a ω) ≡ wedge (f₀ a) (Ω¹-map f comm ω)
+  wedge-natural a = Ω¹-elim-prop A φA
+    (λ ω → Ω²-map (wedge a ω) ≡ wedge (f₀ a) (Ω¹-map f comm ω))
+    (λ _ → squash² _ _)
+    (λ b → refl)
+    (λ b ω ih → ap (f₀ b ·²_) ih)
+    (λ x ihx y ihy → ap₂ _+²_ ihx ihy)
+    refl
+    (λ x ih → ap -²_ ih)
+```
+
+<!--
+```agda
+d¹-aux-fst
+  : {A : CRing ℓ} {φ : CR.Hom R A}
+  → (ω : Ω¹ A φ) → d¹-aux ω .fst ≡ ω
+d¹-aux-fst {A} {φ} = Ω¹-elim-prop A φ
+  (λ ω → d¹-aux ω .fst ≡ ω)
+  (λ _ → squashω _ _)
+  (λ a → refl)
+  (λ a x ih → ap (a ·ω_) ih)
+  (λ x ihx y ihy → ap₂ _+ω_ ihx ihy)
+  refl
+  (λ x ih → ap -ω_ ih)
+```
+-->
+
+```agda
+module _ {A B : CRing ℓ} {φA : CR.Hom R A} {φB : CR.Hom R B}
+         (f : CR.Hom A B) (comm : f CR.∘ φA ≡ φB)
+  where
+  private
+    f₀ : ⌞ A ⌟ → ⌞ B ⌟
+    f₀ = f .∫Hom.fst
+
+  d¹-natural : ∀ ω → Ω²-map f comm (d¹ ω) ≡ d¹ (Ω¹-map f comm ω)
+  d¹-natural = Ω¹-elim-prop A φA
+    (λ ω → Ω²-map f comm (d¹ ω) ≡ d¹ (Ω¹-map f comm ω))
+    (λ _ → squash² _ _)
+    (λ a → refl)
+    ·-case
+    (λ x ihx y ihy → ap₂ _+²_ ihx ihy)
+    refl
+    (λ x ih → ap -²_ ih)
+    where
+    ·-case
+      : ∀ a ω
+      → Ω²-map f comm (d¹ ω) ≡ d¹ (Ω¹-map f comm ω)
+      → Ω²-map f comm (d¹ (a ·ω ω)) ≡ d¹ (Ω¹-map f comm (a ·ω ω))
+    ·-case a ω ih = ap₂ _+²_
+      ( wedge-natural f comm a (d¹-aux ω .fst)
+      ∙ ap (wedge (f₀ a))
+          ( ap (Ω¹-map f comm) (d¹-aux-fst ω)
+          ∙ sym (d¹-aux-fst (Ω¹-map f comm ω))))
+      (ap (f₀ a ·²_) ih)
+```
+
+The unit and composition laws follow by the same induction as for
+$\Omega^1$.
+
+<!--
+```agda
+module _ {A : CRing ℓ} {φ : CR.Hom R A} where
+  Ω²-map-id
+    : (comm : CR.id CR.∘ φ ≡ φ)
+    → ∀ x → Ω²-map CR.id comm x ≡ x
+  Ω²-map-id comm = Ω²-elim-prop A φ
+    (λ x → Ω²-map CR.id comm x ≡ x)
+    (λ _ → squash² _ _)
+    (λ a b → refl)
+    (λ a x ih → ap (a ·²_) ih)
+    (λ x ihx y ihy → ap₂ _+²_ ihx ihy)
+    refl
+    (λ x ih → ap -²_ ih)
+
+module _ {A B C : CRing ℓ} {φA : CR.Hom R A} {φB : CR.Hom R B}
+         {φC : CR.Hom R C}
+         (f : CR.Hom B C) (g : CR.Hom A B)
+         (cf : f CR.∘ φB ≡ φC) (cg : g CR.∘ φA ≡ φB)
+         (cfg : (f CR.∘ g) CR.∘ φA ≡ φC)
+  where
+
+  Ω²-map-∘
+    : ∀ x → Ω²-map (f CR.∘ g) cfg x ≡ Ω²-map f cf (Ω²-map g cg x)
+  Ω²-map-∘ = Ω²-elim-prop A φA
+    (λ x → Ω²-map (f CR.∘ g) cfg x ≡ Ω²-map f cf (Ω²-map g cg x))
+    (λ _ → squash² _ _)
+    (λ a b → refl)
+    (λ a x ih → ap (f .∫Hom.fst (g .∫Hom.fst a) ·²_) ih)
+    (λ x ihx y ihy → ap₂ _+²_ ihx ihy)
+    refl
+    (λ x ih → ap -²_ ih)
+```
+-->
