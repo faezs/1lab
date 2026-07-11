@@ -37,9 +37,12 @@ import Neural.Topos.Quantifiers
 import Neural.Topos.Predicates
 import Neural.Stack.Grothendieck
 import Neural.Stack.Equivalence
+import Neural.Stack.ContractedProduct
 import Neural.Stack.Presentation
 import Neural.Stack.Adjunction
+import Neural.Stack.Semantics
 import Neural.Stack.Boolean
+import Neural.Stack.Open
 import Neural.Stack.Omega
 import Neural.Stack.Restriction
 import Neural.Stack.Presheaves
@@ -397,6 +400,55 @@ _ = Neural.Stack.Boolean.complement→¬
 _ = Neural.Stack.Boolean.complemented→boolean
 ```
 
+**Lemma 2.4, faithful to the paper** (equations 2.10–2.11 and
+2.24–2.29, transcribed from the source and formalized verbatim). The
+paper's $\Omega_\alpha$ is the *direct image* of fibre sieves along
+the transition functor, $\tau'_\alpha$ the preimage; image against
+preimage is a Galois adjunction with no hypothesis, and mere strict
+lifts — the split-fibration situation — upgrade the counit to the
+*equality* of equation 2.26: $\tau'$ an injective section of the
+surjective $\Omega_\alpha$.
+
+```agda
+_ = Neural.Stack.Adjunction.Ω-fib⊣τ'
+_ = Neural.Stack.Adjunction.lifts→section
+```
+
+**Theorem 2.1 and Definition 2.1.** The standard hypothesis (the
+adjoint transports) holds *unconditionally* at the sieve level — an
+honest strengthening over the paper's geometricity caution — and
+lifts for every transition give the strong form, equation 2.30.
+
+```agda
+_ = Neural.Stack.Semantics.standard
+_ = Neural.Stack.Semantics.theorem-2·1
+```
+
+**Openness and Proposition 2.2** (equations 2.13–2.16). Openness
+*defined* by the Mac Lane–Moerdijk adjoint characterization with its
+Frobenius law; the transport dictionary proved operation by
+operation — $\top,\bot,\vee$ unconditionally, $\wedge$ from the left
+adjoint, $\Rightarrow$ and $\neg$ from Frobenius.
+
+```agda
+_ = Neural.Stack.Open.is-open
+_ = Neural.Stack.Open.Ω-pres-∨
+_ = Neural.Stack.Open.Ω-pres-⇒
+```
+
+**Lemma 2.2, group tier** (the risk register's item one). For an
+arbitrary group homomorphism, the contracted product
+$G \times_{G'} X'$ as a set-quotient $G$-set, and the bijective,
+order-preserving correspondence of stable subobjects — the paper's
+"weakly geometric and open" transport, with the groupoid extension
+honestly not claimed.
+
+```agda
+_ = Neural.Stack.ContractedProduct.Contracted
+_ = Neural.Stack.ContractedProduct.push-pull
+_ = Neural.Stack.ContractedProduct.pull-push
+```
+
 ## What is missing
 
 Phase 1 leaves: the universal property of the explicit
@@ -405,13 +457,15 @@ duality for arbitrary posets (Proposition 1.2, generalized); the
 tree-structure theorem 1.2; and the discrete backpropagation flow
 (Theorem 1.1, reformulated). The
 threshold description of decidable chain sieves is stated in prose
-only. Phase 3 remainder: the packaging of the family–presheaf
-comparison as an equivalence of categories (triangle identities);
-the paper's section equations 2.24–2.29 for $\tau'_\alpha$;
-openness and the transport dictionary (Lemma 2.3, Proposition 2.2);
-the Boolean side lemma under explicit complementedness; the
-contracted product (Lemma 2.2, the recorded research risk); and the
-assembly of Theorem 2.1 with the fibrant-stack models. Phases 4–7
+only. Phase 3 remainder: the groupoid extension of Lemma 2.2 (tier
+2 of the risk register — reduction of component-sum groupoids to
+the group case via Proposition C.1); concrete instances of
+`is-open`{.Agda ident=is-open} beyond the Boolean route; the
+quantifier clauses of the transport dictionary (inequality 2.14 at
+the hyperdoctrine level); and the `Model.*` cluster — Proposition
+2.3, the corrected relative Theorem 2.2 (matching maps by deleting
+an initial star), and the fibrant-network-stack definition, for
+$M \in \{\mathrm{Set}, \mathrm{Grpd}, \mathrm{Cat}\}$. Phases 4–7
 of the roadmap — semantic information, the memory-cell sites and
 braid tower, the 2-category with its derivator, and the appendix
 gems — are not started. The Ran-side Kan extension dualization
