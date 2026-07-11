@@ -67,30 +67,29 @@ substituting the argument backwards, and simultaneous substitution
 of morphism and argument cancels.
 
 ```agda
-private
-  P-sub-hom
-    : ∀ {oc ℓc} (C : Precategory oc ℓc) (P : Functor (C ^op) (Sets κ))
-      {x y y' : C .Ob} (p : y ≡ y') (u : C .Hom x y) (v : P ʻ y')
-    → Psh.₁ P (subst (C .Hom x) p u) v
-    ≡ Psh.₁ P u (subst (λ e → P ʻ e) (sym p) v)
-  P-sub-hom C P {x} p u = J
-    (λ y' p → (v : P ʻ y')
-            → Psh.₁ P (subst (C .Hom x) p u) v
-            ≡ Psh.₁ P u (subst (λ e → P ʻ e) (sym p) v))
-    (λ v → ap₂ (λ m w → Psh.₁ P m w) (transport-refl u) refl
-         ∙ ap (Psh.₁ P u) (sym (transport-refl v)))
-    p
+P-sub-hom
+  : ∀ {oc ℓc} (C : Precategory oc ℓc) (P : Functor (C ^op) (Sets κ))
+    {x y y' : C .Ob} (p : y ≡ y') (u : C .Hom x y) (v : P ʻ y')
+  → Psh.₁ P (subst (C .Hom x) p u) v
+  ≡ Psh.₁ P u (subst (λ e → P ʻ e) (sym p) v)
+P-sub-hom C P {x} p u = J
+  (λ y' p → (v : P ʻ y')
+          → Psh.₁ P (subst (C .Hom x) p u) v
+          ≡ Psh.₁ P u (subst (λ e → P ʻ e) (sym p) v))
+  (λ v → ap₂ (λ m w → Psh.₁ P m w) (transport-refl u) refl
+       ∙ ap (Psh.₁ P u) (sym (transport-refl v)))
+  p
 
-  P-sub-both
-    : ∀ {oc ℓc} (C : Precategory oc ℓc) (P : Functor (C ^op) (Sets κ))
-      {x y y' : C .Ob} (p : y ≡ y') (u : C .Hom x y) (v : P ʻ y)
-    → Psh.₁ P (subst (C .Hom x) p u) (subst (λ e → P ʻ e) p v)
-    ≡ Psh.₁ P u v
-  P-sub-both C P {x} p u v = J
-    (λ y' p → Psh.₁ P (subst (C .Hom x) p u) (subst (λ e → P ʻ e) p v)
-            ≡ Psh.₁ P u v)
-    (ap₂ (λ m w → Psh.₁ P m w) (transport-refl u) (transport-refl v))
-    p
+P-sub-both
+  : ∀ {oc ℓc} (C : Precategory oc ℓc) (P : Functor (C ^op) (Sets κ))
+    {x y y' : C .Ob} (p : y ≡ y') (u : C .Hom x y) (v : P ʻ y)
+  → Psh.₁ P (subst (C .Hom x) p u) (subst (λ e → P ʻ e) p v)
+  ≡ Psh.₁ P u v
+P-sub-both C P {x} p u v = J
+  (λ y' p → Psh.₁ P (subst (C .Hom x) p u) (subst (λ e → P ʻ e) p v)
+          ≡ Psh.₁ P u v)
+  (ap₂ (λ m w → Psh.₁ P m w) (transport-refl u) (transport-refl v))
+  p
 ```
 
 ## The functor
