@@ -67,9 +67,8 @@ propositions], $\Omega$.
 [low]: Order.Instances.Lower.html
 
 ```agda
-Lower-sets-frame : ∀ {o ℓ} → Meet-semilattice o ℓ → Frame (o ⊔ ℓ) o
-Lower-sets-frame (P , L) = Lower-sets P , L↓-frame where
-  module L = Meet-slat L
+Lower-sets-frame : ∀ {o ℓ} → Poset o ℓ → Frame (o ⊔ ℓ) o
+Lower-sets-frame P = Lower-sets P , L↓-frame where
   module L↓ = Order.Reasoning (Lower-sets P)
 
   L↓-frame : is-frame (Lower-sets P)
@@ -118,7 +117,7 @@ semilattice homomorphism $A \to B$ to a frame homomorphism $DA \to B$.
   module Mk (B : Frame ℓ ℓ)
             (f : Meet-slats.Hom A (Frm.meets (B .snd)))
     where
-    module A↓ = Frm (Lower-sets-frame A .snd)
+    module A↓ = Frm (Lower-sets-frame (A .fst) .snd)
     module B  = Frm (B .snd)
     module f = is-meet-slat-hom (f .witness)
 ```
@@ -128,7 +127,7 @@ cocompletions: Any monotone map $A \to B$ extends to a _cocontinuous_
 map $DA \to B$, because $B$, being a frame, is cocomplete.
 
 ```agda
-    mkhom : Frames.Hom (Lower-sets-frame A) B
+    mkhom : Frames.Hom (Lower-sets-frame (A .fst)) B
     mkhom .hom = Lan↓ B.⋃-lubs (f .hom)
     mkhom .witness .⋃-≤ g = B.≤-refl' $
       Lan↓-cocontinuous B.⋃-lubs (f .hom) g
@@ -182,10 +181,10 @@ $\land$.
 ```agda
   the-unit
     : (S : Meet-semilattice ℓ ℓ)
-    → Meet-slats.Hom S (Frm.meets (Lower-sets-frame S .snd))
+    → Meet-slats.Hom S (Frm.meets (Lower-sets-frame (S .fst) .snd))
   the-unit S = go where
     module S = Meet-slat (S .snd)
-    module S↓ = Frm (Lower-sets-frame S .snd)
+    module S↓ = Frm (Lower-sets-frame (S .fst) .snd)
     go : Meet-slats.Hom S S↓.meets
     go .hom = よₚ (S .fst)
     go .witness .is-meet-slat-hom.∩-≤ x y z (p , q) = do
@@ -207,7 +206,7 @@ cocontinuous extensions to tie everything up:
 
 ```agda
   go : Free-object Frame↪SLat A
-  go .free = Lower-sets-frame A
+  go .free = Lower-sets-frame (A .fst)
   go .unit = the-unit A
   go .fold {B} f = Mk.mkhom B f
   go .commute {B} {f} = ext (Mk.mkcomm B f)
