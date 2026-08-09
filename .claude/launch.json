@@ -1,0 +1,10 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "1lab-shake watch",
+      "runtimeExecutable": "nix-shell",
+      "runtimeArgs": ["--run", "1lab-shake all -j --watch"]
+    }
+  ]
+}
